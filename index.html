@@ -661,8 +661,8 @@ tr.subcat-row.visible{display:table-row}
     <div class="top-actions">
       <span class="sync-pill"><span class="sync-dot" id="sync-dot"></span><span id="sync-status">Supabase connected</span></span>
       <button class="btn btn-soft" onclick="showSupabaseInfo()">Supabase Info</button>
-      <button class="btn btn-ghost" onclick="refreshFromSupabase()">Refresh Data</button>
-      <button class="btn btn-primary" onclick="saveToSupabase()">Save to Supabase</button>
+      <button class="btn btn-ghost" onclick="refreshFromSupabase()">Refresh Live Data</button>
+      <button class="btn btn-primary" onclick="saveToSupabase()">Sync Now</button>
       <button class="btn btn-ghost logout-btn" onclick="logoutCathOS()">Logout</button>
     </div>
   </div>
@@ -712,6 +712,14 @@ tr.subcat-row.visible{display:table-row}
         <div id="dash-alerts" class="alert-list"></div>
       </div>
     </div>
+
+    <div class="grid grid-3 gap-14 mt-16">
+      <div class="chart-card"><div class="section-title">📈 Net Worth Graph</div><canvas id="dash-chart-networth"></canvas></div>
+      <div class="chart-card"><div class="section-title">💸 Monthly Cash Flow</div><canvas id="dash-chart-cashflow"></canvas></div>
+      <div class="chart-card"><div class="section-title">🧾 Category Breakdown</div><canvas id="dash-chart-category"></canvas></div>
+    </div>
+
+    <div class="grid grid-4 gap-14 mt-16" id="dash-passive-grid"></div>
 
     <div class="grid grid-2 gap-14 mt-16">
       <div class="card"><div class="section-title">💳 Credit Cards</div><div id="dash-creditcards"></div></div>
@@ -1488,7 +1496,7 @@ function queueAutoPush() {
   clearTimeout(autoPushTimer);
   autoPushTimer = setTimeout(() => {
     saveToSupabase({ silent: true, source: 'autosave' });
-  }, 700);
+  }, 250);
 }
 function ensureCollection(collection) {
   if (!Array.isArray(db[collection])) db[collection] = [];
@@ -2195,15 +2203,58 @@ function populateAccountSelect(selId, selected = '') {
   if (selected && options.includes(selected)) sel.value = selected;
 }
 
+function deleteTransactionSubcategoryInline() {
+  const cat = document.getElementById('txn-cat')?.value;
+  const sel = document.getElementById('txn-subcat');
+  const current = sel?.value || '';
+  if (!cat || !current) return alert('Please choose a category and sub-category first.');
+  if (!confirm(`Delete sub-category "${current}" under "${cat}"?`)) return;
+  const list = db.settings?.transactionCategoryMap?.[cat] || [];
+  db.settings.transactionCategoryMap[cat] = list.filter(item => item !== current);
+  if (!db.settings.transactionCategoryMap[cat].length) delete db.settings.transactionCategoryMap[cat];
+  db.transactions = (db.transactions || []).map(item => ({
+    ...item,
+    subcat: item.cat === cat && item.subcat === current ? 'General' : item.subcat
+  }));
+  save();
+  populateTransactionCategorySelect(cat in db.settings.transactionCategoryMap ? cat : Object.keys(getTransactionCategoryMap())[0]);
+  populateTransactionSubcategorySelect();
+  renderTransactionSettings();
+  renderTransactions();
+}
+
+function autoCategorizeTransaction(payload) {
+  const text = `${payload.desc || ''} ${payload.notes || ''} ${payload.acct || ''}`.toLowerCase();
+  const rules = [
+    { test: /(salary|psycle contractor|affiliate|interest|refund|farm income|home share)/, type: 'Income', cat: 'Income' },
+    { test: /(electric|water|internet|wifi|starlink|insurance|helper|grocery)/, type: 'Expense', cat: 'Bills' },
+    { test: /(subscription|icloud|google one|netflix|spotify|apple bill)/, type: 'Expense', cat: 'Subscriptions' },
+    { test: /(gotrade|col financial|crypto|savings|travel fund|house fund|farm expansion|emergency fund|jimny)/, type: 'Investment', cat: 'Savings & Investments' },
+    { test: /(bdo visa ca|loan payment|ca payment|debt)/, type: 'Expense', cat: 'Debt' },
+    { test: /(farm|harvest|fertilizer|spray|motoworks|inventory|business)/, type: 'Expense', cat: 'Business Expenses' }
+  ];
+  const match = rules.find(rule => rule.test.test(text));
+  if (match) {
+    if (!payload.cat || payload.cat === 'Expenses') payload.cat = match.cat;
+    if (!payload.type || payload.type === 'Expense') payload.type = match.type;
+  }
+  const map = getTransactionCategoryMap();
+  if ((!payload.subcat || payload.subcat === 'General') && map[payload.cat]?.length) {
+    const sub = map[payload.cat].find(s => text.includes(String(s).toLowerCase()));
+    if (sub) payload.subcat = sub;
+  }
+  return payload;
+}
+
 function editTransaction(id) {
-  const item = (db.transactions || []).find(x => x.id === id);
+  const item = (db.transactions || []).find(x => String(x.id) === String(id));
   if (!item) return;
   openModal('modal-transaction', item);
 }
 
 function saveTransaction() {
   const editId = document.getElementById('txn-edit-id')?.value;
-  const payload = {
+  let payload = {
     id: editId || uid(),
     date: document.getElementById('txn-date').value || today(),
     type: document.getElementById('txn-type').value || 'Expense',
@@ -2215,6 +2266,7 @@ function saveTransaction() {
     notes: document.getElementById('txn-notes').value.trim()
   };
   if (!payload.date || !payload.desc || !payload.amount) return alert('Please fill required fields.');
+  payload = autoCategorizeTransaction(payload);
   upsertRecord('transactions', payload);
   closeModal('modal-transaction');
   renderTransactions();
@@ -2310,7 +2362,7 @@ function saveBudget() {
   upsertRecord('budget', {id:uid(), month, cat, plan, actual}); closeModal('modal-budget'); render('budget');
 }
 function editSalary(id) {
-  const item = (db.salary || []).find(x => x.id === id);
+  const item = (db.salary || []).find(x => String(x.id) === String(id));
   if (!item) return;
   openModal('modal-salary', item);
 }
@@ -2329,19 +2381,19 @@ function saveSalary() {
   upsertRecord('salary', payload); closeModal('modal-salary'); render('salary'); renderDash();
 }
 function editLend(id) {
-  const item = (db.lend || []).find(x => x.id === id);
+  const item = (db.lend || []).find(x => String(x.id) === String(id));
   if (!item) return;
   openModal('modal-lend', item);
 }
 
 function editAccount(id) {
-  const item = (db.accounts || []).find(x => x.id === id);
+  const item = (db.accounts || []).find(x => String(x.id) === String(id));
   if (!item) return;
   openModal('modal-account', item);
 }
 
 function editInvestment(id) {
-  const item = (db.investments || []).find(x => x.id === id);
+  const item = (db.investments || []).find(x => String(x.id) === String(id));
   if (!item) return;
   openModal('modal-investment', item);
 }
@@ -2413,7 +2465,7 @@ function getNetWorthCurrentValue(item) {
 }
 
 function editNetWorth(id) {
-  const item = db.networth.find(x => x.id === id);
+  const item = db.networth.find(x => String(x.id) === String(id));
   if (!item) return;
   openModal('modal-networth', item);
 }
@@ -2472,6 +2524,25 @@ function removeTransactionCategory(main) {
   renderTransactionSettings();
 }
 
+function deleteTransactionSubcategoryFromSettings(main) {
+  const list = db.settings?.transactionCategoryMap?.[main] || [];
+  if (!list.length) return alert('This category has no sub-categories to delete.');
+  const pick = prompt(`Type the exact sub-category to delete from "${main}":
+
+${list.join(', ')}`);
+  if (pick === null) return;
+  const value = pick.trim();
+  if (!value) return;
+  if (!list.includes(value)) return alert('Sub-category not found in that category.');
+  if (!confirm(`Delete sub-category "${value}" from "${main}"?`)) return;
+  db.settings.transactionCategoryMap[main] = list.filter(item => item !== value);
+  if (!db.settings.transactionCategoryMap[main].length) delete db.settings.transactionCategoryMap[main];
+  db.transactions = (db.transactions || []).map(item => ({ ...item, subcat: item.cat === main && item.subcat === value ? 'General' : item.subcat }));
+  save();
+  renderTransactionSettings();
+  renderTransactions();
+}
+
 function addTransactionAccountOption() {
   const input = document.getElementById('txn-new-account-option');
   const name = (input?.value || '').trim();
@@ -2497,7 +2568,7 @@ function renderTransactionSettings() {
   if (catWrap) {
     const map = getTransactionCategoryMap();
     const entries = Object.entries(map || {});
-    catWrap.innerHTML = entries.length ? entries.map(([main, subs]) => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(216,164,90,0.15)">🧾</div><div><div class="account-name">${main}</div><div class="account-type">${(subs || []).join(', ')}</div></div></div><div class="flex gap-10"><button class="btn btn-ghost" onclick='editTransactionCategory(${JSON.stringify(main)})'>Edit</button><button class="btn btn-ghost" onclick='removeTransactionCategory(${JSON.stringify(main)})'>Remove</button></div></div>`).join('') : '<div class="empty"><div class="empty-text">No transaction categories yet</div></div>';
+    catWrap.innerHTML = entries.length ? entries.map(([main, subs]) => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(216,164,90,0.15)">🧾</div><div><div class="account-name">${main}</div><div class="account-type">${(subs || []).join(', ')}</div></div></div><div class="flex gap-10"><button class="btn btn-ghost" onclick='editTransactionCategory(${JSON.stringify(main)})'>Edit</button><button class="btn btn-ghost" onclick='deleteTransactionSubcategoryFromSettings(${JSON.stringify(main)})'>Delete Sub</button><button class="btn btn-ghost" onclick='removeTransactionCategory(${JSON.stringify(main)})'>Remove</button></div></div>`).join('') : '<div class="empty"><div class="empty-text">No transaction categories yet</div></div>';
   }
   if (acctWrap) {
     const options = db.settings?.transactionAccountOptions || [];
@@ -3140,6 +3211,61 @@ const fns = { dashboard: renderDash, transactions: renderTransactions, budget: r
   if (page === 'settings') renderTransactionSettings();
 }
 
+
+let dashNetWorthChart = null;
+let dashCashflowChart = null;
+let dashCategoryChart = null;
+
+function getPassiveIncomeSummary(year = new Date().getFullYear()) {
+  const rows = (db.transactions || []).filter(t => t.type === 'Income' && t.date && new Date(t.date + 'T00:00:00').getFullYear() === year);
+  const rental = rows.filter(t => /rental|rent|home share/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
+  const affiliate = rows.filter(t => /affiliate/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
+  const farm = rows.filter(t => /farm income|farm|harvest|sugarcane/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
+  return { rental, affiliate, farm, total: rental + affiliate + farm };
+}
+
+function renderDashboardCharts() {
+  if (typeof Chart === 'undefined') return;
+  const nwCtx = document.getElementById('dash-chart-networth');
+  const cfCtx = document.getElementById('dash-chart-cashflow');
+  const catCtx = document.getElementById('dash-chart-category');
+  if (!nwCtx || !cfCtx || !catCtx) return;
+
+  const monthly = Array.from({length:12}, (_,i)=>i);
+  const year = new Date().getFullYear();
+  const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const cashflow = monthly.map(i => {
+    const income = (db.transactions||[]).filter(t => t.date && new Date(t.date + 'T00:00:00').getFullYear()===year && new Date(t.date + 'T00:00:00').getMonth()===i && t.type==='Income').reduce((s,t)=>s+(+t.amount||0),0);
+    const out = (db.transactions||[]).filter(t => t.date && new Date(t.date + 'T00:00:00').getFullYear()===year && new Date(t.date + 'T00:00:00').getMonth()===i && t.type!=='Income').reduce((s,t)=>s+(+t.amount||0),0);
+    return income - out;
+  });
+  let running = 0;
+  const nwSeries = cashflow.map(v => running += v);
+  const expenseByCat = {};
+  (db.transactions||[]).filter(t => t.type !== 'Income').forEach(t => { const key = t.cat || 'Uncategorized'; expenseByCat[key] = (expenseByCat[key]||0) + (+t.amount||0); });
+  const catEntries = Object.entries(expenseByCat).sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+  if (dashNetWorthChart) dashNetWorthChart.destroy();
+  dashNetWorthChart = new Chart(nwCtx, { type: 'line', data: { labels, datasets: [{ label: 'Net Worth Trend', data: nwSeries, borderWidth: 2, tension: 0.25 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
+  if (dashCashflowChart) dashCashflowChart.destroy();
+  dashCashflowChart = new Chart(cfCtx, { type: 'bar', data: { labels, datasets: [{ label: 'Cash Flow', data: cashflow }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
+  if (dashCategoryChart) dashCategoryChart.destroy();
+  dashCategoryChart = new Chart(catCtx, { type: 'doughnut', data: { labels: catEntries.map(x=>x[0]), datasets: [{ data: catEntries.map(x=>x[1]) }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+}
+
+function renderDashboardPassiveIncome() {
+  const wrap = document.getElementById('dash-passive-grid');
+  if (!wrap) return;
+  const data = getPassiveIncomeSummary();
+  const cards = [
+    ['Rental Income', data.rental, 'Rental and home share income'],
+    ['Affiliate Income', data.affiliate, 'Affiliate and referral income'],
+    ['Farm Income', data.farm, 'Farm and sugarcane income'],
+    ['Passive Total', data.total, 'Combined passive income tracked']
+  ];
+  wrap.innerHTML = cards.map(([label,val,sub]) => `<div class="passive-card"><div class="passive-label">${label}</div><div class="passive-value">${fmt(val)}</div><div class="passive-sub">${sub}</div><div class="passive-bar-wrap"><div class="passive-bar" style="width:${Math.min(100, data.total ? (val / Math.max(data.total,1))*100 : 0)}%"></div></div></div>`).join('');
+}
+
 function renderDash() {
   document.getElementById('dashboard-date').textContent = new Date().toLocaleDateString('en-PH', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
 
@@ -3261,7 +3387,7 @@ function renderTransactions() {
   document.getElementById('txn-body').innerHTML = data.length ? data.map(t => {
     const typeClass = t.type === 'Income' ? 'badge-green' : t.type === 'Investment' ? 'badge-blue' : 'badge-red';
     const amountClass = t.type === 'Income' ? 'positive' : t.type === 'Investment' ? 'accent' : 'negative';
-    return `<tr><td class="mono">${t.date||'—'}</td><td>${t.desc||'—'}</td><td><span class="badge badge-blue">${t.cat||'—'}</span></td><td>${t.subcat||'—'}</td><td>${t.acct||'—'}</td><td><span class="badge ${typeClass}">${t.type||'—'}</span></td><td class="${amountClass}">${fmt(t.amount)}</td><td style="color:var(--text3)">${t.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editTransaction(${t.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('transactions', t.id)}</div></td></tr>`;
+    return `<tr><td class="mono">${t.date||'—'}</td><td>${t.desc||'—'}</td><td><span class="badge badge-blue">${t.cat||'—'}</span></td><td>${t.subcat||'—'}</td><td>${t.acct||'—'}</td><td><span class="badge ${typeClass}">${t.type||'—'}</span></td><td class="${amountClass}">${fmt(t.amount)}</td><td style="color:var(--text3)">${t.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editTransaction('${t.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('transactions', t.id)}</div></td></tr>`;
   }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No transactions yet</div></div></td></tr>`;
 }
 function renderBudget() {
@@ -3428,7 +3554,11 @@ function renderLend() {
   const countEl = document.getElementById('lend-count');
   if (countEl) countEl.textContent = data.length;
   document.getElementById('lend-body').innerHTML = data.length ? data.map(l => { const bal = (+l.amount || 0) - (+l.repaid || 0); const paid = bal <= 0; const overdue = !paid && l.due && l.due < today(); return `<tr><td>${l.name}</td><td class="mono">${l.date||'—'}</td><td class="accent">${fmt(l.amount)}</td><td class="positive">${fmt(l.repaid)}</td><td class="${paid?'positive':'negative'}">${fmt(bal)}</td><td class="mono">${l.due||'—'}</td><td><span class="badge ${paid?'badge-green':overdue?'badge-red':'badge-yellow'}">${paid?'Paid':overdue?'Overdue':'Pending'}</span></td><td style="color:var(--text3)">${l.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editLend(${l.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('lend', l.id)}</div></td></tr>`; }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">No loans tracked for this filter</div></div></td></tr>`;
+
+  renderDashboardCharts();
+  renderDashboardPassiveIncome();
 }
+
 function renderAccountsGroup(group, cardId, bodyId, rainyMode) {
   const data = db.accounts.filter(a => a.group === group);
   const total = data.reduce((s,a)=>s + (rainyMode ? getAccountPhpEquivalent(a) : (a.currency==='PHP' ? (+a.balance || 0) : 0)),0);
@@ -3442,7 +3572,7 @@ function renderRainy() { renderAccountsGroup('rainy','rainy-accounts-cards','rai
 function editAccountBalance(id) { const acct = db.accounts.find(a=>a.id===id); if (!acct) return; const val = prompt(`Update balance for "${acct.name}" (${acct.currency}):`, acct.balance); if (val === null) return; acct.balance = parseFloat(val) || 0; acct.updated = today(); save(); const active = document.querySelector('.page.active'); if (active) render(active.id.replace('page-','')); renderDash(); }
 
 function editCreditCard(id) {
-  const item = (db.creditcards || []).find(x => x.id === id);
+  const item = (db.creditcards || []).find(x => String(x.id) === String(id));
   if (!item) return;
   openModal('modal-creditcard', item);
 }
@@ -3682,7 +3812,7 @@ function renderNetWorth() {
     `<tr class="totals-row"><td>TOTAL</td><td></td><td></td><td>${fmt(totalLiabs)}</td><td></td></tr>`;
 }
 
-function editProjIncome(id) { const r = db.sugarcane_proj.find(x=>x.id===id); if (!r) return; const inc = prompt(`Income for ${r.location} (${r.year}):`, r.income); if (inc === null) return; r.income = parseFloat(inc) || 0; r.profit = r.income - r.capital; save(); renderSugarcane(); renderReports(); }
+function editProjIncome(id) { const r = db.sugarcane_proj.find(x=>String(x.id)===String(id)); if (!r) return; const inc = prompt(`Income for ${r.location} (${r.year}):`, r.income); if (inc === null) return; r.income = parseFloat(inc) || 0; r.profit = r.income - r.capital; save(); renderSugarcane(); renderReports(); }
 
 // ─── CONSTANTS ───
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -4605,7 +4735,7 @@ function renderTransactions() {
   document.getElementById('txn-body').innerHTML = data.length ? data.map(t => {
     const typeClass = t.type === 'Income' ? 'badge-green' : t.type === 'Investment' ? 'badge-blue' : 'badge-red';
     const amountClass = t.type === 'Income' ? 'positive' : t.type === 'Investment' ? 'accent' : 'negative';
-    return `<tr><td class="mono">${t.date||'—'}</td><td>${t.desc||'—'}</td><td><span class="badge badge-blue">${t.cat||'—'}</span></td><td>${t.subcat||'—'}</td><td>${t.acct||'—'}</td><td><span class="badge ${typeClass}">${t.type||'—'}</span></td><td class="${amountClass}">${fmt(t.amount)}</td><td style="color:var(--text3)">${t.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editTransaction(${t.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('transactions', t.id)}</div></td></tr>`;
+    return `<tr><td class="mono">${t.date||'—'}</td><td>${t.desc||'—'}</td><td><span class="badge badge-blue">${t.cat||'—'}</span></td><td>${t.subcat||'—'}</td><td>${t.acct||'—'}</td><td><span class="badge ${typeClass}">${t.type||'—'}</span></td><td class="${amountClass}">${fmt(t.amount)}</td><td style="color:var(--text3)">${t.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editTransaction('${t.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('transactions', t.id)}</div></td></tr>`;
   }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No transactions found for this filter</div></div></td></tr>`;
 }
 
