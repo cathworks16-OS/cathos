@@ -1522,8 +1522,17 @@ function confirmDeleteRecord(collection, id) {
 function fmt(n) { return '₱' + (+n||0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtCur(n, cur) { return cur === 'USD' ? '$' + (+n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : fmt(n); }
 function fmtPct(n) { const num = +n || 0; return (num > 0 ? '+' : '') + num.toFixed(2) + '%'; }
-function uid() { return Date.now() + Math.floor(Math.random()*1000); }
+function uid() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
 
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 function safeArray(value, fallback = []) {
   if (Array.isArray(value)) return value;
   if (typeof value === 'string') {
