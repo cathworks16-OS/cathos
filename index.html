@@ -655,11 +655,14 @@ tr.subcat-row.visible{display:table-row}
 
   <div class="sync-banner">
     <div>
-    <div class="sync-banner-title">Supabase Sync</div>
-<div class="sync-banner-sub">CathOS is connected to Supabase. Your data is loaded and saved from the live database.</div>
-...
-<button class="btn btn-soft" onclick="loadFromGoogleSheet()">Refresh Data</button>
-<button class="btn btn-primary" onclick="pushToGoogleSheet()">Save to Supabase</button>
+      <div class="sync-banner-title">Supabase Sync</div>
+      <div class="sync-banner-sub">CathOS is connected to Supabase. Refresh data from the live database or save your current CathOS data back to Supabase.</div>
+    </div>
+    <div class="top-actions">
+      <span class="sync-pill"><span class="sync-dot" id="sync-dot"></span><span id="sync-status">Supabase connected</span></span>
+      <button class="btn btn-soft" onclick="configureSync()">Supabase Info</button>
+      <button class="btn btn-ghost" onclick="loadFromGoogleSheet()">Refresh Data</button>
+      <button class="btn btn-primary" onclick="pushToGoogleSheet()">Save to Supabase</button>
       <button class="btn btn-ghost logout-btn" onclick="logoutCathOS()">Logout</button>
     </div>
   </div>
@@ -1329,13 +1332,14 @@ tr.subcat-row.visible{display:table-row}
 <div class="modal-overlay" id="modal-sugarcane-projection"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-projection-modal-title">Add Projection</div><button class="modal-close" onclick="closeModal('modal-sugarcane-projection')">✕</button></div><input type="hidden" id="sc-projection-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Year</label><input type="number" id="sc-proj-year" min="2026" placeholder="2027"></div><div class="form-group"><label>Phase / Stage</label><input type="text" id="sc-proj-phase" placeholder="Scale Phase"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-proj-location" placeholder="La Carlota"></div><div class="form-group"><label>Planned Transaction</label><select id="sc-proj-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Target Hectares</label><input type="number" id="sc-proj-hectares" min="0" step="0.01"></div><div class="form-group"><label>Profit %</label><input type="number" id="sc-proj-profitpct" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Target Capital (₱)</label><input type="number" id="sc-proj-capital" min="0" step="0.01"></div><div class="form-group"><label>Target Income (₱)</label><input type="number" id="sc-proj-income" min="0" step="0.01"></div><div class="form-group"><label>Target Net Profit (₱)</label><input type="number" id="sc-proj-profit" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Special Notes</label><input type="text" id="sc-proj-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneProjection()">Save Projection</button></div></div>
 
 <script>
-const SUPABASE_URL = 'https://nthwfmeydjhowwdflkkw.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_K5gkizj9MS152kpyzdXrSQ_23zuV76b';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 const DB_KEY = 'cathos_earthy_v1';
 const SCRIPT_URL_KEY = 'cathos_google_script_url';
 let db = JSON.parse(localStorage.getItem(DB_KEY) || '{}');
+const SUPABASE_URL = 'https://nthwfmeydjhowwdflkkw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_K5gkizj9MS152kpyzdXrSQ_23zuV76b';
+const supabaseClient = window.supabase && window.supabase.createClient
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 
 function today() { return new Date().toISOString().split('T')[0]; }
 const defaults = {
@@ -1475,29 +1479,33 @@ save(true);
 let autoPushTimer = null;
 let isAutoPushing = false;
 let lastAutoPushAt = 0;
-function save(skipRemote = false) {
+function save(skipAutoSync = false) {
   try { syncSugarcaneLegacyCollections(db); } catch (e) {}
   localStorage.setItem(DB_KEY, JSON.stringify(db));
+  if (!skipAutoSync) queueAutoPush();
 }
 function queueAutoPush() {
-  // disabled because Supabase replaces Google Sheets sync
+  const url = getScriptUrl();
+  if (!url) return;
+  clearTimeout(autoPushTimer);
+  autoPushTimer = setTimeout(() => {
+    pushToGoogleSheet({ silent: true, source: 'autosave' });
+  }, 700);
 }
 function ensureCollection(collection) {
   if (!Array.isArray(db[collection])) db[collection] = [];
 }
-async function upsertRecord(collection, payload) {
+function upsertRecord(collection, payload) {
   ensureCollection(collection);
   const index = db[collection].findIndex(item => String(item.id) === String(payload.id));
   if (index >= 0) db[collection][index] = {...db[collection][index], ...payload};
   else db[collection].push(payload);
-  save(true);
-  await syncCollectionRecordToSupabase(collection, payload);
+  save();
 }
-async function deleteRecord(collection, id) {
+function deleteRecord(collection, id) {
   ensureCollection(collection);
   db[collection] = db[collection].filter(item => String(item.id) !== String(id));
-  save(true);
-  await deleteCollectionRecordFromSupabase(collection, id);
+  save();
 }
 function deleteBtn(collection, id) {
   return `<button onclick="confirmDeleteRecord('${String(collection).replace(/'/g, "\'")}', '${String(id).replace(/'/g, "\'")}')" style="background:none;border:none;color:var(--accent3);cursor:pointer;font-size:13px;padding:2px 6px;" title="Delete">🗑️</button>`;
@@ -1606,263 +1614,6 @@ function canonicalizeDbShape(input = {}) {
 
   normalized.creditcards = normalizeCreditCardsCollection(normalized.creditcards, defaults.creditcards);
   return normalized;
-}
-
-
-const SUPABASE_TABLE_MAP = {
-  transactions: 'transactions',
-  accounts: 'accounts',
-  creditcards: 'credit_cards',
-  lend: 'lending',
-  investments: 'investments',
-  networth: 'net_worth',
-  budget: 'budgets',
-  salary: 'salary_allocations'
-};
-
-function mapCathOSToSupabase(collection, item) {
-  switch (collection) {
-    case 'transactions':
-      return {
-        id: String(item.id),
-        txn_date: item.date || null,
-        description: item.desc || '',
-        type: item.type || '',
-        amount: +item.amount || 0
-      };
-    case 'accounts':
-      return {
-        id: String(item.id),
-        name: item.name || '',
-        bank: item.bank || '',
-        group_name: item.group || '',
-        purpose: item.purpose || '',
-        currency: item.currency || 'PHP',
-        balance: +item.balance || 0
-      };
-    case 'creditcards':
-      return {
-        id: String(item.id),
-        name: item.name || '',
-        issuer: item.issuer || '',
-        last4: item.last4 || '',
-        credit_limit: +item.limit || 0,
-        balance: +item.balance || 0,
-        due_day: item.dueDay ? +item.dueDay : null,
-        statement_day: item.statementDay ? +item.statementDay : null,
-        min_due: +item.minDue || 0,
-        reward_rate: +item.rewardRate || 0,
-        notes: item.notes || ''
-      };
-    case 'lend':
-      return {
-        id: String(item.id),
-        borrower_name: item.name || '',
-        date_lent: item.date || null,
-        amount_lent: +item.amount || 0,
-        amount_repaid: +item.repaid || 0,
-        due_date: item.due || null,
-        status: getLendStatus(item),
-        notes: item.notes || ''
-      };
-    case 'investments':
-      return {
-        id: String(item.id),
-        name: item.name || '',
-        type: item.type || '',
-        amount_invested: +item.invested || 0,
-        current_value: +item.current || 0,
-        notes: item.notes || ''
-      };
-    case 'networth':
-      return {
-        id: String(item.id),
-        item_type: item.type || '',
-        category: item.cat || '',
-        name: item.name || '',
-        initial_value: +(item.initialVal ?? item.val ?? 0) || 0,
-        asset_mode: item.assetMode || 'standard',
-        start_year: item.startYear ? +item.startYear : null,
-        years: item.years ? +item.years : null,
-        yearly_decrease: +item.yearlyDecrease || 0,
-        monthly_payment: +item.monthlyPayment || 0,
-        depreciation_start: item.depreciationStart || null,
-        appreciation_rate: +item.appreciationRate || 0
-      };
-    case 'budget':
-      return {
-        id: String(item.id),
-        budget_month: item.month || '',
-        category: item.cat || '',
-        planned_amount: +item.plan || 0,
-        actual_amount: +item.actual || 0
-      };
-    case 'salary':
-      return {
-        id: String(item.id),
-        alloc_month: item.month || '',
-        salary_amount: +item.amount || 0,
-        bucket: item.cat || '',
-        account_name: item.acct || '',
-        allocated_amount: +item.alloc || 0,
-        notes: item.notes || ''
-      };
-    default:
-      return null;
-  }
-}
-
-function mapSupabaseToCathOS(collection, row) {
-  switch (collection) {
-    case 'transactions':
-      return {
-        id: row.id,
-        date: row.txn_date || '',
-        desc: row.description || '',
-        type: row.type || '',
-        amount: +row.amount || 0,
-        cat: row.category || '',
-        subcat: row.subcategory || '',
-        acct: row.account_name || '',
-        notes: row.notes || ''
-      };
-    case 'accounts':
-      return {
-        id: row.id,
-        name: row.name || '',
-        bank: row.bank || '',
-        group: row.group_name || 'personal',
-        purpose: row.purpose || '',
-        currency: row.currency || 'PHP',
-        balance: +row.balance || 0,
-        updated: row.created_at ? row.created_at.slice(0, 10) : today()
-      };
-    case 'creditcards':
-      return normalizeCreditCardRecord({
-        id: row.id,
-        name: row.name,
-        issuer: row.issuer,
-        last4: row.last4,
-        limit: row.credit_limit,
-        balance: row.balance,
-        dueDay: row.due_day,
-        statementDay: row.statement_day,
-        minDue: row.min_due,
-        rewardRate: row.reward_rate,
-        notes: row.notes
-      });
-    case 'lend':
-      return {
-        id: row.id,
-        name: row.borrower_name || '',
-        date: row.date_lent || '',
-        amount: +row.amount_lent || 0,
-        repaid: +row.amount_repaid || 0,
-        due: row.due_date || '',
-        notes: row.notes || ''
-      };
-    case 'investments':
-      return {
-        id: row.id,
-        name: row.name || '',
-        type: row.type || '',
-        invested: +row.amount_invested || 0,
-        current: +row.current_value || 0,
-        notes: row.notes || ''
-      };
-    case 'networth':
-      return {
-        id: row.id,
-        type: row.item_type || '',
-        cat: row.category || '',
-        name: row.name || '',
-        initialVal: +row.initial_value || 0,
-        val: +row.initial_value || 0,
-        assetMode: row.asset_mode || 'standard',
-        startYear: row.start_year || '',
-        years: row.years || '',
-        yearlyDecrease: +row.yearly_decrease || 0,
-        monthlyPayment: +row.monthly_payment || 0,
-        depreciationStart: row.depreciation_start || '',
-        appreciationRate: +row.appreciation_rate || 0
-      };
-    case 'budget':
-      return {
-        id: row.id,
-        month: row.budget_month || '',
-        cat: row.category || '',
-        plan: +row.planned_amount || 0,
-        actual: +row.actual_amount || 0
-      };
-    case 'salary':
-      return {
-        id: row.id,
-        month: row.alloc_month || '',
-        amount: +row.salary_amount || 0,
-        cat: row.bucket || '',
-        acct: row.account_name || '',
-        alloc: +row.allocated_amount || 0,
-        notes: row.notes || ''
-      };
-    default:
-      return row;
-  }
-}
-
-async function syncCollectionRecordToSupabase(collection, payload) {
-  const table = SUPABASE_TABLE_MAP[collection];
-  if (!table) return;
-  const row = mapCathOSToSupabase(collection, payload);
-  if (!row) return;
-  const { error } = await supabaseClient.from(table).upsert(row, { onConflict: 'id' });
-  if (error) {
-    console.error(`Supabase upsert failed for ${collection}:`, error);
-    alert(`Failed saving ${collection} to Supabase.
-
-${error.message}`);
-  }
-}
-
-async function deleteCollectionRecordFromSupabase(collection, id) {
-  const table = SUPABASE_TABLE_MAP[collection];
-  if (!table) return;
-  const { error } = await supabaseClient.from(table).delete().eq('id', String(id));
-  if (error) {
-    console.error(`Supabase delete failed for ${collection}:`, error);
-    alert(`Failed deleting ${collection} from Supabase.
-
-${error.message}`);
-  }
-}
-
-async function loadCollectionFromSupabase(collection) {
-  const table = SUPABASE_TABLE_MAP[collection];
-  if (!table) return [];
-  const { data, error } = await supabaseClient.from(table).select('*');
-  if (error) {
-    console.error(`Supabase load failed for ${collection}:`, error);
-    return [];
-  }
-  return (data || []).map(row => mapSupabaseToCathOS(collection, row));
-}
-
-async function hydrateDbFromSupabase() {
-  db.transactions = await loadCollectionFromSupabase('transactions');
-  db.accounts = await loadCollectionFromSupabase('accounts');
-  db.creditcards = await loadCollectionFromSupabase('creditcards');
-  db.lend = await loadCollectionFromSupabase('lend');
-  db.investments = await loadCollectionFromSupabase('investments');
-  db.networth = await loadCollectionFromSupabase('networth');
-  db.budget = await loadCollectionFromSupabase('budget');
-  db.salary = await loadCollectionFromSupabase('salary');
-  save(true);
-}
-
-function getLendStatus(item) {
-  const balance = (+item.amount || 0) - (+item.repaid || 0);
-  if (balance <= 0) return 'Paid';
-  if (item.due && new Date(item.due) < new Date()) return 'Overdue';
-  return 'Pending';
 }
 
 const AUTH_KEY = 'cathos_auth_v2';
@@ -2079,7 +1830,6 @@ async function initCathOSApp() {
   if (cathosInitialized) return;
   cathosInitialized = true;
   db = mergeWithDefaults(canonicalizeDbShape(db));
-  await hydrateDbFromSupabase();
   renderDash();
   renderReports();
   renderSettings();
@@ -2417,7 +2167,7 @@ function editTransaction(id) {
   openModal('modal-transaction', item);
 }
 
-async function saveTransaction() {
+function saveTransaction() {
   const editId = document.getElementById('txn-edit-id')?.value;
   const payload = {
     id: editId || uid(),
@@ -2431,7 +2181,7 @@ async function saveTransaction() {
     notes: document.getElementById('txn-notes').value.trim()
   };
   if (!payload.date || !payload.desc || !payload.amount) return alert('Please fill required fields.');
-  await upsertRecord('transactions', payload);
+  upsertRecord('transactions', payload);
   closeModal('modal-transaction');
   renderTransactions();
   renderDash();
@@ -2517,25 +2267,20 @@ function getCreditCardMetrics(card, referenceDate = new Date()) {
   };
 }
 
-async function saveBudget() {
-  const payload = {
-    id: uid(),
-    month: document.getElementById('bud-month').value,
-    cat: document.getElementById('bud-cat').value,
-    plan: parseFloat(document.getElementById('bud-plan').value) || 0,
-    actual: parseFloat(document.getElementById('bud-actual-inp').value) || 0
-  };
-  if (!payload.month || !payload.cat) return alert('Please fill required fields.');
-  await upsertRecord('budget', payload);
-  closeModal('modal-budget');
-  render('budget');
+function saveBudget() {
+  const month = document.getElementById('bud-month').value;
+  const cat = document.getElementById('bud-cat').value;
+  const plan = parseFloat(document.getElementById('bud-plan').value) || 0;
+  const actual = parseFloat(document.getElementById('bud-actual-inp').value) || 0;
+  if (!month || !cat) return alert('Please fill required fields.');
+  upsertRecord('budget', {id:uid(), month, cat, plan, actual}); closeModal('modal-budget'); render('budget');
 }
 function editSalary(id) {
   const item = (db.salary || []).find(x => x.id === id);
   if (!item) return;
   openModal('modal-salary', item);
 }
-async function saveSalary() {
+function saveSalary() {
   const editId = document.getElementById('salary-edit-id')?.value;
   const payload = {
     id: editId || uid(),
@@ -2547,10 +2292,7 @@ async function saveSalary() {
     notes: document.getElementById('sal-notes').value.trim()
   };
   if (!payload.month || !payload.alloc) return alert('Please fill required fields.');
-  await upsertRecord('salary', payload);
-  closeModal('modal-salary');
-  render('salary');
-  renderDash();
+  upsertRecord('salary', payload); closeModal('modal-salary'); render('salary'); renderDash();
 }
 function editLend(id) {
   const item = (db.lend || []).find(x => x.id === id);
@@ -2570,7 +2312,7 @@ function editInvestment(id) {
   openModal('modal-investment', item);
 }
 
-async function saveLend() {
+function saveLend() {
   const editId = document.getElementById('lend-edit-id')?.value;
   const payload = {
     id: editId || uid(),
@@ -2582,13 +2324,9 @@ async function saveLend() {
     notes: document.getElementById('lend-notes').value.trim()
   };
   if (!payload.name || !payload.amount) return alert('Please fill required fields.');
-  await upsertRecord('lend', payload);
-  closeModal('modal-lend');
-  render('lend');
-  renderDash();
-  renderReports();
+  upsertRecord('lend', payload); closeModal('modal-lend'); render('lend'); renderDash(); renderReports();
 }
-async function saveAccount() {
+function saveAccount() {
   const editId = document.getElementById('acct-edit-id')?.value;
   const group = document.getElementById('acct-group').value;
   const payload = {
@@ -2602,13 +2340,9 @@ async function saveAccount() {
     updated: today()
   };
   if (!payload.name || !payload.bank) return alert('Please fill required fields.');
-  await upsertRecord('accounts', payload);
-  closeModal('modal-account');
-  render(group === 'personal' ? 'accounts' : group === 'business' ? 'business' : 'rainy');
-  renderDash();
-  renderTransactions();
+  upsertRecord('accounts', payload); closeModal('modal-account'); render(group === 'personal' ? 'accounts' : group === 'business' ? 'business' : 'rainy'); renderDash(); renderTransactions();
 }
-async function saveInvestment() {
+function saveInvestment() {
   const editId = document.getElementById('inv-edit-id')?.value;
   const payload = {
     id: editId || uid(),
@@ -2619,11 +2353,7 @@ async function saveInvestment() {
     notes: document.getElementById('inv-notes').value.trim()
   };
   if (!payload.name) return alert('Please fill required fields.');
-  await upsertRecord('investments', payload);
-  closeModal('modal-investment');
-  render('investments');
-  renderDash();
-  renderReports();
+  upsertRecord('investments', payload); closeModal('modal-investment'); render('investments'); renderDash(); renderReports();
 }
 function populateNetWorthCategorySelect() {
   const sel = document.getElementById('nw-cat');
@@ -2775,7 +2505,7 @@ function editTransactionAccountOption(name) {
   renderTransactions();
 }
 
-async function saveNetWorth() {
+function saveNetWorth() {
   const editId = document.getElementById('nw-edit-id').value;
   const type = document.getElementById('nw-type').value;
   const cat = document.getElementById('nw-cat').value;
@@ -2785,8 +2515,10 @@ async function saveNetWorth() {
   const startYear = parseInt(document.getElementById('nw-start-year').value) || '';
   const years = parseInt(document.getElementById('nw-years').value) || '';
   const yearlyDecrease = parseFloat(document.getElementById('nw-yearly-decrease').value) || 0;
+
   if (!name) return alert('Please fill required fields.');
   if (assetMode === 'arendo' && (!startYear || !years)) return alert('Please complete the arendo setup fields.');
+
   const payload = {
     id: editId || uid(),
     type,
@@ -2799,7 +2531,8 @@ async function saveNetWorth() {
     years,
     yearlyDecrease
   };
-  await upsertRecord('networth', payload);
+
+  upsertRecord('networth', payload);
   closeModal('modal-networth');
   render('networth');
   renderDash();
@@ -3739,7 +3472,7 @@ function markCreditCardAsPaid(id) {
   alert((card.name || 'Credit card') + ' marked as paid, and a transaction log entry was created.');
 }
 
-async function saveCreditCard() {
+function saveCreditCard() {
   const editId = document.getElementById('cc-edit-id').value;
   const payload = normalizeCreditCardRecord({
     id: editId || uid(),
@@ -3754,8 +3487,8 @@ async function saveCreditCard() {
     rewardRate: parseFloat(document.getElementById('cc-reward-rate').value) || 0,
     notes: document.getElementById('cc-notes').value.trim()
   });
-  if (!payload.name) return alert('Card name is required.');
-  await upsertRecord('creditcards', payload);
+  if (!payload.name || !payload.issuer) return alert('Please fill in card name and issuer.');
+  upsertRecord('creditcards', payload);
   db.creditcards = normalizeCreditCardsCollection(db.creditcards, defaults.creditcards);
   save(true);
   closeModal('modal-creditcard');
@@ -4461,17 +4194,51 @@ function setScriptUrl(url) {
   localStorage.setItem(SCRIPT_URL_KEY, (url || '').trim());
 }
 
-function updateSyncStatus(state = 'ok', text = 'Supabase connected') {
+function updateSyncStatus(state = 'idle', text) {
   const dot = document.getElementById('sync-dot');
   const label = document.getElementById('sync-status');
   if (!dot || !label) return;
-  dot.classList.remove('warn', 'err');
-  dot.classList.add('ok');
-  label.textContent = text;
+
+  dot.classList.remove('ok', 'warn', 'err');
+
+  if (state === 'ok') dot.classList.add('ok');
+  if (state === 'warn') dot.classList.add('warn');
+  if (state === 'err') dot.classList.add('err');
+
+  if (text) {
+    label.textContent = text;
+    return;
+  }
+
+  const savedUrl = getScriptUrl();
+  label.textContent = savedUrl ? 'Script URL saved' : 'Local only';
+  if (savedUrl) dot.classList.add('ok');
 }
 
 function configureSync() {
-  alert('Google Sheets sync is disabled. CathOS now uses Supabase.');
+  const current = getScriptUrl();
+  const input = window.prompt('Paste your Google Apps Script Web App URL:', current || '');
+
+  if (input === null) return;
+
+  const cleanUrl = input.trim();
+
+  if (!cleanUrl) {
+    localStorage.removeItem(SCRIPT_URL_KEY);
+    updateSyncStatus('warn', 'Local only');
+    alert('Script URL removed. CathOS is now using local storage only.');
+    return;
+  }
+
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/(exec|dev)(\?.*)?$/.test(cleanUrl)) {
+    updateSyncStatus('err', 'Invalid script URL');
+    alert('Please paste a valid Google Apps Script Web App URL. It should end with /exec or /dev.');
+    return;
+  }
+
+  setScriptUrl(cleanUrl);
+  updateSyncStatus('ok', 'Script URL saved');
+  alert('Google Sheets sync URL saved.');
 }
 
 async function parseResponseSafe(response) {
@@ -4625,13 +4392,36 @@ async function requestSheetPull(url) {
 }
 
 async function loadFromGoogleSheet(options = {}) {
-  await hydrateDbFromSupabase();
-  const active = document.querySelector('.page.active');
-  renderDash();
-  renderReports();
-  renderSettings();
-  if (active) render(active.id.replace('page-', ''));
-  updateSyncStatus('ok', 'Pulled from Supabase');
+  const { silent = false } = options;
+  const url = getScriptUrl();
+  if (!url) {
+    updateSyncStatus('warn', 'No script URL');
+    if (!silent) alert('Please click Set Script URL first.');
+    return;
+  }
+
+  try {
+    updateSyncStatus('warn', 'Pulling from sheet...');
+    const result = await requestSheetPull(url);
+    const incomingDb = extractDbFromSyncResult(result);
+    if (!incomingDb) throw new Error('No db payload returned from Google Sheets.');
+
+    db = mergeDbNonDestructive(canonicalizeDbShape(db), canonicalizeDbShape(incomingDb));
+    save(true);
+
+    const active = document.querySelector('.page.active');
+    renderDash();
+    renderReports();
+    renderSettings();
+    if (active) render(active.id.replace('page-', ''));
+
+    updateSyncStatus('ok', 'Pulled from sheet');
+    if (!silent) alert('Data loaded successfully from Google Sheets.');
+  } catch (error) {
+    console.error('Google Sheets load failed:', error);
+    updateSyncStatus('err', 'Pull failed');
+    if (!silent) alert('Failed to pull data from Google Sheets.\n\n' + error.message);
+  }
 }
 
 async function attemptPushToGoogleSheet(url) {
@@ -4676,7 +4466,39 @@ async function attemptPushToGoogleSheet(url) {
 }
 
 async function pushToGoogleSheet(options = {}) {
-  alert('Push to Google Sheets is disabled. Saving now goes directly to Supabase.');
+  const { silent = false, source = 'manual' } = options;
+  const url = getScriptUrl();
+  if (!url) {
+    updateSyncStatus('warn', 'No script URL');
+    if (!silent) alert('Please click Set Script URL first.');
+    return;
+  }
+
+  try {
+    if (isAutoPushing) return;
+    isAutoPushing = true;
+    updateSyncStatus('warn', silent ? 'Auto-saving to sheet...' : 'Pushing to sheet...');
+    await attemptPushToGoogleSheet(url);
+    lastAutoPushAt = Date.now();
+    updateSyncStatus('ok', silent ? 'Auto-saved to sheet' : 'Pushed to sheet');
+    if (!silent) alert('Data saved successfully to Google Sheets.');
+  } catch (error) {
+    const msg = String(error && error.message ? error.message : error);
+    const needsPullFirst = /pull\s*first|load\s*first|sync\s*first|initialize/i.test(msg);
+    if (needsPullFirst) {
+      console.error('Google Sheets save blocked by Apps Script:', error);
+      updateSyncStatus('err', 'Sheet blocked save');
+      const message = 'Your HTML is now saving locally first, but your Apps Script backend is blocking direct save and asking for a pull first. That backend rule is what prevents true auto-save to Sheets.\n\nYour new data is still safe in this device because CathOS already saved it locally.\n\nTo make every save go straight to Sheets, the Apps Script must allow save without requiring a pull first.';
+      if (!silent) alert(message + '\n\nOriginal error: ' + msg);
+      return;
+    }
+
+    console.error('Google Sheets save failed:', error);
+    updateSyncStatus('err', 'Push failed');
+    if (!silent) alert('Failed to push data to Google Sheets.\n\n' + msg);
+  } finally {
+    isAutoPushing = false;
+  }
 }
 
 window.addEventListener('load', () => { bootCathOSAuth(); });
@@ -5067,6 +4889,357 @@ function renderTransactions() {
     return `<tr><td class="mono">${t.date||'—'}</td><td>${t.desc||'—'}</td><td><span class="badge badge-blue">${t.cat||'—'}</span></td><td>${t.subcat||'—'}</td><td>${t.acct||'—'}</td><td><span class="badge ${typeClass}">${t.type||'—'}</span></td><td class="${amountClass}">${fmt(t.amount)}</td><td style="color:var(--text3)">${t.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editTransaction(${t.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('transactions', t.id)}</div></td></tr>`;
   }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No transactions found for this filter</div></div></td></tr>`;
 }
+
+
+// ─── SUPABASE OVERRIDES ───
+function updateSyncStatus(state = 'ok', text) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-status');
+  if (!dot || !label) return;
+  dot.classList.remove('ok', 'warn', 'err');
+  dot.classList.add(state === 'err' ? 'err' : state === 'warn' ? 'warn' : 'ok');
+  label.textContent = text || 'Supabase connected';
+}
+
+function configureSync() {
+  alert('CathOS is using Supabase.\n\nProject URL:\n' + SUPABASE_URL + '\n\nThis banner no longer uses Google Sheets.');
+}
+
+function mapSupabaseTransactionRow(row) {
+  const rawType = String(row.type || '').trim();
+  const normalizedTypeMap = {
+    bill: 'Expense',
+    bills: 'Expense',
+    subscription: 'Expense',
+    subscriptions: 'Expense',
+    savings: 'Investment',
+    debt: 'Expense',
+    expense: 'Expense',
+    expenses: 'Expense',
+    income: 'Income',
+    investment: 'Investment',
+    'capital deployment': 'Investment'
+  };
+  const lowerType = rawType.toLowerCase();
+  return {
+    id: row.id || uid(),
+    date: row.txn_date || row.date || '',
+    desc: row.description || row.desc || '',
+    type: normalizedTypeMap[lowerType] || (rawType ? rawType.charAt(0).toUpperCase() + rawType.slice(1) : 'Expense'),
+    amount: parseFloat(row.amount || 0) || 0,
+    acct: row.acct || row.account_name || row.account || '',
+    cat: row.cat || row.category || '',
+    subcat: row.subcat || row.subcategory || '',
+    notes: row.notes || ''
+  };
+}
+
+function mapSupabaseAccountRow(row) {
+  return {
+    id: row.id || uid(),
+    group: row.group_name || row.group || 'personal',
+    name: row.name || '',
+    bank: row.bank || '',
+    purpose: row.purpose || '',
+    currency: row.currency || 'PHP',
+    balance: parseFloat(row.balance || 0) || 0,
+    updated: row.updated || (row.created_at ? String(row.created_at).slice(0,10) : today())
+  };
+}
+
+function mapSupabaseCreditCardRow(row) {
+  return normalizeCreditCardRecord({
+    id: row.id,
+    name: row.name,
+    issuer: row.issuer,
+    last4: row.last4,
+    limit: row.credit_limit ?? row.limit,
+    balance: row.balance,
+    dueDay: row.due_day ?? row.dueDay,
+    statementDay: row.statement_day ?? row.statementDay,
+    minDue: row.min_due ?? row.minDue,
+    rewardRate: row.reward_rate ?? row.rewardRate,
+    notes: row.notes
+  });
+}
+
+function mapSupabaseLendingRow(row) {
+  return {
+    id: row.id || uid(),
+    name: row.borrower_name || row.name || '',
+    date: row.date_lent || row.date || '',
+    amount: parseFloat(row.amount_lent || row.amount || 0) || 0,
+    repaid: parseFloat(row.amount_repaid || row.repaid || 0) || 0,
+    due: row.due_date || row.due || '',
+    notes: row.notes || ''
+  };
+}
+
+function mapSupabaseInvestmentRow(row) {
+  return {
+    id: row.id || uid(),
+    name: row.name || '',
+    type: row.type || '',
+    invested: parseFloat(row.amount_invested ?? row.invested ?? 0) || 0,
+    current: parseFloat(row.current_value ?? row.current ?? 0) || 0,
+    notes: row.notes || ''
+  };
+}
+
+function mapSupabaseBudgetRow(row) {
+  return {
+    id: row.id || uid(),
+    month: row.budget_month || row.month || '',
+    cat: row.category || row.cat || '',
+    plan: parseFloat(row.planned_amount ?? row.plan ?? 0) || 0,
+    actual: parseFloat(row.actual_amount ?? row.actual ?? 0) || 0
+  };
+}
+
+function mapSupabaseSalaryRow(row) {
+  return {
+    id: row.id || uid(),
+    month: row.alloc_month || row.month || '',
+    amount: parseFloat(row.salary_amount ?? row.amount ?? 0) || 0,
+    cat: row.bucket || row.cat || '',
+    acct: row.account_name || row.acct || '',
+    alloc: parseFloat(row.allocated_amount ?? row.alloc ?? 0) || 0,
+    notes: row.notes || ''
+  };
+}
+
+function mapSupabaseNetWorthRow(row) {
+  return {
+    id: row.id || uid(),
+    type: row.item_type || row.type || 'Asset',
+    cat: row.category || row.cat || '',
+    name: row.name || '',
+    initialVal: parseFloat(row.initial_value ?? row.initialVal ?? row.val ?? 0) || 0,
+    val: parseFloat(row.initial_value ?? row.initialVal ?? row.val ?? 0) || 0,
+    assetMode: row.asset_mode || row.assetMode || 'standard',
+    startYear: row.start_year || row.startYear || '',
+    years: row.years || '',
+    yearlyDecrease: parseFloat(row.yearly_decrease ?? row.yearlyDecrease ?? 0) || 0,
+    monthlyPayment: parseFloat(row.monthly_payment ?? row.monthlyPayment ?? 0) || 0,
+    depreciationStart: row.depreciation_start || row.depreciationStart || '',
+    appreciationRate: parseFloat(row.appreciation_rate ?? row.appreciationRate ?? 0) || 0
+  };
+}
+
+async function supabaseSelect(table) {
+  if (!supabaseClient) return [];
+  const { data, error } = await supabaseClient.from(table).select('*');
+  if (error) {
+    console.error('Supabase load failed for ' + table, error);
+    return [];
+  }
+  return data || [];
+}
+
+async function hydrateDbFromSupabase() {
+  if (!supabaseClient) {
+    updateSyncStatus('err', 'Supabase client missing');
+    return;
+  }
+
+  const [
+    transactionsRows,
+    accountsRows,
+    creditCardRows,
+    lendingRows,
+    investmentRows,
+    budgetRows,
+    salaryRows,
+    netWorthRows
+  ] = await Promise.all([
+    supabaseSelect('transactions'),
+    supabaseSelect('accounts'),
+    supabaseSelect('credit_cards'),
+    supabaseSelect('lending'),
+    supabaseSelect('investments'),
+    supabaseSelect('budgets'),
+    supabaseSelect('salary_allocations'),
+    supabaseSelect('net_worth')
+  ]);
+
+  if (transactionsRows.length) db.transactions = transactionsRows.map(mapSupabaseTransactionRow);
+  if (accountsRows.length) db.accounts = accountsRows.map(mapSupabaseAccountRow);
+  if (creditCardRows.length) db.creditcards = creditCardRows.map(mapSupabaseCreditCardRow);
+  if (lendingRows.length) db.lend = lendingRows.map(mapSupabaseLendingRow);
+  if (investmentRows.length) db.investments = investmentRows.map(mapSupabaseInvestmentRow);
+  if (budgetRows.length) db.budget = budgetRows.map(mapSupabaseBudgetRow);
+  if (salaryRows.length) db.salary = salaryRows.map(mapSupabaseSalaryRow);
+  if (netWorthRows.length) db.networth = netWorthRows.map(mapSupabaseNetWorthRow);
+
+  save(true);
+  updateSyncStatus('ok', 'Supabase connected');
+}
+
+function mapTransactionToSupabaseRow(item) {
+  return {
+    id: String(item.id),
+    txn_date: item.date || null,
+    description: item.desc || '',
+    type: item.type || '',
+    amount: parseFloat(item.amount || 0) || 0,
+    acct: item.acct || '',
+    cat: item.cat || '',
+    subcat: item.subcat || '',
+    notes: item.notes || ''
+  };
+}
+function mapAccountToSupabaseRow(item) {
+  return {
+    id: String(item.id),
+    name: item.name || '',
+    bank: item.bank || '',
+    group_name: item.group || '',
+    purpose: item.purpose || '',
+    currency: item.currency || 'PHP',
+    balance: parseFloat(item.balance || 0) || 0
+  };
+}
+function mapCreditCardToSupabaseRow(item) {
+  return {
+    id: String(item.id),
+    name: item.name || '',
+    issuer: item.issuer || '',
+    last4: item.last4 || '',
+    credit_limit: parseFloat(item.limit || 0) || 0,
+    balance: parseFloat(item.balance || 0) || 0,
+    due_day: item.dueDay ? parseInt(item.dueDay, 10) : null,
+    statement_day: item.statementDay ? parseInt(item.statementDay, 10) : null,
+    min_due: parseFloat(item.minDue || 0) || 0,
+    reward_rate: parseFloat(item.rewardRate || 0) || 0,
+    notes: item.notes || ''
+  };
+}
+function mapLendingToSupabaseRow(item) {
+  return {
+    id: String(item.id),
+    borrower_name: item.name || '',
+    date_lent: item.date || null,
+    amount_lent: parseFloat(item.amount || 0) || 0,
+    amount_repaid: parseFloat(item.repaid || 0) || 0,
+    due_date: item.due || null,
+    status: ((parseFloat(item.amount || 0) - parseFloat(item.repaid || 0)) <= 0) ? 'Paid' : 'Pending',
+    notes: item.notes || ''
+  };
+}
+function mapInvestmentToSupabaseRow(item) {
+  return {
+    id: String(item.id),
+    name: item.name || '',
+    type: item.type || '',
+    amount_invested: parseFloat(item.invested || 0) || 0,
+    current_value: parseFloat(item.current || 0) || 0,
+    notes: item.notes || ''
+  };
+}
+function mapBudgetToSupabaseRow(item) {
+  return {
+    id: String(item.id),
+    budget_month: item.month || '',
+    category: item.cat || '',
+    planned_amount: parseFloat(item.plan || 0) || 0,
+    actual_amount: parseFloat(item.actual || 0) || 0
+  };
+}
+function mapSalaryToSupabaseRow(item) {
+  return {
+    id: String(item.id),
+    alloc_month: item.month || '',
+    salary_amount: parseFloat(item.amount || 0) || 0,
+    bucket: item.cat || '',
+    account_name: item.acct || '',
+    allocated_amount: parseFloat(item.alloc || 0) || 0,
+    notes: item.notes || ''
+  };
+}
+function mapNetWorthToSupabaseRow(item) {
+  return {
+    id: String(item.id),
+    item_type: item.type || '',
+    category: item.cat || '',
+    name: item.name || '',
+    initial_value: parseFloat(item.initialVal ?? item.val ?? 0) || 0,
+    asset_mode: item.assetMode || 'standard',
+    start_year: item.startYear ? parseInt(item.startYear, 10) : null,
+    years: item.years ? parseInt(item.years, 10) : null,
+    yearly_decrease: parseFloat(item.yearlyDecrease || 0) || 0,
+    monthly_payment: parseFloat(item.monthlyPayment || 0) || 0,
+    depreciation_start: item.depreciationStart || null,
+    appreciation_rate: parseFloat(item.appreciationRate || 0) || 0
+  };
+}
+
+async function upsertRows(table, rows) {
+  if (!supabaseClient || !rows.length) return;
+  const { error } = await supabaseClient.from(table).upsert(rows, { onConflict: 'id' });
+  if (error) throw error;
+}
+
+async function pushToGoogleSheet(options = {}) {
+  try {
+    updateSyncStatus('warn', 'Saving to Supabase...');
+    await Promise.all([
+      upsertRows('transactions', (db.transactions || []).map(mapTransactionToSupabaseRow)),
+      upsertRows('accounts', (db.accounts || []).map(mapAccountToSupabaseRow)),
+      upsertRows('credit_cards', (db.creditcards || []).map(mapCreditCardToSupabaseRow)),
+      upsertRows('lending', (db.lend || []).map(mapLendingToSupabaseRow)),
+      upsertRows('investments', (db.investments || []).map(mapInvestmentToSupabaseRow)),
+      upsertRows('budgets', (db.budget || []).map(mapBudgetToSupabaseRow)),
+      upsertRows('salary_allocations', (db.salary || []).map(mapSalaryToSupabaseRow)),
+      upsertRows('net_worth', (db.networth || []).map(mapNetWorthToSupabaseRow))
+    ]);
+    updateSyncStatus('ok', 'Saved to Supabase');
+    if (!options.silent) alert('CathOS data saved to Supabase.');
+  } catch (error) {
+    console.error('Supabase save failed:', error);
+    updateSyncStatus('err', 'Supabase save failed');
+    if (!options.silent) alert('Failed to save to Supabase.\n\n' + (error.message || error));
+  }
+}
+
+async function loadFromGoogleSheet(options = {}) {
+  try {
+    updateSyncStatus('warn', 'Refreshing from Supabase...');
+    await hydrateDbFromSupabase();
+    const active = document.querySelector('.page.active');
+    renderDash();
+    renderReports();
+    renderSettings();
+    if (active) render(active.id.replace('page-', ''));
+    updateSyncStatus('ok', 'Refreshed from Supabase');
+    if (!options.silent) alert('CathOS data refreshed from Supabase.');
+  } catch (error) {
+    console.error('Supabase refresh failed:', error);
+    updateSyncStatus('err', 'Supabase refresh failed');
+    if (!options.silent) alert('Failed to refresh from Supabase.\n\n' + (error.message || error));
+  }
+}
+
+async function initCathOSApp() {
+  if (cathosInitialized) return;
+  cathosInitialized = true;
+  db = mergeWithDefaults(canonicalizeDbShape(db));
+  try {
+    await hydrateDbFromSupabase();
+  } catch (e) {
+    console.warn('Supabase hydrate skipped:', e);
+  }
+  renderDash();
+  renderReports();
+  renderSettings();
+  const active = document.querySelector('.page.active');
+  if (active) render(active.id.replace('page-', ''));
+  document.querySelectorAll('input[type="date"]').forEach(el => { if (!el.value) el.value = today(); });
+  document.querySelectorAll('input[type="month"]').forEach(el => { if (!el.value) el.value = today().slice(0,7); });
+  const salaryReview = document.getElementById('salary-review-month');
+  if (salaryReview && !salaryReview.value) salaryReview.value = today().slice(0,7);
+  updateSyncStatus('ok', 'Supabase connected');
+}
+
 
 // Add 'yearly' to render function
 const renderFns = { dashboard: renderDash, transactions: renderTransactions, budget: renderBudget, salary: renderSalary, lend: renderLend, accounts: renderAccounts, business: renderBusiness, rainy: renderRainy, investments: renderInvestments, networth: renderNetWorth, sugarcane: renderSugarcane, reports: renderReports, settings: renderSettings, yearly: renderYearly };
