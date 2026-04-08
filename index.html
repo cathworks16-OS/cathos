@@ -1522,17 +1522,44 @@ function confirmDeleteRecord(collection, id) {
 function fmt(n) { return '₱' + (+n||0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtCur(n, cur) { return cur === 'USD' ? '$' + (+n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : fmt(n); }
 function fmtPct(n) { const num = +n || 0; return (num > 0 ? '+' : '') + num.toFixed(2) + '%'; }
+function looksLikeUUID(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+}
+
 function uid() {
   if (window.crypto && typeof window.crypto.randomUUID === 'function') {
     return window.crypto.randomUUID();
   }
-
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
+
+function ensureUuid(value) {
+  return looksLikeUUID(value) ? String(value) : uid();
+}
+
+function migrateLegacyIdsInDb() {
+  const collections = ['transactions','accounts','creditcards','lend','investments','networth','budget','salary',
+    'sugarcane','sugarcane_proj','sugarcaneActuals','sugarcaneInvestmentLogs','sugarcaneHarvestExpenses','sugarcaneHarvestIncome','sugarcaneLandStrategy','sugarcaneProjection'];
+  let changed = false;
+  collections.forEach(collection => {
+    if (!Array.isArray(db[collection])) return;
+    db[collection] = db[collection].map(item => {
+      if (!item || typeof item !== 'object') return item;
+      const nextId = ensureUuid(item.id);
+      if (String(item.id || '') !== nextId) {
+        changed = true;
+        return { ...item, id: nextId };
+      }
+      return item;
+    });
+  });
+  if (changed) save(true);
+}
+
 function safeArray(value, fallback = []) {
   if (Array.isArray(value)) return value;
   if (typeof value === 'string') {
@@ -4931,7 +4958,7 @@ function mapSupabaseTransactionRow(row) {
   };
   const lowerType = rawType.toLowerCase();
   return {
-    id: row.id || uid(),
+    id: ensureUuid(row.id),
     date: row.txn_date || row.date || '',
     desc: row.description || row.desc || '',
     type: normalizedTypeMap[lowerType] || (rawType ? rawType.charAt(0).toUpperCase() + rawType.slice(1) : 'Expense'),
@@ -4945,7 +4972,7 @@ function mapSupabaseTransactionRow(row) {
 
 function mapSupabaseAccountRow(row) {
   return {
-    id: row.id || uid(),
+    id: ensureUuid(row.id),
     group: row.group_name || row.group || 'personal',
     name: row.name || '',
     bank: row.bank || '',
@@ -4974,7 +5001,7 @@ function mapSupabaseCreditCardRow(row) {
 
 function mapSupabaseLendingRow(row) {
   return {
-    id: row.id || uid(),
+    id: ensureUuid(row.id),
     name: row.borrower_name || row.name || '',
     date: row.date_lent || row.date || '',
     amount: parseFloat(row.amount_lent || row.amount || 0) || 0,
@@ -4986,7 +5013,7 @@ function mapSupabaseLendingRow(row) {
 
 function mapSupabaseInvestmentRow(row) {
   return {
-    id: row.id || uid(),
+    id: ensureUuid(row.id),
     name: row.name || '',
     type: row.type || '',
     invested: parseFloat(row.amount_invested ?? row.invested ?? 0) || 0,
@@ -4997,7 +5024,7 @@ function mapSupabaseInvestmentRow(row) {
 
 function mapSupabaseBudgetRow(row) {
   return {
-    id: row.id || uid(),
+    id: ensureUuid(row.id),
     month: row.budget_month || row.month || '',
     cat: row.category || row.cat || '',
     plan: parseFloat(row.planned_amount ?? row.plan ?? 0) || 0,
@@ -5007,7 +5034,7 @@ function mapSupabaseBudgetRow(row) {
 
 function mapSupabaseSalaryRow(row) {
   return {
-    id: row.id || uid(),
+    id: ensureUuid(row.id),
     month: row.alloc_month || row.month || '',
     amount: parseFloat(row.salary_amount ?? row.amount ?? 0) || 0,
     cat: row.bucket || row.cat || '',
@@ -5019,7 +5046,7 @@ function mapSupabaseSalaryRow(row) {
 
 function mapSupabaseNetWorthRow(row) {
   return {
-    id: row.id || uid(),
+    id: ensureUuid(row.id),
     type: row.item_type || row.type || 'Asset',
     cat: row.category || row.cat || '',
     name: row.name || '',
@@ -5086,7 +5113,7 @@ async function hydrateDbFromSupabase() {
 
 function mapTransactionToSupabaseRow(item) {
   return {
-    id: String(item.id),
+    id: ensureUuid(item.id),
     txn_date: item.date || null,
     description: item.desc || '',
     type: item.type || '',
@@ -5099,7 +5126,7 @@ function mapTransactionToSupabaseRow(item) {
 }
 function mapAccountToSupabaseRow(item) {
   return {
-    id: String(item.id),
+    id: ensureUuid(item.id),
     name: item.name || '',
     bank: item.bank || '',
     group_name: item.group || '',
@@ -5110,7 +5137,7 @@ function mapAccountToSupabaseRow(item) {
 }
 function mapCreditCardToSupabaseRow(item) {
   return {
-    id: String(item.id),
+    id: ensureUuid(item.id),
     name: item.name || '',
     issuer: item.issuer || '',
     last4: item.last4 || '',
@@ -5125,7 +5152,7 @@ function mapCreditCardToSupabaseRow(item) {
 }
 function mapLendingToSupabaseRow(item) {
   return {
-    id: String(item.id),
+    id: ensureUuid(item.id),
     borrower_name: item.name || '',
     date_lent: item.date || null,
     amount_lent: parseFloat(item.amount || 0) || 0,
@@ -5137,7 +5164,7 @@ function mapLendingToSupabaseRow(item) {
 }
 function mapInvestmentToSupabaseRow(item) {
   return {
-    id: String(item.id),
+    id: ensureUuid(item.id),
     name: item.name || '',
     type: item.type || '',
     amount_invested: parseFloat(item.invested || 0) || 0,
@@ -5147,7 +5174,7 @@ function mapInvestmentToSupabaseRow(item) {
 }
 function mapBudgetToSupabaseRow(item) {
   return {
-    id: String(item.id),
+    id: ensureUuid(item.id),
     budget_month: item.month || '',
     category: item.cat || '',
     planned_amount: parseFloat(item.plan || 0) || 0,
@@ -5156,7 +5183,7 @@ function mapBudgetToSupabaseRow(item) {
 }
 function mapSalaryToSupabaseRow(item) {
   return {
-    id: String(item.id),
+    id: ensureUuid(item.id),
     alloc_month: item.month || '',
     salary_amount: parseFloat(item.amount || 0) || 0,
     bucket: item.cat || '',
@@ -5167,7 +5194,7 @@ function mapSalaryToSupabaseRow(item) {
 }
 function mapNetWorthToSupabaseRow(item) {
   return {
-    id: String(item.id),
+    id: ensureUuid(item.id),
     item_type: item.type || '',
     category: item.cat || '',
     name: item.name || '',
@@ -5190,6 +5217,7 @@ async function upsertRows(table, rows) {
 
 async function pushToGoogleSheet(options = {}) {
   try {
+    migrateLegacyIdsInDb();
     updateSyncStatus('warn', 'Saving to Supabase...');
     await Promise.all([
       upsertRows('transactions', (db.transactions || []).map(mapTransactionToSupabaseRow)),
@@ -5232,6 +5260,7 @@ async function initCathOSApp() {
   if (cathosInitialized) return;
   cathosInitialized = true;
   db = mergeWithDefaults(canonicalizeDbShape(db));
+  migrateLegacyIdsInDb();
   try {
     await hydrateDbFromSupabase();
   } catch (e) {
