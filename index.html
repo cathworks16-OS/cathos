@@ -655,14 +655,11 @@ tr.subcat-row.visible{display:table-row}
 
   <div class="sync-banner">
     <div>
-      <div class="sync-banner-title">Google Sheets Sync</div>
-      <div class="sync-banner-sub">Connect your Google Apps Script web app URL, then push or pull CathOS data live.</div>
-    </div>
-    <div class="top-actions">
-      <span class="sync-pill"><span class="sync-dot" id="sync-dot"></span><span id="sync-status">Local only</span></span>
-      <button class="btn btn-soft" onclick="configureSync()">Set Script URL</button>
-      <button class="btn btn-ghost" onclick="loadFromGoogleSheet()">Pull from Sheet</button>
-      <button class="btn btn-primary" onclick="pushToGoogleSheet()">Push to Sheet</button>
+    <div class="sync-banner-title">Supabase Sync</div>
+<div class="sync-banner-sub">CathOS is connected to Supabase. Your data is loaded and saved from the live database.</div>
+...
+<button class="btn btn-soft" onclick="loadFromGoogleSheet()">Refresh Data</button>
+<button class="btn btn-primary" onclick="pushToGoogleSheet()">Save to Supabase</button>
       <button class="btn btn-ghost logout-btn" onclick="logoutCathOS()">Logout</button>
     </div>
   </div>
