@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CathOS — Personal Wealth Operating System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #F7F3EF;
+    --surface: #FFFFFF;
+    --surface2: #EFE7E1;
+    --border: #E2D6CE;
+    --accent: #4A5A49;
+    --accent2: #6B8F71;
+    --accent3: #B06A5A;
+    --accent4: #A7B3A5;
+    --mustard: #D8A45A;
+    --rust: #B77A44;
+    --brick: #8A5A4A;
+    --text: #2F2F2F;
+    --text2: #6F5B55;
+    --text3: #A89B94;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 13px;
+  }
+
+  .auth-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #F7F3EF 0%, #EFE7E1 45%, #F4EEE8 100%);
+    z-index: 6000;
+  }
+
+  .auth-card {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(226, 214, 206, 0.9);
+    border-radius: 28px;
+    padding: 30px;
+    box-shadow: 0 30px 80px rgba(47, 47, 47, 0.14);
+  }
+
+  .auth-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    color: var(--accent);
+    line-height: 1.05;
+    margin-bottom: 8px;
+  }
+
+  .auth-sub {
+    font-size: 12px;
+    color: var(--text3);
+    line-height: 1.7;
+    margin-bottom: 18px;
+  }
+
+  .loading-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    z-index: 5000;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 238px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .logo { padding: 22px 20px 18px; border-bottom: 1px solid var(--border); }
+  .logo-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--accent); }
+  .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 1.9px; text-transform: uppercase; margin-top: 2px; }
+
+  .nav-section { padding: 14px 12px 6px; }
+  .nav-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); padding: 0 8px; margin-bottom: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 10px;
+    cursor: pointer; font-size: 12px; color: var(--text2); transition: all 0.15s;
+    margin-bottom: 2px; border: 1px solid transparent;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(74, 90, 73, 0.10); color: var(--accent); border-color: rgba(74, 90, 73, 0.12); }
+  .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+
+  .main { margin-left: 238px; min-height: 100vh; padding: 30px 30px 70px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
+  }
+
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700; color: var(--text); line-height: 1;
+  }
+
+  .page-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  .card-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+  .card-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 21px; font-weight: 500; color: var(--text);
+  }
+
+  .card-value.accent { color: var(--accent); }
+  .card-value.green { color: var(--accent2); }
+  .card-value.red { color: var(--accent3); }
+  .card-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .table-wrap {
+    overflow-x: auto; border-radius: 14px; border: 1px solid var(--border);
+    background: var(--surface); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #F6F0EB; }
+  th {
+    padding: 11px 14px; text-align: left;
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text3); font-weight: 600;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 14px; font-size: 12px; color: var(--text2);
+    border-bottom: 1px solid rgba(226, 214, 206, 0.75); vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(239, 231, 225, 0.5); }
+
+  td.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+  td.positive { color: var(--accent2); font-family: 'DM Mono', monospace; }
+  td.negative { color: var(--accent3); font-family: 'DM Mono', monospace; }
+  td.accent { color: var(--accent); font-family: 'DM Mono', monospace; }
+
+  .badge {
+    display: inline-block; padding: 3px 8px; border-radius: 999px;
+    font-size: 10px; font-weight: 600;
+  }
+
+  .badge-green { background: rgba(107, 143, 113, 0.14); color: var(--accent2); }
+  .badge-yellow { background: rgba(216, 164, 90, 0.16); color: var(--mustard); }
+  .badge-red { background: rgba(176, 106, 90, 0.14); color: var(--accent3); }
+  .badge-blue { background: rgba(167, 179, 165, 0.18); color: var(--accent); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 14px; border-radius: 10px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    border: none; transition: all 0.15s; font-family: 'Inter', sans-serif;
+  }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #3d4b3c; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover:not(:disabled) { color: var(--text); }
+
+  .form-row { display: grid; gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 11px; color: var(--text3); letter-spacing: 0.5px; }
+  .form-group input, .form-group select, .form-group textarea {
+    background: #fff; border: 1px solid var(--border);
+    color: var(--text); padding: 10px 12px; border-radius: 10px;
+    font-size: 12px; font-family: 'Inter', sans-serif;
+    outline: none; transition: border-color 0.15s;
+  }
+
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent4);
+    box-shadow: 0 0 0 3px rgba(74, 90, 73, 0.08);
+  }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(47, 47, 47, 0.38); z-index: 999;
+    align-items: center; justify-content: center;
+    padding: 18px;
+  }
+
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 24px; width: 560px;
+    max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  }
+
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 19px; }
+  .modal-close { cursor: pointer; background: none; border: none; color: var(--text2); font-size: 22px; }
+
+  .sync-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap; background: rgba(255, 255, 255, 0.9); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 18px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+  }
+
+  .sync-banner-title { font-size: 12px; font-weight: 700; color: var(--accent); }
+  .sync-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.82); color: var(--text2);
+    font-size: 11px; font-weight: 600;
+  }
+
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); }
+
+  .alert-item {
+    display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px;
+    border-radius: 12px; border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  .alert-item.ok { background: rgba(107, 143, 113, 0.08); border-color: rgba(107, 143, 113, 0.18); }
+  .alert-item.warn { background: rgba(216, 164, 90, 0.10); border-color: rgba(216, 164, 90, 0.2); }
+
+  .alert-icon { font-size: 16px; line-height: 1.2; }
+  .alert-title { font-size: 12px; font-weight: 700; color: var(--text); }
+  .alert-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-icon { font-size: 32px; margin-bottom: 10px; }
+  .empty-text { font-size: 13px; }
+
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .mb-14 { margin-bottom: 14px; }
+  .flex { display: flex; }
+  .gap-10 { gap: 10px; }
+  .gap-14 { gap: 14px; }
+  .text-right { text-align: right; }
+  .w-full { width: 100%; }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+    max-width: 300px;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .toast.success { border-left: 3px solid var(--accent2); }
+  .toast.error { border-left: 3px solid var(--accent3); }
+
+  @media (max-width: 900px) {
+    .sidebar { position: relative; width: 100%; height: auto; }
+    .main { margin-left: 0; padding: 20px; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .modal { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-title">Welcome to CathOS</div>
+    <div class="auth-sub">Personal Wealth Operating System. Sign in to get started.</div>
+
+    <div id="auth-form" style="display:block;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="auth-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+      </div>
+      <button class="btn btn-primary w-full" onclick="doLogin()">Sign In</button>
+      <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--text3);">
+        <div>Demo Account:</div>
+        <div style="font-family:'DM Mono',monospace;margin-top:4px;">
+          demo@cathos.app / Demo123!
+        </div>
+      </div>
+    </div>
+
+    <div id="auth-loading" style="display:none;text-align:center;">
+      <div class="spinner" style="width:40px;height:40px;margin:0 auto 16px;"></div>
+      <div style="color:var(--text2);font-size:12px;">Connecting...</div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="app-sidebar" style="display:none;">
+  <div class="logo">
+    <div class="logo-title">CathOS</div>
+    <div class="logo-sub">Demo Edition</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">🏠</span> Dashboard</div>
+    <div class="nav-item" onclick="navigate('yearlyreading')"><span class="icon">📖</span> Yearly Reading</div>
+    <div class="nav-item" onclick="navigate('networth')"><span class="icon">📊</span> Net Worth</div>
+    <div class="nav-item" onclick="navigate('reports')"><span class="icon">🧾</span> Reports</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Transactions</div>
+    <div class="nav-item" onclick="navigate('transactions')"><span class="icon">📋</span> Transaction Logs</div>
+    <div class="nav-item" onclick="navigate('budget')"><span class="icon">📅</span> Monthly Budget</div>
+    <div class="nav-item" onclick="navigate('salary')"><span class="icon">💸</span> Salary Allocation</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Bank Accounts</div>
+    <div class="nav-item" onclick="navigate('accounts')"><span class="icon">💖</span> Personal Accounts</div>
+    <div class="nav-item" onclick="navigate('business')"><span class="icon">🏢</span> Business Accounts</div>
+    <div class="nav-item" onclick="navigate('reserves')"><span class="icon">🏖️</span> Rainy Day Reserve</div>
+    <div class="nav-item" onclick="navigate('creditcards')"><span class="icon">💳</span> Credit Cards</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Tracking</div>
+    <div class="nav-item" onclick="navigate('lending')"><span class="icon">🤝</span> Lending Tracker</div>
+    <div class="nav-item" onclick="navigate('investments')"><span class="icon">🌙</span> Investments</div>
+    <div class="nav-item" onclick="navigate('farm')"><span class="icon">🌾</span> Sugarcane Farm</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="navigate('settings')"><span class="icon">⚙️</span> Settings</div>
+    <div class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Logout</div>
+  </div>
+</nav>
+
+<!-- MAIN APP -->
+<main class="main" id="app-main" style="display:none;">
+  <div class="sync-banner">
+    <div>
+      <div class="sync-banner-title">Demo Mode Active</div>
+      <div style="font-size: 11px; color: var(--text3); margin-top: 3px;">Data stored in memory</div>
+    </div>
+    <div class="flex gap-10" style="flex-wrap:wrap;align-items:center;">
+      <span class="sync-pill"><span class="sync-dot"></span><span>Connected</span></span>
+      <button class="btn btn-ghost" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Good day! 👋</div>
+        <div class="page-sub">Your financial system at a glance</div>
+      </div>
+    </div>
+
+    <div class="grid grid-4 mb-14">
+      <div class="card">
+        <div class="card-label">Total Net Worth</div>
+        <div class="card-value accent">₱0.00</div>
+        <div class="card-sub">Assets − Liabilities</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Total Bank Balance</div>
+        <div class="card-value green">₱0.00</div>
+        <div class="card-sub">All accounts combined</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Outstanding Loans</div>
+        <div class="card-value red">₱0.00</div>
+        <div class="card-sub">Money lent out</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Investment Value</div>
+        <div class="card-value">₱0.00</div>
+        <div class="card-sub">Current portfolio value</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2 gap-14 mb-14">
+      <div class="card">
+        <div class="section-title">Welcome</div>
+        <div class="empty">
+          <div class="empty-icon">✨</div>
+          <div class="empty-text">All systems ready. Start tracking your wealth!</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Quick Start</div>
+        <div style="padding: 20px; text-align: center; font-size: 12px; color: var(--text3); line-height: 1.6;">
+          • Add your accounts<br>
+          • Track transactions<br>
+          • Plan your budget<br>
+          • Monitor investments
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS PAGE -->
+  <div class="page" id="page-transactions">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Transaction Logs</div>
+        <div class="page-sub">All income and expense entries</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">No transactions yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNTS PAGE -->
+  <div class="page" id="page-accounts">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Personal Accounts</div>
+        <div class="page-sub">Bank accounts and savings</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">🏦</div>
+        <div class="empty-text">No accounts yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUSINESS PAGE -->
+  <div class="page" id="page-business">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Business Accounts</div>
+        <div class="page-sub">Operating and investment accounts</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">🏢</div>
+        <div class="empty-text">No business accounts yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESERVES PAGE -->
+  <div class="page" id="page-reserves">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Rainy Day Reserve</div>
+        <div class="page-sub">Emergency and contingency funds</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">🏖️</div>
+        <div class="empty-text">No reserves yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FARM PAGE -->
+  <div class="page" id="page-farm">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Sugarcane Farm</div>
+        <div class="page-sub">Production and financial tracking</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">🌾</div>
+        <div class="empty-text">No farm entries yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YEARLY READING PAGE -->
+  <div class="page" id="page-yearlyreading">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Yearly Reading</div>
+        <div class="page-sub">Annual financial summary and review</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">📖</div>
+        <div class="empty-text">No yearly readings yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NET WORTH PAGE -->
+  <div class="page" id="page-networth">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Net Worth Tracker</div>
+        <div class="page-sub">Assets vs liabilities</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">📊</div>
+        <div class="empty-text">No net worth items yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET PAGE -->
+  <div class="page" id="page-budget">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Monthly Budget</div>
+        <div class="page-sub">Planned vs actual spending</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">📅</div>
+        <div class="empty-text">No budgets yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALARY PAGE -->
+  <div class="page" id="page-salary">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Salary Allocation</div>
+        <div class="page-sub">Protect → Build → Scale</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">💸</div>
+        <div class="empty-text">No salary entries yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREDIT CARDS PAGE -->
+  <div class="page" id="page-creditcards">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Credit Cards</div>
+        <div class="page-sub">Track limits, balances, and due dates</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">💳</div>
+        <div class="empty-text">No credit cards yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LENDING PAGE -->
+  <div class="page" id="page-lending">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Lending Tracker</div>
+        <div class="page-sub">Money lent and repayments</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">🤝</div>
+        <div class="empty-text">No loans yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVESTMENTS PAGE -->
+  <div class="page" id="page-investments">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Investments</div>
+        <div class="page-sub">Portfolio tracking</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">🌙</div>
+        <div class="empty-text">No investments yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS PAGE -->
+  <div class="page" id="page-reports">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Reports</div>
+        <div class="page-sub">CFO-level view of your finances</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">🧾</div>
+        <div class="empty-text">No data to report yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PAGE -->
+  <div class="page" id="page-settings">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Settings</div>
+        <div class="page-sub">App configuration</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Demo Information</div>
+      <div style="font-size: 12px; color: var(--text2); line-height: 1.6;">
+        <div>✅ Running in Demo Mode</div>
+        <div style="margin-top: 8px;"><strong>Features available:</strong></div>
+        <div style="margin-top: 4px; color: var(--text3);">
+          • Transactions<br>
+          • Personal & Business Accounts<br>
+          • Budgets<br>
+          • Credit Cards<br>
+          • Investments & Lending<br>
+          • Rainy Day Reserve<br>
+          • Sugarcane Farm<br>
+          • Net Worth Tracking<br>
+          • Yearly Readings
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ========== GLOBAL STATE ==========
+  let currentUser = null
+  let db = {
+    transactions: [],
+    accounts: [],
+    business: [],
+    reserves: [],
+    budgets: [],
+    credit_cards: [],
+    investments: [],
+    lending: [],
+    net_worth: [],
+    salary: [],
+    farm: [],
+    yearly_reading: []
+  }
+
+  // ========== UTILITIES ==========
+  function fmt(n) {
+    return '₱' + (+n||0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2})
+  }
+
+  function today() {
+    return new Date().toISOString().split('T')[0]
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div')
+    toast.className = `toast ${type}`
+    toast.textContent = message
+    document.body.appendChild(toast)
+    setTimeout(() => toast.remove(), 3000)
+  }
+
+  // ========== AUTHENTICATION ==========
+  function doLogin() {
+    const email = document.getElementById('auth-email').value.trim()
+    const password = document.getElementById('auth-password').value
+
+    if (!email || !password) {
+      showToast('Please enter email and password', 'error')
+      return
+    }
+
+    if (email === 'demo@cathos.app' && password === 'Demo123!') {
+      document.getElementById('auth-form').style.display = 'none'
+      document.getElementById('auth-loading').style.display = 'block'
+      
+      setTimeout(() => {
+        currentUser = { id: 'demo-user', email: email }
+        document.getElementById('auth-screen').style.display = 'none'
+        document.getElementById('app-sidebar').style.display = 'flex'
+        document.getElementById('app-main').style.display = 'block'
+        showToast('Welcome back!', 'success')
+      }, 800)
+    } else {
+      showToast('Invalid credentials. Try demo@cathos.app / Demo123!', 'error')
+    }
+  }
+
+  function doLogout() {
+    if (confirm('Logout?')) {
+      currentUser = null
+      location.reload()
+    }
+  }
+
+  // ========== NAVIGATION ==========
+  function navigate(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+    
+    const pageEl = document.getElementById('page-' + page)
+    if (pageEl) {
+      pageEl.classList.add('active')
+    }
+    
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.getAttribute('onclick')?.includes("'" + page + "'")) {
+        n.classList.add('active')
+      }
+    })
+  }
+
+  // ========== INITIALIZE ==========
+  window.doLogin = doLogin
+  window.doLogout = doLogout
+  window.navigate = navigate
+</script>
+</body>
+</html>
