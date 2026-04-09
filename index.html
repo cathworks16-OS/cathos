@@ -5156,6 +5156,199 @@ function mapSupabaseMonthlySummaryRow(row) {
 }
 
 
+
+function mapSupabaseSugarcaneActualRow(row) {
+  return {
+    id: ensureUuid(row.id),
+    year: parseInt(row.harvest_year ?? row.year ?? 0, 10) || new Date().getFullYear(),
+    location: row.location || '',
+    txn: row.transaction_type || row.txn || 'Other',
+    hectares: parseFloat(row.hectares ?? 0) || 0,
+    tons: parseFloat(row.tons_harvested ?? row.tons ?? 0) || 0,
+    phase1Expense: parseFloat(row.phase1_expense ?? row.phase1Expense ?? 0) || 0,
+    phase2Expense: parseFloat(row.phase2_expense ?? row.phase2Expense ?? 0) || 0,
+    grossProfit: parseFloat(row.gross_profit ?? row.grossProfit ?? 0) || 0,
+    notes: row.notes || ''
+  };
+}
+function mapSupabaseSugarcaneInvestmentLogRow(row) {
+  return {
+    id: ensureUuid(row.id),
+    date: row.log_date || row.date || '',
+    location: row.location || '',
+    txn: row.transaction_type || row.txn || 'Other',
+    category: row.category || 'Other',
+    description: row.description || '',
+    quantity: parseFloat(row.quantity ?? 0) || 0,
+    unitCost: parseFloat(row.unit_cost ?? row.unitCost ?? 0) || 0,
+    totalInvestment: parseFloat(row.total_investment ?? row.totalInvestment ?? 0) || 0,
+    notes: row.notes || ''
+  };
+}
+function mapSupabaseSugarcaneHarvestExpenseRow(row) {
+  return {
+    id: ensureUuid(row.id),
+    date: row.expense_date || row.date || '',
+    location: row.location || '',
+    txn: row.transaction_type || row.txn || 'Other',
+    expenseType: row.expense_type || row.expenseType || 'Other',
+    quantity: parseFloat(row.quantity ?? 0) || 0,
+    rate: parseFloat(row.rate ?? 0) || 0,
+    totalExpense: parseFloat(row.total_expense ?? row.totalExpense ?? 0) || 0,
+    notes: row.notes || ''
+  };
+}
+function mapSupabaseSugarcaneHarvestIncomeRow(row) {
+  return {
+    id: ensureUuid(row.id),
+    date: row.income_date || row.date || '',
+    location: row.location || '',
+    txn: row.transaction_type || row.txn || 'Other',
+    area: row.area || '',
+    buyer: row.area || '',
+    load: row.load_ref || row.load || '',
+    puresa: parseFloat(row.puresa ?? 0) || 0,
+    kargador: parseFloat(row.kargador ?? 0) || 0,
+    kTripping: parseFloat(row.k_tripping ?? row.kTripping ?? 0) || 0,
+    truck: parseFloat(row.truck ?? 0) || 0,
+    dTripping: parseFloat(row.d_tripping ?? row.dTripping ?? 0) || 0,
+    pricePerTon: parseFloat(row.price_per_ton ?? row.pricePerTon ?? 0) || 0,
+    tonsPaid: parseFloat(row.tons_paid ?? row.tonsPaid ?? 0) || 0,
+    grossIncome: parseFloat(row.gross_income ?? row.grossIncome ?? 0) || 0,
+    adjustments: parseFloat(row.adjustments ?? 0) || 0,
+    netIncome: parseFloat(row.net_income ?? row.netIncome ?? 0) || 0,
+    check: row.check_ref || row.check || '',
+    notes: row.notes || ''
+  };
+}
+function mapSupabaseSugarcaneLandStrategyRow(row) {
+  return {
+    id: ensureUuid(row.id),
+    year: parseInt(row.strategy_year ?? row.year ?? 0, 10) || new Date().getFullYear(),
+    location: row.location || '',
+    txn: row.transaction_type || row.txn || 'Other',
+    hectares: parseFloat(row.hectares ?? 0) || 0,
+    tonsTotal: parseFloat(row.tons_total ?? row.tonsTotal ?? 0) || 0,
+    capitalInvested: parseFloat(row.capital_invested ?? row.capitalInvested ?? 0) || 0,
+    income: parseFloat(row.income ?? 0) || 0,
+    netProfit: parseFloat(row.net_profit ?? row.netProfit ?? 0) || 0,
+    contractStart: row.contract_start || row.contractStart || '',
+    contractEnd: row.contract_end || row.contractEnd || '',
+    status: row.status || '',
+    specialNotes: row.special_notes || row.specialNotes || ''
+  };
+}
+function mapSupabaseSugarcaneProjectionRow(row) {
+  return {
+    id: ensureUuid(row.id),
+    year: parseInt(row.projection_year ?? row.year ?? 0, 10) || new Date().getFullYear(),
+    phase: row.phase || '',
+    location: row.location || '',
+    plannedTransaction: row.planned_transaction || row.plannedTransaction || 'Other',
+    targetHectares: parseFloat(row.target_hectares ?? row.targetHectares ?? 0) || 0,
+    targetCapital: parseFloat(row.target_capital ?? row.targetCapital ?? 0) || 0,
+    targetIncome: parseFloat(row.target_income ?? row.targetIncome ?? 0) || 0,
+    targetNetProfit: parseFloat(row.target_net_profit ?? row.targetNetProfit ?? 0) || 0,
+    profitPct: parseFloat(row.profit_pct ?? row.profitPct ?? 0) || 0,
+    specialNotes: row.special_notes || row.specialNotes || ''
+  };
+}
+function mapSugarcaneActualToSupabaseRow(item) {
+  return {
+    id: ensureUuid(item.id),
+    harvest_year: parseInt(item.year ?? 0, 10) || null,
+    location: item.location || '',
+    transaction_type: item.txn || '',
+    hectares: parseFloat(item.hectares ?? 0) || 0,
+    tons_harvested: parseFloat(item.tons ?? 0) || 0,
+    phase1_expense: parseFloat(item.phase1Expense ?? 0) || 0,
+    phase2_expense: parseFloat(item.phase2Expense ?? 0) || 0,
+    gross_profit: parseFloat(item.grossProfit ?? 0) || 0,
+    notes: item.notes || ''
+  };
+}
+function mapSugarcaneInvestmentLogToSupabaseRow(item) {
+  return {
+    id: ensureUuid(item.id),
+    log_date: item.date || null,
+    location: item.location || '',
+    transaction_type: item.txn || '',
+    category: item.category || '',
+    description: item.description || '',
+    quantity: parseFloat(item.quantity ?? 0) || 0,
+    unit_cost: parseFloat(item.unitCost ?? 0) || 0,
+    total_investment: parseFloat(item.totalInvestment ?? 0) || 0,
+    notes: item.notes || ''
+  };
+}
+function mapSugarcaneHarvestExpenseToSupabaseRow(item) {
+  return {
+    id: ensureUuid(item.id),
+    expense_date: item.date || null,
+    location: item.location || '',
+    transaction_type: item.txn || '',
+    expense_type: item.expenseType || '',
+    quantity: parseFloat(item.quantity ?? 0) || 0,
+    rate: parseFloat(item.rate ?? 0) || 0,
+    total_expense: parseFloat(item.totalExpense ?? 0) || 0,
+    notes: item.notes || ''
+  };
+}
+function mapSugarcaneHarvestIncomeToSupabaseRow(item) {
+  return {
+    id: ensureUuid(item.id),
+    income_date: item.date || null,
+    location: item.location || '',
+    transaction_type: item.txn || '',
+    area: item.area || item.buyer || '',
+    load_ref: item.load || '',
+    puresa: parseFloat(item.puresa ?? 0) || 0,
+    kargador: parseFloat(item.kargador ?? 0) || 0,
+    k_tripping: parseFloat(item.kTripping ?? 0) || 0,
+    truck: parseFloat(item.truck ?? 0) || 0,
+    d_tripping: parseFloat(item.dTripping ?? 0) || 0,
+    price_per_ton: parseFloat(item.pricePerTon ?? 0) || 0,
+    tons_paid: parseFloat(item.tonsPaid ?? 0) || 0,
+    gross_income: parseFloat(item.grossIncome ?? 0) || 0,
+    adjustments: parseFloat(item.adjustments ?? 0) || 0,
+    net_income: parseFloat(item.netIncome ?? 0) || 0,
+    check_ref: item.check || '',
+    notes: item.notes || ''
+  };
+}
+function mapSugarcaneLandStrategyToSupabaseRow(item) {
+  return {
+    id: ensureUuid(item.id),
+    strategy_year: parseInt(item.year ?? 0, 10) || null,
+    location: item.location || '',
+    transaction_type: item.txn || '',
+    hectares: parseFloat(item.hectares ?? 0) || 0,
+    tons_total: parseFloat(item.tonsTotal ?? 0) || 0,
+    capital_invested: parseFloat(item.capitalInvested ?? 0) || 0,
+    income: parseFloat(item.income ?? 0) || 0,
+    net_profit: parseFloat(item.netProfit ?? 0) || 0,
+    contract_start: item.contractStart || null,
+    contract_end: item.contractEnd || null,
+    status: item.status || '',
+    special_notes: item.specialNotes || ''
+  };
+}
+function mapSugarcaneProjectionToSupabaseRow(item) {
+  return {
+    id: ensureUuid(item.id),
+    projection_year: parseInt(item.year ?? 0, 10) || null,
+    phase: item.phase || '',
+    location: item.location || '',
+    planned_transaction: item.plannedTransaction || '',
+    target_hectares: parseFloat(item.targetHectares ?? 0) || 0,
+    target_capital: parseFloat(item.targetCapital ?? 0) || 0,
+    target_income: parseFloat(item.targetIncome ?? 0) || 0,
+    target_net_profit: parseFloat(item.targetNetProfit ?? 0) || 0,
+    profit_pct: parseFloat(item.profitPct ?? 0) || 0,
+    special_notes: item.specialNotes || ''
+  };
+}
+
 async function supabaseSelect(table) {
   if (!supabaseClient) return [];
   const { data, error } = await supabaseClient.from(table).select('*');
@@ -5181,7 +5374,13 @@ async function hydrateDbFromSupabase() {
     budgetRows,
     salaryRows,
     netWorthRows,
-    monthlySummaryRows
+    monthlySummaryRows,
+    sugarcaneActualRows,
+    sugarcaneInvestmentRows,
+    sugarcaneExpenseRows,
+    sugarcaneIncomeRows,
+    sugarcaneLandRows,
+    sugarcaneProjectionRows
   ] = await Promise.all([
     supabaseSelect('transactions'),
     supabaseSelect('accounts'),
@@ -5191,19 +5390,32 @@ async function hydrateDbFromSupabase() {
     supabaseSelect('budgets'),
     supabaseSelect('salary_allocations'),
     supabaseSelect('net_worth'),
-    supabaseSelect('monthly_summaries')
+    supabaseSelect('monthly_summaries'),
+    supabaseSelect('sugarcane_actuals'),
+    supabaseSelect('sugarcane_investment_logs'),
+    supabaseSelect('sugarcane_harvest_expenses'),
+    supabaseSelect('sugarcane_harvest_income'),
+    supabaseSelect('sugarcane_land_strategy'),
+    supabaseSelect('sugarcane_projection')
   ]);
 
-  if (transactionsRows.length) db.transactions = transactionsRows.map(mapSupabaseTransactionRow);
-  if (accountsRows.length) db.accounts = accountsRows.map(mapSupabaseAccountRow);
-  if (creditCardRows.length) db.creditcards = creditCardRows.map(mapSupabaseCreditCardRow);
-  if (lendingRows.length) db.lend = lendingRows.map(mapSupabaseLendingRow);
-  if (investmentRows.length) db.investments = investmentRows.map(mapSupabaseInvestmentRow);
-  if (budgetRows.length) db.budget = budgetRows.map(mapSupabaseBudgetRow);
-  if (salaryRows.length) db.salary = salaryRows.map(mapSupabaseSalaryRow);
-  if (netWorthRows.length) db.networth = netWorthRows.map(mapSupabaseNetWorthRow);
-  if (monthlySummaryRows.length) db.monthlySummaries = monthlySummaryRows.map(mapSupabaseMonthlySummaryRow);
+  db.transactions = transactionsRows.map(mapSupabaseTransactionRow);
+  db.accounts = accountsRows.map(mapSupabaseAccountRow);
+  db.creditcards = creditCardRows.map(mapSupabaseCreditCardRow);
+  db.lend = lendingRows.map(mapSupabaseLendingRow);
+  db.investments = investmentRows.map(mapSupabaseInvestmentRow);
+  db.budget = budgetRows.map(mapSupabaseBudgetRow);
+  db.salary = salaryRows.map(mapSupabaseSalaryRow);
+  db.networth = netWorthRows.map(mapSupabaseNetWorthRow);
+  db.monthlySummaries = monthlySummaryRows.map(mapSupabaseMonthlySummaryRow);
+  db.sugarcaneActuals = sugarcaneActualRows.map(mapSupabaseSugarcaneActualRow);
+  db.sugarcaneInvestmentLogs = sugarcaneInvestmentRows.map(mapSupabaseSugarcaneInvestmentLogRow);
+  db.sugarcaneHarvestExpenses = sugarcaneExpenseRows.map(mapSupabaseSugarcaneHarvestExpenseRow);
+  db.sugarcaneHarvestIncome = sugarcaneIncomeRows.map(mapSupabaseSugarcaneHarvestIncomeRow);
+  db.sugarcaneLandStrategy = sugarcaneLandRows.map(mapSupabaseSugarcaneLandStrategyRow);
+  db.sugarcaneProjection = sugarcaneProjectionRows.map(mapSupabaseSugarcaneProjectionRow);
 
+  hydrateSugarcaneCollections(db);
   save(true);
   updateSyncStatus('ok', 'Supabase connected');
 }
@@ -5336,7 +5548,13 @@ async function saveToSupabase(options = {}) {
       upsertRows('budgets', (db.budget || []).map(mapBudgetToSupabaseRow)),
       upsertRows('salary_allocations', (db.salary || []).map(mapSalaryToSupabaseRow)),
       upsertRows('net_worth', (db.networth || []).map(mapNetWorthToSupabaseRow)),
-      upsertRows('monthly_summaries', (db.monthlySummaries || []).map(mapMonthlySummaryToSupabaseRow))
+      upsertRows('monthly_summaries', (db.monthlySummaries || []).map(mapMonthlySummaryToSupabaseRow)),
+      upsertRows('sugarcane_actuals', (db.sugarcaneActuals || []).map(mapSugarcaneActualToSupabaseRow)),
+      upsertRows('sugarcane_investment_logs', (db.sugarcaneInvestmentLogs || []).map(mapSugarcaneInvestmentLogToSupabaseRow)),
+      upsertRows('sugarcane_harvest_expenses', (db.sugarcaneHarvestExpenses || []).map(mapSugarcaneHarvestExpenseToSupabaseRow)),
+      upsertRows('sugarcane_harvest_income', (db.sugarcaneHarvestIncome || []).map(mapSugarcaneHarvestIncomeToSupabaseRow)),
+      upsertRows('sugarcane_land_strategy', (db.sugarcaneLandStrategy || []).map(mapSugarcaneLandStrategyToSupabaseRow)),
+      upsertRows('sugarcane_projection', (db.sugarcaneProjection || []).map(mapSugarcaneProjectionToSupabaseRow))
     ]);
     updateSyncStatus('ok', 'Saved to Supabase');
     if (!options.silent) alert('CathOS data saved to Supabase.');
