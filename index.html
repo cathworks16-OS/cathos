@@ -1133,6 +1133,7 @@ tr.subcat-row.visible{display:table-row}
     <div class="sc-subpage active" id="sc-subpage-dashboard">
       <div class="flex gap-10 mb-14" style="flex-wrap:wrap;align-items:center;">
         <select id="sc-filter-year" onchange="renderSugarcane()"></select>
+        <select id="sc-filter-cycle" onchange="renderSugarcane()"></select>
         <select id="sc-filter-location" onchange="renderSugarcane()"></select>
         <select id="sc-filter-txn" onchange="renderSugarcane()"></select>
         <select id="sc-sort-by" onchange="renderSugarcane()">
@@ -1187,6 +1188,7 @@ tr.subcat-row.visible{display:table-row}
       <div class="flex gap-10 mb-14" style="flex-wrap:wrap;align-items:center;">
         <span class="sync-pill"><span>Detailed Report Year</span></span>
         <select id="sc-detail-year" onchange="renderSugarcane()"></select>
+        <select id="sc-detail-cycle" onchange="renderSugarcane()"></select>
         <select id="sc-detail-sort" onchange="renderSugarcane()">
           <option value="date_desc">Sort: Newest First</option>
           <option value="date_asc">Sort: Oldest First</option>
@@ -1474,11 +1476,11 @@ tr.subcat-row.visible{display:table-row}
 
 <div class="modal-overlay" id="modal-sugarcane-actual"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-actual-modal-title">Add Yearly Actual</div><button class="modal-close" onclick="closeModal('modal-sugarcane-actual')">✕</button></div><input type="hidden" id="sc-actual-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-actual-year" min="2020" placeholder="2026"></div><div class="form-group"><label>Location</label><input type="text" id="sc-actual-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-actual-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Hectares</label><input type="number" id="sc-actual-hectares" min="0" step="0.01"></div><div class="form-group"><label>Total Tons Harvested</label><input type="number" id="sc-actual-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Phase 1 Expense (₱)</label><input type="number" id="sc-actual-p1" min="0" step="0.01"></div><div class="form-group"><label>Phase 2 Harvest Expense (₱)</label><input type="number" id="sc-actual-p2" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Gross Profit / Income (₱)</label><input type="number" id="sc-actual-gross" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="sc-actual-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneActual()">Save Yearly Actual</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane-investment"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-investment-modal-title">Add Investment Log</div><button class="modal-close" onclick="closeModal('modal-sugarcane-investment')">✕</button></div><input type="hidden" id="sc-investment-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-investment-date"></div><div class="form-group"><label>Location</label><input type="text" id="sc-investment-location" placeholder="Lemery"></div><div class="form-group"><label>Transaction Type</label><select id="sc-investment-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Category</label><select id="sc-investment-category"><option>Land Payment</option><option>Arendo</option><option>Prenda</option><option>Labor</option><option>Fertilizer</option><option>Spray</option><option>Fuel</option><option>Equipment</option><option>Referral Fee</option><option>Travel</option><option>Other</option></select></div><div class="form-group"><label>Description / Use</label><input type="text" id="sc-investment-description" placeholder="Sagud setup"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Quantity</label><input type="number" id="sc-investment-qty" min="0" step="0.01"></div><div class="form-group"><label>Unit Cost (₱)</label><input type="number" id="sc-investment-unit" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Total Investment (₱)</label><input type="number" id="sc-investment-total" min="0" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="sc-investment-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneInvestmentLog()">Save Investment Log</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-investment"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-investment-modal-title">Add Investment Log</div><button class="modal-close" onclick="closeModal('modal-sugarcane-investment')">✕</button></div><input type="hidden" id="sc-investment-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-investment-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-investment-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-investment-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-investment-location" placeholder="Lemery"></div><div class="form-group"><label>Transaction Type</label><select id="sc-investment-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Category</label><select id="sc-investment-category"><option>Land Payment</option><option>Arendo</option><option>Prenda</option><option>Labor</option><option>Fertilizer</option><option>Spray</option><option>Fuel</option><option>Equipment</option><option>Referral Fee</option><option>Travel</option><option>Other</option></select></div><div class="form-group"><label>Description / Use</label><input type="text" id="sc-investment-description" placeholder="Sagud setup"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Quantity</label><input type="number" id="sc-investment-qty" min="0" step="0.01"></div><div class="form-group"><label>Unit Cost (₱)</label><input type="number" id="sc-investment-unit" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Total Investment (₱)</label><input type="number" id="sc-investment-total" min="0" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="sc-investment-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneInvestmentLog()">Save Investment Log</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane-expense"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-expense-modal-title">Add Harvest Expense</div><button class="modal-close" onclick="closeModal('modal-sugarcane-expense')">✕</button></div><input type="hidden" id="sc-expense-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-expense-date"></div><div class="form-group"><label>Location</label><input type="text" id="sc-expense-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-expense-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Expense Type</label><select id="sc-expense-type"><option>Kargador</option><option>Trucking</option><option>Tripping Driver</option><option>Kalsada</option><option>Fuel</option><option>Food</option><option>Advance</option><option>Other</option></select></div><div class="form-group"><label>Notes</label><input type="text" id="sc-expense-notes" placeholder="Optional..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Quantity</label><input type="number" id="sc-expense-qty" min="0" step="0.01"></div><div class="form-group"><label>Rate (₱)</label><input type="number" id="sc-expense-rate" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Total Expense (₱)</label><input type="number" id="sc-expense-total" min="0" step="0.01" placeholder="Auto if blank"></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneHarvestExpense()">Save Harvest Expense</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-expense"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-expense-modal-title">Add Harvest Expense</div><button class="modal-close" onclick="closeModal('modal-sugarcane-expense')">✕</button></div><input type="hidden" id="sc-expense-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-expense-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-expense-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-expense-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-expense-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-expense-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Expense Type</label><select id="sc-expense-type"><option>Kargador</option><option>Trucking</option><option>Tripping Driver</option><option>Kalsada</option><option>Fuel</option><option>Food</option><option>Advance</option><option>Other</option></select></div><div class="form-group"><label>Notes</label><input type="text" id="sc-expense-notes" placeholder="Optional..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Quantity</label><input type="number" id="sc-expense-qty" min="0" step="0.01"></div><div class="form-group"><label>Rate (₱)</label><input type="number" id="sc-expense-rate" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Total Expense (₱)</label><input type="number" id="sc-expense-total" min="0" step="0.01" placeholder="Auto if blank"></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneHarvestExpense()">Save Harvest Expense</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane-income"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-income-modal-title">Add Harvest Income</div><button class="modal-close" onclick="closeModal('modal-sugarcane-income')">✕</button></div><input type="hidden" id="sc-income-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-income-date"></div><div class="form-group"><label>Location</label><input type="text" id="sc-income-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-income-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Area</label><input type="text" id="sc-income-area" placeholder="Area / mill / buyer"></div><div class="form-group"><label>Load</label><input type="text" id="sc-income-load" placeholder="Load reference"></div></div><div class="form-row" style="grid-template-columns:repeat(4,1fr)"><div class="form-group"><label>Puresa</label><input type="number" id="sc-income-puresa" step="0.01"></div><div class="form-group"><label>Kargador</label><input type="number" id="sc-income-kargador" step="0.01"></div><div class="form-group"><label>K. Tripping</label><input type="number" id="sc-income-ktripping" step="0.01"></div><div class="form-group"><label>Truck</label><input type="number" id="sc-income-truck" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>D. Tripping</label><input type="number" id="sc-income-dtripping" step="0.01"></div><div class="form-group"><label>Price</label><input type="number" id="sc-income-price" min="0" step="0.01"></div><div class="form-group"><label>Tons Paid</label><input type="number" id="sc-income-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Gross Income (₱)</label><input type="number" id="sc-income-gross" min="0" step="0.01" placeholder="Auto if blank"></div><div class="form-group"><label>Adjustments (₱)</label><input type="number" id="sc-income-adjustments" step="0.01" placeholder="Auto from deductions"></div><div class="form-group"><label>Net Income (₱)</label><input type="number" id="sc-income-net" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Check</label><input type="text" id="sc-income-check" placeholder="Check / reference"></div><div class="form-group"><label>Notes</label><input type="text" id="sc-income-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneHarvestIncome()">Save Harvest Income</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-income"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-income-modal-title">Add Harvest Income</div><button class="modal-close" onclick="closeModal('modal-sugarcane-income')">✕</button></div><input type="hidden" id="sc-income-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-income-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-income-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-income-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-income-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-income-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Area</label><input type="text" id="sc-income-area" placeholder="Area / mill / buyer"></div><div class="form-group"><label>Load</label><input type="text" id="sc-income-load" placeholder="Load reference"></div></div><div class="form-row" style="grid-template-columns:repeat(4,1fr)"><div class="form-group"><label>Puresa</label><input type="number" id="sc-income-puresa" step="0.01"></div><div class="form-group"><label>Kargador</label><input type="number" id="sc-income-kargador" step="0.01"></div><div class="form-group"><label>K. Tripping</label><input type="number" id="sc-income-ktripping" step="0.01"></div><div class="form-group"><label>Truck</label><input type="number" id="sc-income-truck" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>D. Tripping</label><input type="number" id="sc-income-dtripping" step="0.01"></div><div class="form-group"><label>Price</label><input type="number" id="sc-income-price" min="0" step="0.01"></div><div class="form-group"><label>Tons Paid</label><input type="number" id="sc-income-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Gross Income (₱)</label><input type="number" id="sc-income-gross" min="0" step="0.01" placeholder="Auto if blank"></div><div class="form-group"><label>Adjustments (₱)</label><input type="number" id="sc-income-adjustments" step="0.01" placeholder="Auto from deductions"></div><div class="form-group"><label>Net Income (₱)</label><input type="number" id="sc-income-net" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Check</label><input type="text" id="sc-income-check" placeholder="Check / reference"></div><div class="form-group"><label>Notes</label><input type="text" id="sc-income-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneHarvestIncome()">Save Harvest Income</button></div></div>
 
 <div class="modal-overlay" id="modal-sugarcane-land"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-land-modal-title">Add Land Strategy</div><button class="modal-close" onclick="closeModal('modal-sugarcane-land')">✕</button></div><input type="hidden" id="sc-land-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Year</label><input type="number" id="sc-land-year" min="2020" placeholder="2026"></div><div class="form-group"><label>Location</label><input type="text" id="sc-land-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-land-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Hectares</label><input type="number" id="sc-land-hectares" min="0" step="0.01"></div><div class="form-group"><label>Tons Total</label><input type="number" id="sc-land-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Capital Invested (₱)</label><input type="number" id="sc-land-capital" min="0" step="0.01"></div><div class="form-group"><label>Income (₱)</label><input type="number" id="sc-land-income" min="0" step="0.01"></div><div class="form-group"><label>Net Profit (₱)</label><input type="number" id="sc-land-profit" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Contract Start</label><input type="date" id="sc-land-start"></div><div class="form-group"><label>Contract End</label><input type="date" id="sc-land-end"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Status</label><select id="sc-land-status"><option>Active</option><option>Waiting Harvest</option><option>Renewing</option><option>Contract Ending</option><option>Potential Acquisition</option><option>Closed</option></select></div><div class="form-group"><label>Special Notes</label><input type="text" id="sc-land-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneLandStrategy()">Save Land Strategy</button></div></div>
 
@@ -2238,6 +2240,8 @@ function openModal(id, data) {
     document.getElementById('sc-investment-modal-title').textContent = isEdit ? 'Edit Investment Log' : 'Add Investment Log';
     document.getElementById('sc-investment-edit-id').value = isEdit ? (data.id || '') : '';
     document.getElementById('sc-investment-date').value = isEdit ? (data.date || today()) : today();
+    document.getElementById('sc-investment-harvest-year').value = isEdit ? (data.harvestYear || data.year || new Date(data.date || today()).getFullYear()) : new Date().getFullYear();
+    document.getElementById('sc-investment-harvest-cycle').value = isEdit ? (data.harvestCycle || 'H1') : 'H1';
     document.getElementById('sc-investment-location').value = isEdit ? (data.location || '') : '';
     document.getElementById('sc-investment-txn').value = isEdit ? (data.txn || 'Arendo') : 'Arendo';
     document.getElementById('sc-investment-category').value = isEdit ? (data.category || 'Other') : 'Land Payment';
@@ -2252,6 +2256,8 @@ function openModal(id, data) {
     document.getElementById('sc-expense-modal-title').textContent = isEdit ? 'Edit Harvest Expense' : 'Add Harvest Expense';
     document.getElementById('sc-expense-edit-id').value = isEdit ? (data.id || '') : '';
     document.getElementById('sc-expense-date').value = isEdit ? (data.date || today()) : today();
+    document.getElementById('sc-expense-harvest-year').value = isEdit ? (data.harvestYear || data.year || new Date(data.date || today()).getFullYear()) : new Date().getFullYear();
+    document.getElementById('sc-expense-harvest-cycle').value = isEdit ? (data.harvestCycle || 'H1') : 'H1';
     document.getElementById('sc-expense-location').value = isEdit ? (data.location || '') : '';
     document.getElementById('sc-expense-txn').value = isEdit ? (data.txn || 'Arendo') : 'Arendo';
     document.getElementById('sc-expense-type').value = isEdit ? (data.expenseType || 'Other') : 'Kargador';
@@ -2265,6 +2271,8 @@ function openModal(id, data) {
     document.getElementById('sc-income-modal-title').textContent = isEdit ? 'Edit Harvest Income' : 'Add Harvest Income';
     document.getElementById('sc-income-edit-id').value = isEdit ? (data.id || '') : '';
     document.getElementById('sc-income-date').value = isEdit ? (data.date || today()) : today();
+    document.getElementById('sc-income-harvest-year').value = isEdit ? (data.harvestYear || data.year || new Date(data.date || today()).getFullYear()) : new Date().getFullYear();
+    document.getElementById('sc-income-harvest-cycle').value = isEdit ? (data.harvestCycle || 'H1') : 'H1';
     document.getElementById('sc-income-location').value = isEdit ? (data.location || '') : '';
     document.getElementById('sc-income-txn').value = isEdit ? (data.txn || 'Arendo') : 'Arendo';
     document.getElementById('sc-income-area').value = isEdit ? (data.area || data.buyer || '') : '';
@@ -2874,9 +2882,10 @@ function syncSugarcaneLegacyCollections(target = db) {
 
 function getSugarcaneFilterValues() {
   const year = document.getElementById('sc-filter-year')?.value || '';
+  const cycle = document.getElementById('sc-filter-cycle')?.value || '';
   const location = document.getElementById('sc-filter-location')?.value || '';
   const txn = document.getElementById('sc-filter-txn')?.value || '';
-  return { year, location, txn };
+  return { year, cycle, location, txn };
 }
 
 function getSugarcaneSortValue() {
@@ -2937,29 +2946,36 @@ function scMatchesFilter(item, filters) {
 function renderSugarcaneFilters() {
   ensureSugarcaneCollections();
   const yearEl = document.getElementById('sc-filter-year');
+  const cycleEl = document.getElementById('sc-filter-cycle');
   const locationEl = document.getElementById('sc-filter-location');
   const txnEl = document.getElementById('sc-filter-txn');
-  if (!yearEl || !locationEl || !txnEl) return;
+  if (!yearEl || !cycleEl || !locationEl || !txnEl) return;
   const prev = getSugarcaneFilterValues();
   const yearSet = new Set(['ALL']);
+  const cycleSet = new Set(['ALL']);
   const locationSet = new Set(['ALL']);
   const txnSet = new Set(['ALL']);
   ['sugarcaneActuals','sugarcaneInvestmentLogs','sugarcaneHarvestExpenses','sugarcaneHarvestIncome','sugarcaneLandStrategy','sugarcaneProjection'].forEach(key => {
     (db[key] || []).forEach(item => {
       if (item.year) yearSet.add(String(item.year));
-      if (item.date) yearSet.add(String(new Date(item.date).getFullYear()));
+      if (item.harvestYear) yearSet.add(String(item.harvestYear));
+      if (item.date && !item.harvestYear) yearSet.add(String(new Date(item.date).getFullYear()));
+      if (item.harvestCycle || item.cycle) cycleSet.add(String(item.harvestCycle || item.cycle));
       if (item.location) locationSet.add(item.location);
       const txn = item.txn || item.plannedTransaction;
       if (txn) txnSet.add(txn);
     });
   });
   const years = Array.from(yearSet).sort((a,b) => a === 'ALL' ? -1 : b.localeCompare(a));
+  const cycles = Array.from(cycleSet).sort((a,b) => a === 'ALL' ? -1 : a.localeCompare(b));
   const locations = Array.from(locationSet).sort((a,b) => a === 'ALL' ? -1 : a.localeCompare(b));
   const txns = Array.from(txnSet).sort((a,b) => a === 'ALL' ? -1 : a.localeCompare(b));
   yearEl.innerHTML = years.map(v => `<option value="${v}">${v === 'ALL' ? 'All Years' : v}</option>`).join('');
+  cycleEl.innerHTML = cycles.map(v => `<option value="${v}">${v === 'ALL' ? 'All Cycles' : v}</option>`).join('');
   locationEl.innerHTML = locations.map(v => `<option value="${v}">${v === 'ALL' ? 'All Locations' : v}</option>`).join('');
   txnEl.innerHTML = txns.map(v => `<option value="${v}">${v === 'ALL' ? 'All Transaction Types' : v}</option>`).join('');
   yearEl.value = years.includes(prev.year) ? prev.year : 'ALL';
+  cycleEl.value = cycles.includes(prev.cycle) ? prev.cycle : 'ALL';
   locationEl.value = locations.includes(prev.location) ? prev.location : 'ALL';
   txnEl.value = txns.includes(prev.txn) ? prev.txn : 'ALL';
 }
@@ -2968,15 +2984,15 @@ function getFilteredSugarcaneData() {
   const filters = getSugarcaneFilterValues();
   const actuals = (db.sugarcaneActuals || []).filter(item => scMatchesFilter(item, filters));
   const investments = (db.sugarcaneInvestmentLogs || []).filter(item => {
-    const normalized = { ...item, year: item.date ? new Date(item.date).getFullYear() : item.year };
+    const normalized = { ...item, year: item.harvestYear || (item.date ? new Date(item.date).getFullYear() : item.year) };
     return scMatchesFilter(normalized, filters);
   });
   const expenses = (db.sugarcaneHarvestExpenses || []).filter(item => {
-    const normalized = { ...item, year: item.date ? new Date(item.date).getFullYear() : item.year };
+    const normalized = { ...item, year: item.harvestYear || (item.date ? new Date(item.date).getFullYear() : item.year) };
     return scMatchesFilter(normalized, filters);
   });
   const incomes = (db.sugarcaneHarvestIncome || []).filter(item => {
-    const normalized = { ...item, year: item.date ? new Date(item.date).getFullYear() : item.year };
+    const normalized = { ...item, year: item.harvestYear || (item.date ? new Date(item.date).getFullYear() : item.year) };
     return scMatchesFilter(normalized, filters);
   });
   const land = (db.sugarcaneLandStrategy || []).filter(item => scMatchesFilter(item, filters));
@@ -3099,6 +3115,8 @@ function saveSugarcaneInvestmentLog() {
   const payload = {
     id: document.getElementById('sc-investment-edit-id').value || uid(),
     date: document.getElementById('sc-investment-date').value || today(),
+    harvestYear: parseInt(document.getElementById('sc-investment-harvest-year').value, 10) || new Date(document.getElementById('sc-investment-date').value || today()).getFullYear(),
+    harvestCycle: document.getElementById('sc-investment-harvest-cycle').value || 'H1',
     location: document.getElementById('sc-investment-location').value.trim(),
     txn: document.getElementById('sc-investment-txn').value,
     category: document.getElementById('sc-investment-category').value,
@@ -3122,6 +3140,8 @@ function saveSugarcaneHarvestExpense() {
   const payload = {
     id: document.getElementById('sc-expense-edit-id').value || uid(),
     date: document.getElementById('sc-expense-date').value || today(),
+    harvestYear: parseInt(document.getElementById('sc-expense-harvest-year').value, 10) || new Date(document.getElementById('sc-expense-date').value || today()).getFullYear(),
+    harvestCycle: document.getElementById('sc-expense-harvest-cycle').value || 'H1',
     location: document.getElementById('sc-expense-location').value.trim(),
     txn: document.getElementById('sc-expense-txn').value,
     expenseType: document.getElementById('sc-expense-type').value,
@@ -3153,6 +3173,8 @@ function saveSugarcaneHarvestIncome() {
   const payload = {
     id: document.getElementById('sc-income-edit-id').value || uid(),
     date: document.getElementById('sc-income-date').value || today(),
+    harvestYear: parseInt(document.getElementById('sc-income-harvest-year').value, 10) || new Date(document.getElementById('sc-income-date').value || today()).getFullYear(),
+    harvestCycle: document.getElementById('sc-income-harvest-cycle').value || 'H1',
     location: document.getElementById('sc-income-location').value.trim(),
     txn: document.getElementById('sc-income-txn').value,
     area: document.getElementById('sc-income-area').value.trim(),
@@ -3247,28 +3269,39 @@ function switchSugarcaneView(view) {
 
 function renderSugarcaneDetailYearFilter() {
   const sel = document.getElementById('sc-detail-year');
-  if (!sel) return;
+  const cycleSel = document.getElementById('sc-detail-cycle');
+  if (!sel || !cycleSel) return;
   const prev = sel.value || 'ALL';
+  const prevCycle = cycleSel.value || 'ALL';
   const years = new Set();
+  const cycles = new Set();
   [...(db.sugarcaneInvestmentLogs||[]), ...(db.sugarcaneHarvestExpenses||[]), ...(db.sugarcaneHarvestIncome||[])].forEach(item => {
-    const y = item.date ? new Date(item.date).getFullYear() : item.year;
+    const y = item.harvestYear || (item.date ? new Date(item.date).getFullYear() : item.year);
     if (y) years.add(String(y));
+    const c = item.harvestCycle || item.cycle;
+    if (c) cycles.add(String(c));
   });
   const sorted = Array.from(years).sort((a,b)=>Number(b)-Number(a));
+  const sortedCycles = Array.from(cycles).sort();
   sel.innerHTML = ['<option value="ALL">All Years</option>'].concat(sorted.map(y => `<option value="${y}">${y}</option>`)).join('');
+  cycleSel.innerHTML = ['<option value="ALL">All Cycles</option>'].concat(sortedCycles.map(c => `<option value="${c}">${c}</option>`)).join('');
   sel.value = sorted.includes(prev) || prev==='ALL' ? prev : 'ALL';
+  cycleSel.value = sortedCycles.includes(prevCycle) || prevCycle==='ALL' ? prevCycle : 'ALL';
 }
 
 function getSugarcaneDetailedReportData() {
   const year = document.getElementById('sc-detail-year')?.value || 'ALL';
-  const matchYear = item => {
-    if (year === 'ALL') return true;
-    const itemYear = item.date ? String(new Date(item.date).getFullYear()) : String(item.year || '');
-    return itemYear === year;
+  const cycle = document.getElementById('sc-detail-cycle')?.value || 'ALL';
+  const matchYearCycle = item => {
+    const itemYear = String(item.harvestYear || (item.date ? new Date(item.date).getFullYear() : item.year || ''));
+    const itemCycle = String(item.harvestCycle || item.cycle || '');
+    const yearOk = year === 'ALL' || itemYear === year;
+    const cycleOk = cycle === 'ALL' || itemCycle === cycle;
+    return yearOk && cycleOk;
   };
-  const investments = (db.sugarcaneInvestmentLogs || []).filter(matchYear);
-  const expenses = (db.sugarcaneHarvestExpenses || []).filter(matchYear);
-  const incomes = (db.sugarcaneHarvestIncome || []).filter(matchYear);
+  const investments = (db.sugarcaneInvestmentLogs || []).filter(matchYearCycle);
+  const expenses = (db.sugarcaneHarvestExpenses || []).filter(matchYearCycle);
+  const incomes = (db.sugarcaneHarvestIncome || []).filter(matchYearCycle);
   const locations = Array.from(new Set([...investments.map(x=>x.location), ...expenses.map(x=>x.location), ...incomes.map(x=>x.location)].filter(Boolean))).sort();
   return { year, investments, expenses, incomes, locations };
 }
@@ -3291,11 +3324,11 @@ function renderSugarcaneDetailedReport() {
 
     const actionBtns = (editFn, collection, id) => { const safeId = String(id).replace(/'/g, "\'"); return `<div class="flex gap-10"><button onclick="${editFn}('${safeId}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn(collection, id)}</div>`; };
 
-    const invRows = inv.length ? inv.map(item => `<tr><td class="mono">${item.date||'—'}</td><td>${[item.category,item.description].filter(Boolean).join(' · ') || '—'}</td><td class="mono">${scNum(item.quantity).toFixed(2)}</td><td class="text-right mono">${fmt(item.unitCost)}</td><td class="text-right negative">${fmt(item.totalInvestment)}</td><td style="color:var(--text3)">${item.notes||'—'}</td><td>${actionBtns('editSugarcaneInvestmentLog','sugarcaneInvestmentLogs', item.id)}</td></tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text3)">No phase 1 investment logs.</td></tr>`;
+    const invRows = inv.length ? inv.map(item => `<tr><td class="mono">${item.date||'—'}${item.harvestCycle ? `<div style=\"color:var(--text3);font-size:11px\">${item.harvestCycle}</div>` : ''}</td><td>${[item.category,item.description].filter(Boolean).join(' · ') || '—'}</td><td class="mono">${scNum(item.quantity).toFixed(2)}</td><td class="text-right mono">${fmt(item.unitCost)}</td><td class="text-right negative">${fmt(item.totalInvestment)}</td><td style="color:var(--text3)">${item.notes||'—'}</td><td>${actionBtns('editSugarcaneInvestmentLog','sugarcaneInvestmentLogs', item.id)}</td></tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text3)">No phase 1 investment logs.</td></tr>`;
 
-    const expRows = exp.length ? exp.map(item => `<tr><td class="mono">${item.date||'—'}</td><td>${item.expenseType||'—'}</td><td class="mono">${scNum(item.quantity).toFixed(2)}</td><td class="text-right mono">${fmt(item.rate)}</td><td class="text-right negative">${fmt(item.totalExpense)}</td><td style="color:var(--text3)">${item.notes||'—'}</td><td>${actionBtns('editSugarcaneHarvestExpense','sugarcaneHarvestExpenses', item.id)}</td></tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text3)">No phase 2 harvest expenses.</td></tr>`;
+    const expRows = exp.length ? exp.map(item => `<tr><td class="mono">${item.date||'—'}${item.harvestCycle ? `<div style=\"color:var(--text3);font-size:11px\">${item.harvestCycle}</div>` : ''}</td><td>${item.expenseType||'—'}</td><td class="mono">${scNum(item.quantity).toFixed(2)}</td><td class="text-right mono">${fmt(item.rate)}</td><td class="text-right negative">${fmt(item.totalExpense)}</td><td style="color:var(--text3)">${item.notes||'—'}</td><td>${actionBtns('editSugarcaneHarvestExpense','sugarcaneHarvestExpenses', item.id)}</td></tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text3)">No phase 2 harvest expenses.</td></tr>`;
 
-    const incRows = inc.length ? inc.map(item => `<tr><td class="mono">${item.date||'—'}</td><td>${item.area || item.buyer || '—'}</td><td>${item.load || '—'}</td><td class="text-right mono">${fmt(item.puresa)}</td><td class="text-right mono">${fmt(item.kargador)}</td><td class="text-right mono">${fmt(item.kTripping)}</td><td class="text-right mono">${fmt(item.truck)}</td><td class="text-right mono">${fmt(item.dTripping)}</td><td class="text-right mono">${fmt(item.pricePerTon)}</td><td class="text-right mono">${scNum(item.tonsPaid).toFixed(2)}</td><td>${item.check || '—'}</td><td>${actionBtns('editSugarcaneHarvestIncome','sugarcaneHarvestIncome', item.id)}</td></tr>`).join('') : `<tr><td colspan="12" style="text-align:center;color:var(--text3)">No income statement records.</td></tr>`;
+    const incRows = inc.length ? inc.map(item => `<tr><td class="mono">${item.date||'—'}${item.harvestCycle ? `<div style=\"color:var(--text3);font-size:11px\">${item.harvestCycle}</div>` : ''}</td><td>${item.area || item.buyer || '—'}</td><td>${item.load || '—'}</td><td class="text-right mono">${fmt(item.puresa)}</td><td class="text-right mono">${fmt(item.kargador)}</td><td class="text-right mono">${fmt(item.kTripping)}</td><td class="text-right mono">${fmt(item.truck)}</td><td class="text-right mono">${fmt(item.dTripping)}</td><td class="text-right mono">${fmt(item.pricePerTon)}</td><td class="text-right mono">${scNum(item.tonsPaid).toFixed(2)}</td><td>${item.check || '—'}</td><td>${actionBtns('editSugarcaneHarvestIncome','sugarcaneHarvestIncome', item.id)}</td></tr>`).join('') : `<tr><td colspan="12" style="text-align:center;color:var(--text3)">No income statement records.</td></tr>`;
 
     const totalInvestment = inv.reduce((sum, item) => sum + scNum(item.totalInvestment), 0);
     const totalExpenses = exp.reduce((sum, item) => sum + scNum(item.totalExpense), 0);
@@ -5085,7 +5118,8 @@ function mapSupabaseTransactionRow(row) {
     acct: row.acct || row.account_name || row.account || '',
     cat: row.cat || row.category || '',
     subcat: row.subcat || row.subcategory || '',
-    notes: row.notes || ''
+    notes: row.notes || '',
+    harvestCycle: row.harvest_cycle || row.harvestCycle || null
   };
 }
 
@@ -5212,6 +5246,8 @@ function mapSupabaseSugarcaneInvestmentLogRow(row) {
   return {
     id: ensureUuid(row.id),
     date: row.log_date || row.date || '',
+    harvestYear: parseInt(row.harvest_year ?? row.harvestYear ?? ((row.log_date || row.date) ? new Date(row.log_date || row.date).getFullYear() : 0), 10) || null,
+    harvestCycle: row.harvest_cycle || row.harvestCycle || null,
     location: row.location || '',
     txn: row.transaction_type || row.txn || 'Other',
     category: row.category || 'Other',
@@ -5226,6 +5262,8 @@ function mapSupabaseSugarcaneHarvestExpenseRow(row) {
   return {
     id: ensureUuid(row.id),
     date: row.expense_date || row.date || '',
+    harvestYear: parseInt(row.harvest_year ?? row.harvestYear ?? ((row.expense_date || row.date) ? new Date(row.expense_date || row.date).getFullYear() : 0), 10) || null,
+    harvestCycle: row.harvest_cycle || row.harvestCycle || null,
     location: row.location || '',
     txn: row.transaction_type || row.txn || 'Other',
     expenseType: row.expense_type || row.expenseType || 'Other',
@@ -5239,6 +5277,8 @@ function mapSupabaseSugarcaneHarvestIncomeRow(row) {
   return {
     id: ensureUuid(row.id),
     date: row.income_date || row.date || '',
+    harvestYear: parseInt(row.harvest_year ?? row.harvestYear ?? ((row.income_date || row.date) ? new Date(row.income_date || row.date).getFullYear() : 0), 10) || null,
+    harvestCycle: row.harvest_cycle || row.harvestCycle || null,
     location: row.location || '',
     txn: row.transaction_type || row.txn || 'Other',
     area: row.area || '',
@@ -5262,6 +5302,7 @@ function mapSupabaseSugarcaneLandStrategyRow(row) {
   return {
     id: ensureUuid(row.id),
     year: parseInt(row.strategy_year ?? row.year ?? 0, 10) || new Date().getFullYear(),
+    harvestCycle: row.harvest_cycle || row.harvestCycle || null,
     location: row.location || '',
     txn: row.transaction_type || row.txn || 'Other',
     hectares: parseFloat(row.hectares ?? 0) || 0,
@@ -5294,6 +5335,7 @@ function mapSugarcaneActualToSupabaseRow(item) {
   return {
     id: ensureUuid(item.id),
     harvest_year: parseInt(item.year ?? 0, 10) || null,
+    harvest_cycle: item.harvestCycle || null,
     location: item.location || '',
     transaction_type: item.txn || '',
     hectares: parseFloat(item.hectares ?? 0) || 0,
@@ -5308,6 +5350,8 @@ function mapSugarcaneInvestmentLogToSupabaseRow(item) {
   return {
     id: ensureUuid(item.id),
     log_date: item.date || null,
+    harvest_year: parseInt(item.harvestYear ?? item.year ?? ((item.date) ? new Date(item.date).getFullYear() : 0), 10) || null,
+    harvest_cycle: item.harvestCycle || null,
     location: item.location || '',
     transaction_type: item.txn || '',
     category: item.category || '',
@@ -5322,6 +5366,8 @@ function mapSugarcaneHarvestExpenseToSupabaseRow(item) {
   return {
     id: ensureUuid(item.id),
     expense_date: item.date || null,
+    harvest_year: parseInt(item.harvestYear ?? item.year ?? ((item.date) ? new Date(item.date).getFullYear() : 0), 10) || null,
+    harvest_cycle: item.harvestCycle || null,
     location: item.location || '',
     transaction_type: item.txn || '',
     expense_type: item.expenseType || '',
@@ -5335,6 +5381,8 @@ function mapSugarcaneHarvestIncomeToSupabaseRow(item) {
   return {
     id: ensureUuid(item.id),
     income_date: item.date || null,
+    harvest_year: parseInt(item.harvestYear ?? item.year ?? ((item.date) ? new Date(item.date).getFullYear() : 0), 10) || null,
+    harvest_cycle: item.harvestCycle || null,
     location: item.location || '',
     transaction_type: item.txn || '',
     area: item.area || item.buyer || '',
