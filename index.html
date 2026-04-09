@@ -1454,8 +1454,43 @@ tr.subcat-row.visible{display:table-row}
         </div>
       </div>
     </div>
+
+    <div class="grid grid-2 gap-14 mt-24">
+      <div class="card">
+        <div class="section-title">Sugarcane Dropdown Settings</div>
+        <div class="card-sub" style="margin-bottom:12px;">Manage the dropdown options used across the sugar farm forms.</div>
+        <div id="sc-settings-groups"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Add Sugarcane Dropdown Option</div>
+        <div class="card-sub" style="margin-bottom:12px;">Choose which sugarcane dropdown to update, then add a new option.</div>
+        <div class="form-row mt-16" style="grid-template-columns:1fr 1fr auto;">
+          <div class="form-group">
+            <label>Dropdown Group</label>
+            <select id="sc-settings-group-select">
+              <option value="locations">Locations</option>
+              <option value="transactionTypes">Transaction Types</option>
+              <option value="investmentCategories">Investment Categories</option>
+              <option value="expenseTypes">Expense Types</option>
+              <option value="landStatuses">Land Statuses</option>
+              <option value="harvestCycles">Harvest Cycles</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>New Option</label>
+            <input type="text" id="sc-settings-new-option" placeholder="e.g. Bukid">
+          </div>
+          <div style="display:flex;align-items:end;">
+            <button class="btn btn-primary" onclick="addSugarcaneDropdownOption()">Add Option</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
+
+<datalist id="sc-location-options"></datalist>
 
 <div class="modal-overlay" id="modal-transaction"><div class="modal"><div class="modal-header"><div class="modal-title" id="txn-modal-title">Add Transaction</div><button class="modal-close" onclick="closeModal('modal-transaction')">✕</button></div><input type="hidden" id="txn-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="txn-date"></div><div class="form-group"><label>Type</label><select id="txn-type"><option>Income</option><option>Expense</option><option>Investment</option></select></div></div><div class="form-row"><div class="form-group"><label>Description</label><input type="text" id="txn-desc" placeholder="e.g. Salary, groceries..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Category</label><select id="txn-cat" onchange="populateTransactionSubcategorySelect()"></select></div><div class="form-group"><label>Sub-Category</label><select id="txn-subcat"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Account</label><select id="txn-account-sel"></select></div><div class="form-group"><label>Amount (₱)</label><input type="number" id="txn-amount" placeholder="0.00" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="txn-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveTransaction()">Save Transaction</button></div></div>
 
@@ -1474,17 +1509,17 @@ tr.subcat-row.visible{display:table-row}
 <div class="modal-overlay" id="modal-networth"><div class="modal"><div class="modal-header"><div class="modal-title" id="nw-modal-title">Add Net Worth Item</div><button class="modal-close" onclick="closeModal('modal-networth')">✕</button></div><input type="hidden" id="nw-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Type</label><select id="nw-type"><option>Asset</option><option>Liability</option></select></div><div class="form-group"><label>Category</label><select id="nw-cat"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Asset Type</label><select id="nw-asset-mode" onchange="toggleArendoFields()"><option value="standard">Standard</option><option value="arendo">Arendo Setup</option></select></div><div class="form-group"><label>Item Name</label><input type="text" id="nw-name" placeholder="e.g. Land in Lemery..."></div></div><div class="form-row"><div class="form-group"><label>Initial Value (₱)</label><input type="number" id="nw-val" placeholder="0.00" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Start / Purchase Year</label><input type="number" id="nw-start-year" placeholder="2026" min="2000" step="1"></div><div class="form-group"><label>Yearly Price Appreciation (%)</label><input type="number" id="nw-appreciation-rate" placeholder="0" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Monthly Payment / Depreciation (₱)</label><input type="number" id="nw-monthly-payment" placeholder="0" min="0" step="0.01"></div><div class="form-group"><label>Depreciation Start Date</label><input type="date" id="nw-depreciation-start"></div></div><div id="nw-arendo-fields" style="display:none;"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Years</label><input type="number" id="nw-years" placeholder="5" min="1" step="1"></div><div class="form-group"><label>Yearly Decrease (₱)</label><input type="number" id="nw-yearly-decrease" placeholder="40000" min="0" step="0.01"></div></div></div><button class="btn btn-primary w-full" onclick="saveNetWorth()">Save Item</button></div></div>
 
 
-<div class="modal-overlay" id="modal-sugarcane-actual"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-actual-modal-title">Add Yearly Actual</div><button class="modal-close" onclick="closeModal('modal-sugarcane-actual')">✕</button></div><input type="hidden" id="sc-actual-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-actual-year" min="2020" placeholder="2026"></div><div class="form-group"><label>Location</label><input type="text" id="sc-actual-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-actual-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Hectares</label><input type="number" id="sc-actual-hectares" min="0" step="0.01"></div><div class="form-group"><label>Total Tons Harvested</label><input type="number" id="sc-actual-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Phase 1 Expense (₱)</label><input type="number" id="sc-actual-p1" min="0" step="0.01"></div><div class="form-group"><label>Phase 2 Harvest Expense (₱)</label><input type="number" id="sc-actual-p2" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Gross Profit / Income (₱)</label><input type="number" id="sc-actual-gross" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="sc-actual-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneActual()">Save Yearly Actual</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-actual"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-actual-modal-title">Add Yearly Actual</div><button class="modal-close" onclick="closeModal('modal-sugarcane-actual')">✕</button></div><input type="hidden" id="sc-actual-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-actual-year" min="2020" placeholder="2026"></div><div class="form-group"><label>Location</label><input type="text" id="sc-actual-location" list="sc-location-options" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-actual-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Hectares</label><input type="number" id="sc-actual-hectares" min="0" step="0.01"></div><div class="form-group"><label>Total Tons Harvested</label><input type="number" id="sc-actual-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Phase 1 Expense (₱)</label><input type="number" id="sc-actual-p1" min="0" step="0.01"></div><div class="form-group"><label>Phase 2 Harvest Expense (₱)</label><input type="number" id="sc-actual-p2" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Gross Profit / Income (₱)</label><input type="number" id="sc-actual-gross" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="sc-actual-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneActual()">Save Yearly Actual</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane-investment"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-investment-modal-title">Add Investment Log</div><button class="modal-close" onclick="closeModal('modal-sugarcane-investment')">✕</button></div><input type="hidden" id="sc-investment-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-investment-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-investment-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-investment-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-investment-location" placeholder="Lemery"></div><div class="form-group"><label>Transaction Type</label><select id="sc-investment-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Category</label><select id="sc-investment-category"><option>Land Payment</option><option>Arendo</option><option>Prenda</option><option>Labor</option><option>Fertilizer</option><option>Spray</option><option>Fuel</option><option>Equipment</option><option>Referral Fee</option><option>Travel</option><option>Other</option></select></div><div class="form-group"><label>Description / Use</label><input type="text" id="sc-investment-description" placeholder="Sagud setup"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Quantity</label><input type="number" id="sc-investment-qty" min="0" step="0.01"></div><div class="form-group"><label>Unit Cost (₱)</label><input type="number" id="sc-investment-unit" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Total Investment (₱)</label><input type="number" id="sc-investment-total" min="0" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="sc-investment-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneInvestmentLog()">Save Investment Log</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-investment"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-investment-modal-title">Add Investment Log</div><button class="modal-close" onclick="closeModal('modal-sugarcane-investment')">✕</button></div><input type="hidden" id="sc-investment-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-investment-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-investment-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-investment-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-investment-location" list="sc-location-options" placeholder="Lemery"></div><div class="form-group"><label>Transaction Type</label><select id="sc-investment-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Category</label><select id="sc-investment-category"><option>Land Payment</option><option>Arendo</option><option>Prenda</option><option>Labor</option><option>Fertilizer</option><option>Spray</option><option>Fuel</option><option>Equipment</option><option>Referral Fee</option><option>Travel</option><option>Other</option></select></div><div class="form-group"><label>Description / Use</label><input type="text" id="sc-investment-description" placeholder="Sagud setup"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Quantity</label><input type="number" id="sc-investment-qty" min="0" step="0.01"></div><div class="form-group"><label>Unit Cost (₱)</label><input type="number" id="sc-investment-unit" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Total Investment (₱)</label><input type="number" id="sc-investment-total" min="0" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="sc-investment-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneInvestmentLog()">Save Investment Log</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane-expense"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-expense-modal-title">Add Harvest Expense</div><button class="modal-close" onclick="closeModal('modal-sugarcane-expense')">✕</button></div><input type="hidden" id="sc-expense-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-expense-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-expense-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-expense-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-expense-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-expense-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Expense Type</label><select id="sc-expense-type"><option>Kargador</option><option>Trucking</option><option>Truck Payment</option><option>Trucking Payment</option><option>Tripping Driver</option><option>Kalsada</option><option>Fuel</option><option>Food</option><option>Advance</option><option>Other</option></select></div><div class="form-group"><label>Notes</label><input type="text" id="sc-expense-notes" placeholder="Optional..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Quantity</label><input type="number" id="sc-expense-qty" min="0" step="0.01"></div><div class="form-group"><label>Rate (₱)</label><input type="number" id="sc-expense-rate" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Total Expense (₱)</label><input type="number" id="sc-expense-total" min="0" step="0.01" placeholder="Auto if blank"></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneHarvestExpense()">Save Harvest Expense</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-expense"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-expense-modal-title">Add Harvest Expense</div><button class="modal-close" onclick="closeModal('modal-sugarcane-expense')">✕</button></div><input type="hidden" id="sc-expense-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-expense-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-expense-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-expense-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-expense-location" list="sc-location-options" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-expense-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Expense Type</label><select id="sc-expense-type"><option>Kargador</option><option>Trucking</option><option>Truck Payment</option><option>Trucking Payment</option><option>Tripping Driver</option><option>Kalsada</option><option>Fuel</option><option>Food</option><option>Advance</option><option>Other</option></select></div><div class="form-group"><label>Notes</label><input type="text" id="sc-expense-notes" placeholder="Optional..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Quantity</label><input type="number" id="sc-expense-qty" min="0" step="0.01"></div><div class="form-group"><label>Rate (₱)</label><input type="number" id="sc-expense-rate" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Total Expense (₱)</label><input type="number" id="sc-expense-total" min="0" step="0.01" placeholder="Auto if blank"></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneHarvestExpense()">Save Harvest Expense</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane-income"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-income-modal-title">Add Harvest Income</div><button class="modal-close" onclick="closeModal('modal-sugarcane-income')">✕</button></div><input type="hidden" id="sc-income-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-income-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-income-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-income-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-income-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-income-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Area</label><input type="text" id="sc-income-area" placeholder="Area / mill / buyer"></div><div class="form-group"><label>Load</label><input type="text" id="sc-income-load" placeholder="Load reference"></div></div><div class="form-row" style="grid-template-columns:repeat(4,1fr)"><div class="form-group"><label>Puresa</label><input type="number" id="sc-income-puresa" step="0.01"></div><div class="form-group"><label>Kargador</label><input type="number" id="sc-income-kargador" step="0.01"></div><div class="form-group"><label>K. Tripping</label><input type="number" id="sc-income-ktripping" step="0.01"></div><div class="form-group"><label>Truck</label><input type="number" id="sc-income-truck" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>D. Tripping</label><input type="number" id="sc-income-dtripping" step="0.01"></div><div class="form-group"><label>Price</label><input type="number" id="sc-income-price" min="0" step="0.01"></div><div class="form-group"><label>Tons Paid</label><input type="number" id="sc-income-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Gross Income (₱)</label><input type="number" id="sc-income-gross" min="0" step="0.01" placeholder="Auto if blank"></div><div class="form-group"><label>Adjustments (₱)</label><input type="number" id="sc-income-adjustments" step="0.01" placeholder="Auto from deductions"></div><div class="form-group"><label>Net Income (₱)</label><input type="number" id="sc-income-net" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Check</label><input type="text" id="sc-income-check" placeholder="Check / reference"></div><div class="form-group"><label>Notes</label><input type="text" id="sc-income-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneHarvestIncome()">Save Harvest Income</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-income"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-income-modal-title">Add Harvest Income</div><button class="modal-close" onclick="closeModal('modal-sugarcane-income')">✕</button></div><input type="hidden" id="sc-income-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="sc-income-date"></div><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-income-harvest-year" min="2000" step="1"></div><div class="form-group"><label>Harvest Cycle</label><select id="sc-income-harvest-cycle"><option>H1</option><option>H2</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-income-location" list="sc-location-options" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-income-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Area</label><input type="text" id="sc-income-area" placeholder="Area / mill / buyer"></div><div class="form-group"><label>Load</label><input type="text" id="sc-income-load" placeholder="Load reference"></div></div><div class="form-row" style="grid-template-columns:repeat(4,1fr)"><div class="form-group"><label>Puresa</label><input type="number" id="sc-income-puresa" step="0.01"></div><div class="form-group"><label>Kargador</label><input type="number" id="sc-income-kargador" step="0.01"></div><div class="form-group"><label>K. Tripping</label><input type="number" id="sc-income-ktripping" step="0.01"></div><div class="form-group"><label>Truck</label><input type="number" id="sc-income-truck" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>D. Tripping</label><input type="number" id="sc-income-dtripping" step="0.01"></div><div class="form-group"><label>Price</label><input type="number" id="sc-income-price" min="0" step="0.01"></div><div class="form-group"><label>Tons Paid</label><input type="number" id="sc-income-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Gross Income (₱)</label><input type="number" id="sc-income-gross" min="0" step="0.01" placeholder="Auto if blank"></div><div class="form-group"><label>Adjustments (₱)</label><input type="number" id="sc-income-adjustments" step="0.01" placeholder="Auto from deductions"></div><div class="form-group"><label>Net Income (₱)</label><input type="number" id="sc-income-net" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Check</label><input type="text" id="sc-income-check" placeholder="Check / reference"></div><div class="form-group"><label>Notes</label><input type="text" id="sc-income-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneHarvestIncome()">Save Harvest Income</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane-land"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-land-modal-title">Add Land Strategy</div><button class="modal-close" onclick="closeModal('modal-sugarcane-land')">✕</button></div><input type="hidden" id="sc-land-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Year</label><input type="number" id="sc-land-year" min="2020" placeholder="2026"></div><div class="form-group"><label>Location</label><input type="text" id="sc-land-location" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-land-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Hectares</label><input type="number" id="sc-land-hectares" min="0" step="0.01"></div><div class="form-group"><label>Tons Total</label><input type="number" id="sc-land-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Capital Invested (₱)</label><input type="number" id="sc-land-capital" min="0" step="0.01"></div><div class="form-group"><label>Income (₱)</label><input type="number" id="sc-land-income" min="0" step="0.01"></div><div class="form-group"><label>Net Profit (₱)</label><input type="number" id="sc-land-profit" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Contract Start</label><input type="date" id="sc-land-start"></div><div class="form-group"><label>Contract End</label><input type="date" id="sc-land-end"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Status</label><select id="sc-land-status"><option>Active</option><option>Waiting Harvest</option><option>Renewing</option><option>Contract Ending</option><option>Potential Acquisition</option><option>Closed</option></select></div><div class="form-group"><label>Special Notes</label><input type="text" id="sc-land-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneLandStrategy()">Save Land Strategy</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-land"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-land-modal-title">Add Land Strategy</div><button class="modal-close" onclick="closeModal('modal-sugarcane-land')">✕</button></div><input type="hidden" id="sc-land-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Year</label><input type="number" id="sc-land-year" min="2020" placeholder="2026"></div><div class="form-group"><label>Location</label><input type="text" id="sc-land-location" list="sc-location-options" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-land-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Hectares</label><input type="number" id="sc-land-hectares" min="0" step="0.01"></div><div class="form-group"><label>Tons Total</label><input type="number" id="sc-land-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Capital Invested (₱)</label><input type="number" id="sc-land-capital" min="0" step="0.01"></div><div class="form-group"><label>Income (₱)</label><input type="number" id="sc-land-income" min="0" step="0.01"></div><div class="form-group"><label>Net Profit (₱)</label><input type="number" id="sc-land-profit" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Contract Start</label><input type="date" id="sc-land-start"></div><div class="form-group"><label>Contract End</label><input type="date" id="sc-land-end"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Status</label><select id="sc-land-status"><option>Active</option><option>Waiting Harvest</option><option>Renewing</option><option>Contract Ending</option><option>Potential Acquisition</option><option>Closed</option></select></div><div class="form-group"><label>Special Notes</label><input type="text" id="sc-land-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneLandStrategy()">Save Land Strategy</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane-projection"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-projection-modal-title">Add Projection</div><button class="modal-close" onclick="closeModal('modal-sugarcane-projection')">✕</button></div><input type="hidden" id="sc-projection-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Year</label><input type="number" id="sc-proj-year" min="2026" placeholder="2027"></div><div class="form-group"><label>Phase / Stage</label><input type="text" id="sc-proj-phase" placeholder="Scale Phase"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-proj-location" placeholder="La Carlota"></div><div class="form-group"><label>Planned Transaction</label><select id="sc-proj-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Target Hectares</label><input type="number" id="sc-proj-hectares" min="0" step="0.01"></div><div class="form-group"><label>Profit %</label><input type="number" id="sc-proj-profitpct" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Target Capital (₱)</label><input type="number" id="sc-proj-capital" min="0" step="0.01"></div><div class="form-group"><label>Target Income (₱)</label><input type="number" id="sc-proj-income" min="0" step="0.01"></div><div class="form-group"><label>Target Net Profit (₱)</label><input type="number" id="sc-proj-profit" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Special Notes</label><input type="text" id="sc-proj-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneProjection()">Save Projection</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane-projection"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-projection-modal-title">Add Projection</div><button class="modal-close" onclick="closeModal('modal-sugarcane-projection')">✕</button></div><input type="hidden" id="sc-projection-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Year</label><input type="number" id="sc-proj-year" min="2026" placeholder="2027"></div><div class="form-group"><label>Phase / Stage</label><input type="text" id="sc-proj-phase" placeholder="Scale Phase"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Location</label><input type="text" id="sc-proj-location" list="sc-location-options" placeholder="La Carlota"></div><div class="form-group"><label>Planned Transaction</label><select id="sc-proj-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Target Hectares</label><input type="number" id="sc-proj-hectares" min="0" step="0.01"></div><div class="form-group"><label>Profit %</label><input type="number" id="sc-proj-profitpct" step="0.01" placeholder="Auto if blank"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Target Capital (₱)</label><input type="number" id="sc-proj-capital" min="0" step="0.01"></div><div class="form-group"><label>Target Income (₱)</label><input type="number" id="sc-proj-income" min="0" step="0.01"></div><div class="form-group"><label>Target Net Profit (₱)</label><input type="number" id="sc-proj-profit" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Special Notes</label><input type="text" id="sc-proj-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneProjection()">Save Projection</button></div></div>
 
 <script>
 const DB_KEY = 'cathos_earthy_v1';
@@ -1536,7 +1571,15 @@ const defaults = {
       'Business Expenses': ['Farm Expense', 'Motoworks', 'Payroll', 'Marketing', 'Supplies', 'Inventory'],
       'Capital Deployment': ['Land', 'Construction', 'Equipment', 'Rental Units', 'Income Asset']
     },
-    transactionAccountOptions: ['Cash', 'BDO Premium Visa', 'AMEX Premium', 'Other Credit Card']
+    transactionAccountOptions: ['Cash', 'BDO Premium Visa', 'AMEX Premium', 'Other Credit Card'],
+    sugarcaneDropdowns: {
+      locations: ['Lemery', 'La Carlota', 'La Carlota 2.0', 'Cruz', 'Ma Uya', 'Tito Tarsan'],
+      transactionTypes: ['Arendo', 'Prenda', 'Owned', 'Palit', 'Other'],
+      investmentCategories: ['Land Payment', 'Arendo', 'Prenda', 'Labor', 'Fertilizer', 'Spray', 'Fuel', 'Equipment', 'Referral Fee', 'Travel', 'Construction', 'Other'],
+      expenseTypes: ['Kargador', 'Trucking', 'Truck Payment', 'Trucking Payment', 'Tripping Driver', 'Kalsada', 'Fuel', 'Food', 'Advance', 'Other'],
+      landStatuses: ['Active', 'Waiting Harvest', 'Renewing', 'Contract Ending', 'Potential Acquisition', 'Closed'],
+      harvestCycles: ['H1', 'H2']
+    }
   },
   sugarcane: [],
   sugarcane_proj: [
@@ -2660,6 +2703,8 @@ function renderSettings() {
     wrap.innerHTML = cats.length ? cats.map(cat => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(167,179,165,0.18)">🏷️</div><div><div class="account-name">${cat}</div><div class="account-type">Net worth dropdown option</div></div></div><div class="flex gap-10"><button class="btn btn-ghost" onclick='editNetWorthCategory(${JSON.stringify(cat)})'>Edit</button><button class="btn btn-ghost" onclick='removeNetWorthCategory(${JSON.stringify(cat)})'>Remove</button></div></div>`).join('') : '<div class="empty"><div class="empty-text">No categories yet</div></div>';
   }
   renderTransactionSettings();
+  renderSugarcaneSettings();
+  populateSugarcaneSettingsDropdowns();
 }
 
 function addTransactionCategory() {
@@ -2682,6 +2727,8 @@ function removeTransactionCategory(main) {
   if (!Object.keys(db.settings.transactionCategoryMap || {}).length) db.settings.transactionCategoryMap = JSON.parse(JSON.stringify(defaults.settings.transactionCategoryMap));
   save();
   renderTransactionSettings();
+  renderSugarcaneSettings();
+  populateSugarcaneSettingsDropdowns();
 }
 
 function deleteTransactionSubcategoryFromSettings(main) {
@@ -2720,6 +2767,8 @@ function removeTransactionAccountOption(name) {
   if (!db.settings.transactionAccountOptions.length) db.settings.transactionAccountOptions = [...defaults.settings.transactionAccountOptions];
   save();
   renderTransactionSettings();
+  renderSugarcaneSettings();
+  populateSugarcaneSettingsDropdowns();
 }
 
 function renderTransactionSettings() {
@@ -2734,6 +2783,116 @@ function renderTransactionSettings() {
     const options = db.settings?.transactionAccountOptions || [];
     acctWrap.innerHTML = options.length ? options.map(name => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(107,143,113,0.14)">💳</div><div><div class="account-name">${name}</div><div class="account-type">Custom bank / credit card option</div></div></div><div class="flex gap-10"><button class="btn btn-ghost" onclick='editTransactionAccountOption(${JSON.stringify(name)})'>Edit</button><button class="btn btn-ghost" onclick='removeTransactionAccountOption(${JSON.stringify(name)})'>Remove</button></div></div>`).join('') : '<div class="empty"><div class="empty-text">No custom account options yet</div></div>';
   }
+}
+
+function getSugarcaneDropdownSettings() {
+  const base = JSON.parse(JSON.stringify(defaults.settings?.sugarcaneDropdowns || {}));
+  const current = db.settings?.sugarcaneDropdowns || {};
+  return {
+    locations: Array.from(new Set([...(current.locations || base.locations || [])])).filter(Boolean),
+    transactionTypes: Array.from(new Set([...(current.transactionTypes || base.transactionTypes || [])])).filter(Boolean),
+    investmentCategories: Array.from(new Set([...(current.investmentCategories || base.investmentCategories || [])])).filter(Boolean),
+    expenseTypes: Array.from(new Set([...(current.expenseTypes || base.expenseTypes || [])])).filter(Boolean),
+    landStatuses: Array.from(new Set([...(current.landStatuses || base.landStatuses || [])])).filter(Boolean),
+    harvestCycles: Array.from(new Set([...(current.harvestCycles || base.harvestCycles || [])])).filter(Boolean)
+  };
+}
+
+function ensureSugarcaneDropdownSettings() {
+  db.settings = db.settings || {};
+  db.settings.sugarcaneDropdowns = getSugarcaneDropdownSettings();
+  return db.settings.sugarcaneDropdowns;
+}
+
+function renderSugarcaneSettings() {
+  const wrap = document.getElementById('sc-settings-groups');
+  if (!wrap) return;
+  const settings = ensureSugarcaneDropdownSettings();
+  const labels = {
+    locations: 'Locations',
+    transactionTypes: 'Transaction Types',
+    investmentCategories: 'Investment Categories',
+    expenseTypes: 'Expense Types',
+    landStatuses: 'Land Statuses',
+    harvestCycles: 'Harvest Cycles'
+  };
+  wrap.innerHTML = Object.entries(labels).map(([key, label]) => {
+    const list = settings[key] || [];
+    const chips = list.length
+      ? list.map(item => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(167,179,165,0.18)">🌾</div><div><div class="account-name">${item}</div><div class="account-type">${label} option</div></div></div><div class="flex gap-10"><button class="btn btn-ghost" onclick='editSugarcaneDropdownOption(${JSON.stringify(key)}, ${JSON.stringify(item)})'>Edit</button><button class="btn btn-ghost" onclick='removeSugarcaneDropdownOption(${JSON.stringify(key)}, ${JSON.stringify(item)})'>Remove</button></div></div>`).join('')
+      : '<div class="empty"><div class="empty-text">No options yet</div></div>';
+    return `<div style="margin-bottom:16px"><div class="section-title" style="font-size:14px;margin-bottom:8px">${label}</div>${chips}</div>`;
+  }).join('');
+}
+
+function addSugarcaneDropdownOption() {
+  const key = document.getElementById('sc-settings-group-select')?.value;
+  const input = document.getElementById('sc-settings-new-option');
+  const value = (input?.value || '').trim();
+  if (!key || !value) return alert('Choose a dropdown group and enter an option.');
+  const settings = ensureSugarcaneDropdownSettings();
+  settings[key] = settings[key] || [];
+  if (!settings[key].includes(value)) settings[key].push(value);
+  save();
+  renderSugarcaneSettings();
+  populateSugarcaneSettingsDropdowns();
+  input.value = '';
+}
+
+function editSugarcaneDropdownOption(key, currentValue) {
+  const next = prompt('Edit sugarcane dropdown option:', currentValue);
+  if (next === null) return;
+  const value = next.trim();
+  if (!value) return alert('Option cannot be empty.');
+  const settings = ensureSugarcaneDropdownSettings();
+  settings[key] = (settings[key] || []).map(item => item === currentValue ? value : item);
+  settings[key] = Array.from(new Set(settings[key]));
+  save();
+  renderSugarcaneSettings();
+  populateSugarcaneSettingsDropdowns();
+}
+
+function removeSugarcaneDropdownOption(key, value) {
+  const labels = {
+    locations: 'location',
+    transactionTypes: 'transaction type',
+    investmentCategories: 'investment category',
+    expenseTypes: 'expense type',
+    landStatuses: 'land status',
+    harvestCycles: 'harvest cycle'
+  };
+  if (!confirm(`Remove "${value}" from ${labels[key] || 'this dropdown'} options?`)) return;
+  const settings = ensureSugarcaneDropdownSettings();
+  settings[key] = (settings[key] || []).filter(item => item !== value);
+  if (!settings[key].length) {
+    settings[key] = [...((defaults.settings?.sugarcaneDropdowns || {})[key] || [])];
+  }
+  save();
+  renderSugarcaneSettings();
+  populateSugarcaneSettingsDropdowns();
+}
+
+function setSelectOptions(selectId, options, selected) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const current = selected ?? sel.value;
+  sel.innerHTML = (options || []).map(opt => `<option value="${opt}">${opt}</option>`).join('');
+  const list = options || [];
+  sel.value = list.includes(current) ? current : (list[0] || '');
+}
+
+function populateSugarcaneSettingsDropdowns() {
+  const settings = ensureSugarcaneDropdownSettings();
+  const locations = settings.locations || [];
+  const datalist = document.getElementById('sc-location-options');
+  if (datalist) datalist.innerHTML = locations.map(item => `<option value="${item}"></option>`).join('');
+
+  const txns = settings.transactionTypes || [];
+  ['sc-actual-txn','sc-investment-txn','sc-expense-txn','sc-income-txn','sc-land-txn','sc-proj-txn'].forEach(id => setSelectOptions(id, txns));
+  setSelectOptions('sc-investment-category', settings.investmentCategories || []);
+  setSelectOptions('sc-expense-type', settings.expenseTypes || []);
+  setSelectOptions('sc-land-status', settings.landStatuses || []);
+  ['sc-investment-harvest-cycle','sc-expense-harvest-cycle','sc-income-harvest-cycle'].forEach(id => setSelectOptions(id, settings.harvestCycles || ['H1','H2']));
 }
 
 function editTransactionCategory(main) {
