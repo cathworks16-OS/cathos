@@ -3272,7 +3272,19 @@ function renderSugarcaneDetailedReport() {
 
     const incRows = inc.length ? inc.map(item => `<tr><td class="mono">${item.date||'—'}</td><td>${item.area || item.buyer || '—'}</td><td>${item.load || '—'}</td><td class="text-right mono">${fmt(item.puresa)}</td><td class="text-right mono">${fmt(item.kargador)}</td><td class="text-right mono">${fmt(item.kTripping)}</td><td class="text-right mono">${fmt(item.truck)}</td><td class="text-right mono">${fmt(item.dTripping)}</td><td class="text-right mono">${fmt(item.pricePerTon)}</td><td class="text-right mono">${scNum(item.tonsPaid).toFixed(2)}</td><td>${item.check || '—'}</td><td>${actionBtns('editSugarcaneHarvestIncome','sugarcaneHarvestIncome', item.id)}</td></tr>`).join('') : `<tr><td colspan="12" style="text-align:center;color:var(--text3)">No income statement records.</td></tr>`;
 
-    return `<div class="location-report-block"><div class="location-chip">${location}</div><div class="location-report-grid"><div class="location-report-card"><div class="location-report-title">${location.toUpperCase()} INVESTMENT - SAGUD</div><div class="table-wrap"><table class="tight-table"><thead><tr><th>Date</th><th>Use</th><th>Quantity</th><th class="text-right">Investment</th><th class="text-right">Net Amount</th><th>Notes</th><th>Actions</th></tr></thead><tbody>${invRows}</tbody></table></div></div><div class="location-report-card"><div class="location-report-title">${location.toUpperCase()} EXPENSES - HARVEST</div><div class="table-wrap"><table class="tight-table"><thead><tr><th>Date</th><th>Use</th><th>Quantity</th><th class="text-right">Price</th><th class="text-right">Amount</th><th>Notes</th><th>Actions</th></tr></thead><tbody>${expRows}</tbody></table></div></div><div class="location-report-card"><div class="location-report-title">${location.toUpperCase()} INCOME STATEMENT</div><div class="table-wrap"><table class="tight-table"><thead><tr><th>Date</th><th>Area</th><th>Load</th><th class="text-right">Puresa</th><th class="text-right">Kargador</th><th class="text-right">K. Tripping</th><th class="text-right">Truck</th><th class="text-right">D. Tripping</th><th class="text-right">Price</th><th class="text-right">Tons Paid</th><th>Check</th><th>Actions</th></tr></thead><tbody>${incRows}</tbody></table></div></div></div></div>`;
+    const totalInvestment = inv.reduce((sum, item) => sum + scNum(item.totalInvestment), 0);
+    const totalExpenses = exp.reduce((sum, item) => sum + scNum(item.totalExpense), 0);
+    const totalGrossIncome = inc.reduce((sum, item) => sum + (scNum(item.grossIncome) || scNum(item.netIncome)), 0);
+    const totalNetIncome = inc.reduce((sum, item) => sum + scNum(item.netIncome), 0);
+    const summaryCards = `
+      <div class="grid grid-4 gap-14 mb-14">
+        <div class="mini-stat"><div class="mini-stat-label">Total Investment - Sagud</div><div class="mini-stat-value">${fmt(totalInvestment)}</div><div class="mini-stat-sub">Phase 1 setup and farm investment</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">Total Expenses</div><div class="mini-stat-value">${fmt(totalExpenses)}</div><div class="mini-stat-sub">Harvest, trucking, kargador, and tapas</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">Total Gross Income</div><div class="mini-stat-value">${fmt(totalGrossIncome)}</div><div class="mini-stat-sub">Before deductions and adjustments</div></div>
+        <div class="mini-stat"><div class="mini-stat-label">Total Net Income</div><div class="mini-stat-value">${fmt(totalNetIncome)}</div><div class="mini-stat-sub">Income after deductions</div></div>
+      </div>`;
+
+    return `<div class="location-report-block"><div class="location-chip">${location}</div>${summaryCards}<div class="location-report-grid"><div class="location-report-card"><div class="location-report-title">${location.toUpperCase()} INVESTMENT - SAGUD</div><div class="table-wrap"><table class="tight-table"><thead><tr><th>Date</th><th>Use</th><th>Quantity</th><th class="text-right">Investment</th><th class="text-right">Net Amount</th><th>Notes</th><th>Actions</th></tr></thead><tbody>${invRows}</tbody></table></div></div><div class="location-report-card"><div class="location-report-title">${location.toUpperCase()} EXPENSES - HARVEST</div><div class="table-wrap"><table class="tight-table"><thead><tr><th>Date</th><th>Use</th><th>Quantity</th><th class="text-right">Price</th><th class="text-right">Amount</th><th>Notes</th><th>Actions</th></tr></thead><tbody>${expRows}</tbody></table></div></div><div class="location-report-card"><div class="location-report-title">${location.toUpperCase()} INCOME STATEMENT</div><div class="table-wrap"><table class="tight-table"><thead><tr><th>Date</th><th>Area</th><th>Load</th><th class="text-right">Puresa</th><th class="text-right">Kargador</th><th class="text-right">K. Tripping</th><th class="text-right">Truck</th><th class="text-right">D. Tripping</th><th class="text-right">Price</th><th class="text-right">Tons Paid</th><th>Check</th><th>Actions</th></tr></thead><tbody>${incRows}</tbody></table></div></div></div></div>`;
   }).join('');
 }
 
@@ -3318,16 +3330,16 @@ function renderSugarcane() {
 
   const actualRows = filtered.actuals.map(item => {
     const m = computeSugarcaneActualMetrics(item);
-    return `<tr><td class="mono">${item.year || '—'}</td><td>${item.location || '—'}</td><td><span class="badge badge-yellow">${item.txn || '—'}</span></td><td class="mono">${scNum(item.hectares).toFixed(2)}</td><td class="mono">${scNum(item.tons).toFixed(2)}</td><td class="negative text-right">${fmt(item.phase1Expense)}</td><td class="negative text-right">${fmt(item.phase2Expense)}</td><td class="positive text-right">${fmt(item.grossProfit)}</td><td class="${m.netProfit >= 0 ? 'positive' : 'negative'} text-right">${fmt(m.netProfit)}</td><td>${m.goalProgress.toFixed(1)}%</td><td class="mono">${m.roiPct.toFixed(2)}%</td><td class="mono">${fmt(m.profitPerHectare)}</td><td class="mono">${fmt(m.costPerTon)}</td><td class="mono">${fmt(m.profitPerTon)}</td><td style="color:var(--text3)">${item.notes || '—'}</td><td><div class="flex gap-10"><button onclick="editSugarcaneActual(${item.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('sugarcaneActuals', item.id)}</div></td></tr>`;
+    return `<tr><td class="mono">${item.year || '—'}</td><td>${item.location || '—'}</td><td><span class="badge badge-yellow">${item.txn || '—'}</span></td><td class="mono">${scNum(item.hectares).toFixed(2)}</td><td class="mono">${scNum(item.tons).toFixed(2)}</td><td class="negative text-right">${fmt(item.phase1Expense)}</td><td class="negative text-right">${fmt(item.phase2Expense)}</td><td class="positive text-right">${fmt(item.grossProfit)}</td><td class="${m.netProfit >= 0 ? 'positive' : 'negative'} text-right">${fmt(m.netProfit)}</td><td>${m.goalProgress.toFixed(1)}%</td><td class="mono">${m.roiPct.toFixed(2)}%</td><td class="mono">${fmt(m.profitPerHectare)}</td><td class="mono">${fmt(m.costPerTon)}</td><td class="mono">${fmt(m.profitPerTon)}</td><td style="color:var(--text3)">${item.notes || '—'}</td><td><div class="flex gap-10"><button onclick="editSugarcaneActual('${item.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('sugarcaneActuals', item.id)}</div></td></tr>`;
   }).join('') || `<tr><td colspan="16"><div class="empty"><div class="empty-text">No yearly actuals yet</div></div></td></tr>`;
   const actualBody = document.getElementById('sc-actuals-body');
   if (actualBody) actualBody.innerHTML = actualRows;
 
   const landBody = document.getElementById('sc-land-body');
-  if (landBody) landBody.innerHTML = filtered.land.map(item => `<tr><td class="mono">${item.year || '—'}</td><td>${item.location || '—'}</td><td><span class="badge badge-yellow">${item.txn || '—'}</span></td><td class="mono">${scNum(item.hectares).toFixed(2)}</td><td class="text-right accent">${fmt(item.capitalInvested)}</td><td class="text-right positive">${fmt(item.income)}</td><td class="text-right ${scNum(item.netProfit) >= 0 ? 'positive' : 'negative'}">${fmt(item.netProfit)}</td><td class="mono">${scNum(item.tonsTotal).toFixed(2)}</td><td class="mono">${item.contractStart || '—'}</td><td class="mono">${item.contractEnd || '—'}</td><td><span class="badge badge-blue">${item.status || '—'}</span></td><td style="color:var(--text3)">${item.specialNotes || '—'}</td><td><div class="flex gap-10"><button onclick="editSugarcaneLandStrategy(${item.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('sugarcaneLandStrategy', item.id)}</div></td></tr>`).join('') || `<tr><td colspan="13"><div class="empty"><div class="empty-text">No land strategy records yet</div></div></td></tr>`;
+  if (landBody) landBody.innerHTML = filtered.land.map(item => `<tr><td class="mono">${item.year || '—'}</td><td>${item.location || '—'}</td><td><span class="badge badge-yellow">${item.txn || '—'}</span></td><td class="mono">${scNum(item.hectares).toFixed(2)}</td><td class="text-right accent">${fmt(item.capitalInvested)}</td><td class="text-right positive">${fmt(item.income)}</td><td class="text-right ${scNum(item.netProfit) >= 0 ? 'positive' : 'negative'}">${fmt(item.netProfit)}</td><td class="mono">${scNum(item.tonsTotal).toFixed(2)}</td><td class="mono">${item.contractStart || '—'}</td><td class="mono">${item.contractEnd || '—'}</td><td><span class="badge badge-blue">${item.status || '—'}</span></td><td style="color:var(--text3)">${item.specialNotes || '—'}</td><td><div class="flex gap-10"><button onclick="editSugarcaneLandStrategy('${item.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('sugarcaneLandStrategy', item.id)}</div></td></tr>`).join('') || `<tr><td colspan="13"><div class="empty"><div class="empty-text">No land strategy records yet</div></div></td></tr>`;
 
   const projBody = document.getElementById('sc-proj-body');
-  if (projBody) projBody.innerHTML = filtered.projection.map(item => `<tr><td class="mono">${item.year || '—'}</td><td>${item.phase || '—'}</td><td>${item.location || '—'}</td><td><span class="badge badge-yellow">${item.plannedTransaction || '—'}</span></td><td class="mono">${scNum(item.targetHectares).toFixed(2)}</td><td class="text-right accent">${fmt(item.targetCapital)}</td><td class="text-right positive">${fmt(item.targetIncome)}</td><td class="text-right ${scNum(item.targetNetProfit) >= 0 ? 'positive' : 'negative'}">${fmt(item.targetNetProfit)}</td><td class="mono">${scNum(item.profitPct).toFixed(2)}%</td><td style="color:var(--text3)">${item.specialNotes || '—'}</td><td><div class="flex gap-10"><button onclick="editSugarcaneProjection(${item.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('sugarcaneProjection', item.id)}</div></td></tr>`).join('') || `<tr><td colspan="11"><div class="empty"><div class="empty-text">No projection records yet</div></div></td></tr>`;
+  if (projBody) projBody.innerHTML = filtered.projection.map(item => `<tr><td class="mono">${item.year || '—'}</td><td>${item.phase || '—'}</td><td>${item.location || '—'}</td><td><span class="badge badge-yellow">${item.plannedTransaction || '—'}</span></td><td class="mono">${scNum(item.targetHectares).toFixed(2)}</td><td class="text-right accent">${fmt(item.targetCapital)}</td><td class="text-right positive">${fmt(item.targetIncome)}</td><td class="text-right ${scNum(item.targetNetProfit) >= 0 ? 'positive' : 'negative'}">${fmt(item.targetNetProfit)}</td><td class="mono">${scNum(item.profitPct).toFixed(2)}%</td><td style="color:var(--text3)">${item.specialNotes || '—'}</td><td><div class="flex gap-10"><button onclick="editSugarcaneProjection('${item.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('sugarcaneProjection', item.id)}</div></td></tr>`).join('') || `<tr><td colspan="11"><div class="empty"><div class="empty-text">No projection records yet</div></div></td></tr>`;
 
   renderSugarcaneDetailedReport();
 }
@@ -3723,7 +3735,7 @@ function renderSalary() {
   document.getElementById('salary-body').innerHTML = monthData.length ? monthData.map(r => {
     const pct = monthIncome ? (((+r.alloc || 0) / monthIncome) * 100).toFixed(1) + '%' : '—';
     const status = (+r.alloc || 0) <= (+r.amount || 0) || !(+r.amount || 0) ? 'On Track' : 'Over';
-    return `<tr><td class="mono">${r.month}</td><td>${r.cat||'—'}</td><td>${r.notes || r.acct || '—'}</td><td class="accent text-right">${fmt(r.alloc)}</td><td style="color:var(--text3)">${pct}</td><td><span class="badge ${status==='On Track'?'badge-green':'badge-red'}">${status}</span></td><td><div class="flex gap-10"><button onclick="editSalary(${r.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('salary', r.id)}</div></td></tr>`;
+    return `<tr><td class="mono">${r.month}</td><td>${r.cat||'—'}</td><td>${r.notes || r.acct || '—'}</td><td class="accent text-right">${fmt(r.alloc)}</td><td style="color:var(--text3)">${pct}</td><td><span class="badge ${status==='On Track'?'badge-green':'badge-red'}">${status}</span></td><td><div class="flex gap-10"><button onclick="editSalary('${r.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('salary', r.id)}</div></td></tr>`;
   }).join('') : `<tr><td colspan="7"><div class="empty"><div class="empty-icon">💸</div><div class="empty-text">No salary entries for ${reviewMonth}</div></div></td></tr>`;
 }
 function getAccountPhpEquivalent(account) {
@@ -3822,7 +3834,7 @@ function renderLend() {
   document.getElementById('lend-outstanding').textContent = fmt(outstanding);
   const countEl = document.getElementById('lend-count');
   if (countEl) countEl.textContent = data.length;
-  document.getElementById('lend-body').innerHTML = data.length ? data.map(l => { const bal = (+l.amount || 0) - (+l.repaid || 0); const paid = bal <= 0; const overdue = !paid && l.due && l.due < today(); return `<tr><td>${l.name}</td><td class="mono">${l.date||'—'}</td><td class="accent">${fmt(l.amount)}</td><td class="positive">${fmt(l.repaid)}</td><td class="${paid?'positive':'negative'}">${fmt(bal)}</td><td class="mono">${l.due||'—'}</td><td><span class="badge ${paid?'badge-green':overdue?'badge-red':'badge-yellow'}">${paid?'Paid':overdue?'Overdue':'Pending'}</span></td><td style="color:var(--text3)">${l.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editLend(${l.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('lend', l.id)}</div></td></tr>`; }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">No loans tracked for this filter</div></div></td></tr>`;
+  document.getElementById('lend-body').innerHTML = data.length ? data.map(l => { const bal = (+l.amount || 0) - (+l.repaid || 0); const paid = bal <= 0; const overdue = !paid && l.due && l.due < today(); return `<tr><td>${l.name}</td><td class="mono">${l.date||'—'}</td><td class="accent">${fmt(l.amount)}</td><td class="positive">${fmt(l.repaid)}</td><td class="${paid?'positive':'negative'}">${fmt(bal)}</td><td class="mono">${l.due||'—'}</td><td><span class="badge ${paid?'badge-green':overdue?'badge-red':'badge-yellow'}">${paid?'Paid':overdue?'Overdue':'Pending'}</span></td><td style="color:var(--text3)">${l.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editLend('${l.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('lend', l.id)}</div></td></tr>`; }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">No loans tracked for this filter</div></div></td></tr>`;
 
   renderDashboardCharts();
   renderDashboardPassiveIncome();
@@ -3832,8 +3844,8 @@ function renderAccountsGroup(group, cardId, bodyId, rainyMode) {
   const data = db.accounts.filter(a => a.group === group);
   const total = data.reduce((s,a)=>s + (rainyMode ? getAccountPhpEquivalent(a) : (a.currency==='PHP' ? (+a.balance || 0) : 0)),0);
   const colors = {personal:'var(--mustard)',business:'var(--accent2)',rainy:'var(--accent4)'};
-  document.getElementById(cardId).innerHTML = data.map(a => `<div class="card" onclick="editAccount(${a.id})" style="cursor:pointer"><div class="card-accent-bar" style="background:${colors[group]}"></div><div class="card-label">${a.name}</div><div class="card-value" style="color:${group==='personal'?'var(--rust)':colors[group]}">${fmtCur(a.balance, a.currency)}</div><div class="card-sub">${a.bank} · ${a.purpose||''}</div></div>`).join('') + `<div class="card"><div class="card-label">Total (PHP)</div><div class="card-value">${fmt(total)}</div><div class="card-sub">${data.length} accounts</div></div>`;
-  document.getElementById(bodyId).innerHTML = data.length ? data.map(a => `<tr><td>${a.name}</td><td>${a.bank}</td><td>${rainyMode ? a.currency : a.purpose||'—'}</td><td class="accent">${fmtCur(a.balance, a.currency)}</td>${rainyMode ? `<td class="mono">${fmt(getAccountPhpEquivalent(a))}</td>` : ''}<td class="mono" style="color:var(--text3)">${a.updated||'—'}</td><td><div class="flex gap-10"><button onclick="editAccount(${a.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('accounts', a.id)}</div></td></tr>`).join('') : `<tr><td colspan="${rainyMode?7:6}"><div class="empty"><div class="empty-text">No accounts</div></div></td></tr>`;
+  document.getElementById(cardId).innerHTML = data.map(a => `<div class="card" onclick="editAccount('${a.id}')" style="cursor:pointer"><div class="card-accent-bar" style="background:${colors[group]}"></div><div class="card-label">${a.name}</div><div class="card-value" style="color:${group==='personal'?'var(--rust)':colors[group]}">${fmtCur(a.balance, a.currency)}</div><div class="card-sub">${a.bank} · ${a.purpose||''}</div></div>`).join('') + `<div class="card"><div class="card-label">Total (PHP)</div><div class="card-value">${fmt(total)}</div><div class="card-sub">${data.length} accounts</div></div>`;
+  document.getElementById(bodyId).innerHTML = data.length ? data.map(a => `<tr><td>${a.name}</td><td>${a.bank}</td><td>${rainyMode ? a.currency : a.purpose||'—'}</td><td class="accent">${fmtCur(a.balance, a.currency)}</td>${rainyMode ? `<td class="mono">${fmt(getAccountPhpEquivalent(a))}</td>` : ''}<td class="mono" style="color:var(--text3)">${a.updated||'—'}</td><td><div class="flex gap-10"><button onclick="editAccount('${a.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('accounts', a.id)}</div></td></tr>`).join('') : `<tr><td colspan="${rainyMode?7:6}"><div class="empty"><div class="empty-text">No accounts</div></div></td></tr>`;
 }
 function renderAccounts() { renderAccountsGroup('personal','personal-accounts-cards','personal-accounts-body',false); }
 function renderBusiness() { renderAccountsGroup('business','business-accounts-cards','business-accounts-body',false); }
@@ -3981,14 +3993,14 @@ function renderCreditCards() {
   document.getElementById('creditcards-cards').innerHTML = filteredCards.map(c => {
     const metrics = getCreditCardMetrics(c);
     const availableCard = (+c.limit || 0) - (+c.balance || 0);
-    return '<div class="card" onclick="editCreditCard(' + c.id + ')" style="cursor:pointer"><div class="card-accent-bar" style="background:var(--brick)"></div><div class="card-label">' + c.name + '</div><div class="card-value red">' + fmt(c.balance) + '</div><div class="card-sub">Due ' + fmt(metrics.dueBalance) + ' · Rewards ' + fmt(metrics.rewards) + '</div><div class="card-sub">Limit ' + fmt(c.limit) + ' · Available ' + fmt(availableCard) + '</div></div>';
+    return '<div class="card" onclick="editCreditCard(\'' + c.id + '\')" style="cursor:pointer"><div class="card-accent-bar" style="background:var(--brick)"></div><div class="card-label">' + c.name + '</div><div class="card-value red">' + fmt(c.balance) + '</div><div class="card-sub">Due ' + fmt(metrics.dueBalance) + ' · Rewards ' + fmt(metrics.rewards) + '</div><div class="card-sub">Limit ' + fmt(c.limit) + ' · Available ' + fmt(availableCard) + '</div></div>';
   }).join('') + '<div class="card"><div class="card-label">Cards Tracked</div><div class="card-value">' + filteredCards.length + '</div><div class="card-sub">Current filter view</div></div>';
 
   document.getElementById('creditcards-body').innerHTML = filteredCards.length ? filteredCards.map(c => {
     const metrics = getCreditCardMetrics(c);
     const status = metrics.dueBalance <= 0 ? 'Paid' : (metrics.utilization >= 80 ? 'High Utilization' : metrics.dueBalance > 0 ? 'Payment Due' : 'Healthy');
     const badge = status === 'Paid' ? 'badge-green' : status === 'High Utilization' ? 'badge-red' : status === 'Payment Due' ? 'badge-yellow' : 'badge-blue';
-    return '<tr><td>' + (c.name||'—') + '</td><td>' + (c.issuer||'—') + '</td><td class="mono">' + (c.last4||'—') + '</td><td class="accent">' + fmt(c.limit) + '</td><td class="negative">' + fmt(c.balance) + '</td><td class="accent">' + fmt(metrics.yearSpend) + '</td><td class="positive">' + fmt(metrics.rewards) + '</td><td class="negative">' + fmt(metrics.dueBalance) + '</td><td class="mono">Stmt ' + metrics.statementLabel + ' · Due ' + metrics.dueLabel + '</td><td><span class="badge ' + badge + '">' + status + '</span></td><td style="color:var(--text3)">' + (c.notes||'—') + '</td><td><div class="flex gap-10"><button onclick="markCreditCardAsPaid(' + c.id + ')" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:12px;padding:2px 6px;font-weight:600;" title="Mark as Paid">✅ Paid</button><button onclick="editCreditCard(' + c.id + ')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>' + deleteBtn('creditcards', c.id) + '</div></td></tr>';
+    return '<tr><td>' + (c.name||'—') + '</td><td>' + (c.issuer||'—') + '</td><td class="mono">' + (c.last4||'—') + '</td><td class="accent">' + fmt(c.limit) + '</td><td class="negative">' + fmt(c.balance) + '</td><td class="accent">' + fmt(metrics.yearSpend) + '</td><td class="positive">' + fmt(metrics.rewards) + '</td><td class="negative">' + fmt(metrics.dueBalance) + '</td><td class="mono">Stmt ' + metrics.statementLabel + ' · Due ' + metrics.dueLabel + '</td><td><span class="badge ' + badge + '">' + status + '</span></td><td style="color:var(--text3)">' + (c.notes||'—') + '</td><td><div class="flex gap-10"><button onclick="markCreditCardAsPaid(\'' + c.id + '\')" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:12px;padding:2px 6px;font-weight:600;" title="Mark as Paid">✅ Paid</button><button onclick="editCreditCard(\'' + c.id + '\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>' + deleteBtn('creditcards', c.id) + '</div></td></tr>';
   }).join('') : '<tr><td colspan="12"><div class="empty"><div class="empty-icon">💳</div><div class="empty-text">No credit cards for this filter</div></div></td></tr>';
 
   const txns = (db.transactions || []).filter(t => getDateMatchesFilter(t.date, 'cc')).filter(t => {
@@ -4030,7 +4042,7 @@ function renderInvestments() {
   const data = allData.filter(i => (!selectedName || i.name === selectedName) && (!selectedType || i.type === selectedType));
   const totalInv = data.reduce((s,i)=>s + (+i.invested || 0),0); const totalCur = data.reduce((s,i)=>s + (+i.current || 0),0); const gain = totalCur - totalInv; const pct = totalInv ? ((gain/totalInv)*100).toFixed(2) : 0;
   document.getElementById('inv-total').textContent = fmt(totalInv); document.getElementById('inv-value').textContent = fmt(totalCur); document.getElementById('inv-gain').textContent = fmt(gain); document.getElementById('inv-gain').className = 'card-value ' + (gain>=0?'green':'red'); document.getElementById('inv-pct').textContent = (gain>=0?'+':'') + pct + '%'; document.getElementById('inv-pct').className = 'card-value ' + (gain>=0?'green':'red');
-  document.getElementById('inv-body').innerHTML = data.length ? data.map(i => { const g = (+i.current || 0) - (+i.invested || 0); const r = (+i.invested || 0) ? ((g/(+i.invested || 0))*100).toFixed(2) : 0; return `<tr><td>${i.name}</td><td><span class="badge badge-blue">${i.type}</span></td><td class="accent">${fmt(i.invested)}</td><td class="mono">${fmt(i.current)}</td><td class="${g>=0?'positive':'negative'}">${g>=0?'+':''}${fmt(g)}</td><td style="color:${g>=0?'var(--accent2)':'var(--accent3)'}">${g>=0?'+':''}${r}%</td><td style="color:var(--text3)">${i.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editInvestment(${i.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('investments', i.id)}</div></td></tr>`; }).join('') : `<tr><td colspan="8"><div class="empty"><div class="empty-icon">🌙</div><div class="empty-text">No investments for this filter</div></div></td></tr>`;
+  document.getElementById('inv-body').innerHTML = data.length ? data.map(i => { const g = (+i.current || 0) - (+i.invested || 0); const r = (+i.invested || 0) ? ((g/(+i.invested || 0))*100).toFixed(2) : 0; return `<tr><td>${i.name}</td><td><span class="badge badge-blue">${i.type}</span></td><td class="accent">${fmt(i.invested)}</td><td class="mono">${fmt(i.current)}</td><td class="${g>=0?'positive':'negative'}">${g>=0?'+':''}${fmt(g)}</td><td style="color:${g>=0?'var(--accent2)':'var(--accent3)'}">${g>=0?'+':''}${r}%</td><td style="color:var(--text3)">${i.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editInvestment('${i.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('investments', i.id)}</div></td></tr>`; }).join('') : `<tr><td colspan="8"><div class="empty"><div class="empty-icon">🌙</div><div class="empty-text">No investments for this filter</div></div></td></tr>`;
 
   const nameNeedle = selectedName.toLowerCase();
   const typeNeedle = selectedType.toLowerCase();
@@ -4073,11 +4085,11 @@ function renderNetWorth() {
   const invRow = `<tr><td>Investments (all)</td><td><span class="badge badge-blue">Auto</span></td><td>Standard</td><td class="accent">${fmt(invAssets)}</td><td></td></tr>`;
   document.getElementById('nw-assets-body').innerHTML =
     bankRow + invRow +
-    (assets.length ? assets.map(x => `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${x.assetMode==='arendo' ? 'Arendo Setup' : 'Standard'}</td><td class="accent">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth(${x.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`).join('') : '') +
+    (assets.length ? assets.map(x => `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${x.assetMode==='arendo' ? 'Arendo Setup' : 'Standard'}</td><td class="accent">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth('${x.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`).join('') : '') +
     `<tr class="totals-row"><td>TOTAL</td><td></td><td></td><td>${fmt(totalAssets)}</td><td></td></tr>`;
 
   document.getElementById('nw-liab-body').innerHTML =
-    (liabs.length ? liabs.map(x => `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${x.assetMode==='arendo' ? 'Arendo Setup' : 'Standard'}</td><td class="negative">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth(${x.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`).join('') : '<tr><td colspan="5"><div class="empty"><div class="empty-text">No liabilities</div></div></td></tr>') +
+    (liabs.length ? liabs.map(x => `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${x.assetMode==='arendo' ? 'Arendo Setup' : 'Standard'}</td><td class="negative">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth('${x.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`).join('') : '<tr><td colspan="5"><div class="empty"><div class="empty-text">No liabilities</div></div></td></tr>') +
     `<tr class="totals-row"><td>TOTAL</td><td></td><td></td><td>${fmt(totalLiabs)}</td><td></td></tr>`;
 }
 
@@ -4863,11 +4875,11 @@ function renderNetWorth() {
   const invRow = `<tr><td>Investments (all)</td><td><span class="badge badge-blue">Auto</span></td><td>Standard</td><td class="accent">${fmt(invAssets)}</td><td></td></tr>`;
   document.getElementById('nw-assets-body').innerHTML = bankRow + rainyRow + invRow + ((assets.length ? assets.map(x => {
     const appreciationText = (+x.appreciationRate || 0) > 0 ? ` · ${Number(x.appreciationRate).toFixed(2)}%/yr` : '';
-    return `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${x.assetMode==='arendo' ? 'Arendo Setup' : 'Standard'}${appreciationText}</td><td class="accent">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth(${x.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`;
+    return `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${x.assetMode==='arendo' ? 'Arendo Setup' : 'Standard'}${appreciationText}</td><td class="accent">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth('${x.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`;
   }).join('') : '')) + `<tr class="totals-row"><td>TOTAL</td><td></td><td></td><td>${fmt(totalAssets)}</td><td></td></tr>`;
   document.getElementById('nw-liab-body').innerHTML = ((liabs.length ? liabs.map(x => {
     const payText = (+x.monthlyPayment || 0) > 0 ? `${fmt(x.monthlyPayment)}/month` : '—';
-    return `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${payText}</td><td class="negative">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth(${x.id})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`;
+    return `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${payText}</td><td class="negative">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth('${x.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`;
   }).join('') : '<tr><td colspan="5"><div class="empty"><div class="empty-text">No liabilities</div></div></td></tr>')) + `<tr class="totals-row"><td>TOTAL</td><td></td><td></td><td>${fmt(totalLiabs)}</td><td></td></tr>`;
   renderNetWorthGrowthTables('nw-monthly-report-body','nw-yearly-report-body', new Date().getFullYear());
 }
@@ -5535,33 +5547,53 @@ async function upsertRows(table, rows) {
   if (error) throw error;
 }
 
+async function deleteMissingRows(table, localIds) {
+  if (!supabaseClient) return;
+  const { data, error } = await supabaseClient.from(table).select('id');
+  if (error) throw error;
+  const remoteIds = (data || []).map(row => String(row.id || '')).filter(Boolean);
+  const keepIds = new Set((localIds || []).map(id => String(id || '')).filter(Boolean));
+  const idsToDelete = remoteIds.filter(id => !keepIds.has(id));
+  if (!idsToDelete.length) return;
+  const { error: deleteError } = await supabaseClient.from(table).delete().in('id', idsToDelete);
+  if (deleteError) throw deleteError;
+}
+
+async function syncTableToSupabase(table, rows) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  await upsertRows(table, safeRows);
+  await deleteMissingRows(table, safeRows.map(row => row.id));
+}
+
 async function saveToSupabase(options = {}) {
   try {
     migrateLegacyIdsInDb();
     updateSyncStatus('warn', 'Saving to Supabase...');
     await Promise.all([
-      upsertRows('transactions', (db.transactions || []).map(mapTransactionToSupabaseRow)),
-      upsertRows('accounts', (db.accounts || []).map(mapAccountToSupabaseRow)),
-      upsertRows('credit_cards', (db.creditcards || []).map(mapCreditCardToSupabaseRow)),
-      upsertRows('lending', (db.lend || []).map(mapLendingToSupabaseRow)),
-      upsertRows('investments', (db.investments || []).map(mapInvestmentToSupabaseRow)),
-      upsertRows('budgets', (db.budget || []).map(mapBudgetToSupabaseRow)),
-      upsertRows('salary_allocations', (db.salary || []).map(mapSalaryToSupabaseRow)),
-      upsertRows('net_worth', (db.networth || []).map(mapNetWorthToSupabaseRow)),
-      upsertRows('monthly_summaries', (db.monthlySummaries || []).map(mapMonthlySummaryToSupabaseRow)),
-      upsertRows('sugarcane_actuals', (db.sugarcaneActuals || []).map(mapSugarcaneActualToSupabaseRow)),
-      upsertRows('sugarcane_investment_logs', (db.sugarcaneInvestmentLogs || []).map(mapSugarcaneInvestmentLogToSupabaseRow)),
-      upsertRows('sugarcane_harvest_expenses', (db.sugarcaneHarvestExpenses || []).map(mapSugarcaneHarvestExpenseToSupabaseRow)),
-      upsertRows('sugarcane_harvest_income', (db.sugarcaneHarvestIncome || []).map(mapSugarcaneHarvestIncomeToSupabaseRow)),
-      upsertRows('sugarcane_land_strategy', (db.sugarcaneLandStrategy || []).map(mapSugarcaneLandStrategyToSupabaseRow)),
-      upsertRows('sugarcane_projection', (db.sugarcaneProjection || []).map(mapSugarcaneProjectionToSupabaseRow))
+      syncTableToSupabase('transactions', (db.transactions || []).map(mapTransactionToSupabaseRow)),
+      syncTableToSupabase('accounts', (db.accounts || []).map(mapAccountToSupabaseRow)),
+      syncTableToSupabase('credit_cards', (db.creditcards || []).map(mapCreditCardToSupabaseRow)),
+      syncTableToSupabase('lending', (db.lend || []).map(mapLendingToSupabaseRow)),
+      syncTableToSupabase('investments', (db.investments || []).map(mapInvestmentToSupabaseRow)),
+      syncTableToSupabase('budgets', (db.budget || []).map(mapBudgetToSupabaseRow)),
+      syncTableToSupabase('salary_allocations', (db.salary || []).map(mapSalaryToSupabaseRow)),
+      syncTableToSupabase('net_worth', (db.networth || []).map(mapNetWorthToSupabaseRow)),
+      syncTableToSupabase('monthly_summaries', (db.monthlySummaries || []).map(mapMonthlySummaryToSupabaseRow)),
+      syncTableToSupabase('sugarcane_actuals', (db.sugarcaneActuals || []).map(mapSugarcaneActualToSupabaseRow)),
+      syncTableToSupabase('sugarcane_investment_logs', (db.sugarcaneInvestmentLogs || []).map(mapSugarcaneInvestmentLogToSupabaseRow)),
+      syncTableToSupabase('sugarcane_harvest_expenses', (db.sugarcaneHarvestExpenses || []).map(mapSugarcaneHarvestExpenseToSupabaseRow)),
+      syncTableToSupabase('sugarcane_harvest_income', (db.sugarcaneHarvestIncome || []).map(mapSugarcaneHarvestIncomeToSupabaseRow)),
+      syncTableToSupabase('sugarcane_land_strategy', (db.sugarcaneLandStrategy || []).map(mapSugarcaneLandStrategyToSupabaseRow)),
+      syncTableToSupabase('sugarcane_projection', (db.sugarcaneProjection || []).map(mapSugarcaneProjectionToSupabaseRow))
     ]);
     updateSyncStatus('ok', 'Saved to Supabase');
     if (!options.silent) alert('CathOS data saved to Supabase.');
   } catch (error) {
     console.error('Supabase save failed:', error);
     updateSyncStatus('err', 'Supabase save failed');
-    if (!options.silent) alert('Failed to save to Supabase.\n\n' + (error.message || error));
+    if (!options.silent) alert('Failed to save to Supabase.
+
+' + (error.message || error));
   }
 }
 
