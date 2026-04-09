@@ -551,6 +551,136 @@ tr.subcat-row.visible{display:table-row}
 .sc-empty-block{padding:20px;border:1px dashed var(--border);border-radius:12px;background:rgba(255,255,255,0.75);font-size:12px;color:var(--text3);text-align:center}
 @media (max-width: 1180px){.location-report-grid{grid-template-columns:1fr}}
 
+
+/* ── premium dashboard upgrade ── */
+.dashboard-premium-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.dashboard-premium-note{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.85);
+  color:var(--accent);
+  font-size:11px;
+  font-weight:700;
+}
+.dashboard-filter-panel{
+  display:grid;
+  grid-template-columns:1.2fr repeat(4, minmax(160px, 1fr));
+  gap:12px;
+  background:rgba(255,255,255,0.92);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.03);
+  margin-bottom:16px;
+}
+.dashboard-filter-group{display:flex;flex-direction:column;gap:6px}
+.dashboard-filter-group label{
+  font-size:10px;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:var(--text3);
+  font-weight:700;
+}
+.dashboard-filter-group select,
+.dashboard-filter-group input{
+  background:#fff;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:12px;
+  outline:none;
+}
+.dashboard-kpi-grid{display:grid;gap:14px;grid-template-columns:repeat(5,1fr);margin-bottom:14px}
+.dashboard-kpi-card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,243,239,0.96));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.04);
+  position:relative;
+  overflow:hidden;
+}
+.dashboard-kpi-card::after{
+  content:'';
+  position:absolute;
+  right:-18px;
+  bottom:-18px;
+  width:90px;
+  height:90px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(107,143,113,0.12), rgba(107,143,113,0.01) 70%);
+}
+.dashboard-kpi-label{
+  font-size:10px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:8px;
+  font-weight:700;
+}
+.dashboard-kpi-value{
+  font-family:'DM Mono', monospace;
+  font-size:22px;
+  color:var(--text);
+  line-height:1.1;
+}
+.dashboard-kpi-sub{
+  font-size:11px;
+  color:var(--text3);
+  margin-top:5px;
+}
+.dashboard-chart-grid{
+  display:grid;
+  gap:14px;
+  grid-template-columns:1.15fr 1.15fr 0.9fr;
+  margin-top:16px;
+}
+.dashboard-chart-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.04);
+}
+.dashboard-chart-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:12px;
+}
+.dashboard-chart-meta{font-size:11px;color:var(--text3);margin-top:4px}
+.dashboard-insight-stack{display:grid;gap:10px}
+.dashboard-insight-item{
+  padding:12px 14px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:rgba(255,255,255,0.82);
+}
+.dashboard-insight-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px}
+.dashboard-insight-sub{font-size:11px;color:var(--text3);line-height:1.55}
+@media (max-width: 1180px){
+  .dashboard-filter-panel{grid-template-columns:1fr 1fr}
+  .dashboard-kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .dashboard-chart-grid{grid-template-columns:1fr}
+}
+@media (max-width: 900px){
+  .dashboard-filter-panel{grid-template-columns:1fr}
+  .dashboard-kpi-grid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -667,28 +797,96 @@ tr.subcat-row.visible{display:table-row}
     </div>
   </div>
 
+  
   <div class="page active" id="page-dashboard">
     <div class="page-header">
       <div>
         <div class="page-title">Good day! 👋</div>
         <div class="page-sub">If you open CathOS, you should know your life in 5 seconds.</div>
       </div>
-      <div id="dashboard-date" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;"></div>
+      <div class="dashboard-premium-header">
+        <div class="dashboard-premium-note" id="dashboard-range-note">Premium Dashboard View</div>
+        <div id="dashboard-date" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;"></div>
+      </div>
     </div>
 
-    <div class="grid grid-4 mb-14">
-      <div class="card"><div class="card-accent-bar" style="background: var(--accent);"></div><div class="card-label">Total Net Worth</div><div class="card-value accent" id="kpi-networth">₱0.00</div><div class="card-sub">Assets − Liabilities</div></div>
-      <div class="card"><div class="card-accent-bar" style="background: var(--accent2);"></div><div class="card-label">Total Bank Balance</div><div class="card-value green" id="kpi-bank">₱0.00</div><div class="card-sub">All accounts combined</div></div>
-      <div class="card"><div class="card-accent-bar" style="background: var(--accent3);"></div><div class="card-label">Outstanding Loans</div><div class="card-value red" id="kpi-lend">₱0.00</div><div class="card-sub">Money lent out</div></div>
-      <div class="card"><div class="card-accent-bar" style="background: var(--mustard);"></div><div class="card-label">Sugarcane Goal</div><div class="card-value" id="kpi-sugar">₱0 / ₱2M</div><div class="card-sub"><div class="progress-bar-wrap"><div class="progress-bar" id="sugar-progress" style="width:0%"></div></div></div></div>
+    <div class="dashboard-filter-panel">
+      <div class="dashboard-filter-group">
+        <label for="dash-date-preset">Date Range</label>
+        <select id="dash-date-preset">
+          <option value="thisMonth">This Month</option>
+          <option value="last3">Last 3 Months</option>
+          <option value="last6">Last 6 Months</option>
+          <option value="last12" selected>Last 12 Months</option>
+          <option value="thisYear">This Year</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
+      <div class="dashboard-filter-group">
+        <label for="dash-income-source">Income Source</label>
+        <select id="dash-income-source">
+          <option value="all">All Sources</option>
+          <option value="salary">Salary</option>
+          <option value="rental">Rental</option>
+          <option value="affiliate">Affiliate</option>
+          <option value="farm">Farm</option>
+        </select>
+      </div>
+      <div class="dashboard-filter-group">
+        <label for="dash-account-view">Account View</label>
+        <select id="dash-account-view">
+          <option value="all">All Accounts</option>
+          <option value="personal">Personal</option>
+          <option value="business">Business</option>
+          <option value="rainy">Rainy Day</option>
+        </select>
+      </div>
+      <div class="dashboard-filter-group">
+        <label for="dash-category-filter">Expense Category</label>
+        <select id="dash-category-filter">
+          <option value="all">All Categories</option>
+        </select>
+      </div>
+      <div class="dashboard-filter-group">
+        <label for="dash-search-filter">Keyword Search</label>
+        <input type="text" id="dash-search-filter" placeholder="Search description, notes, account...">
+      </div>
+    </div>
+
+    <div class="dashboard-kpi-grid">
+      <div class="dashboard-kpi-card">
+        <div class="dashboard-kpi-label">Net Worth</div>
+        <div class="dashboard-kpi-value" id="kpi-networth">₱0.00</div>
+        <div class="dashboard-kpi-sub">Assets minus liabilities</div>
+      </div>
+      <div class="dashboard-kpi-card">
+        <div class="dashboard-kpi-label">Tracked Cash</div>
+        <div class="dashboard-kpi-value" id="kpi-bank">₱0.00</div>
+        <div class="dashboard-kpi-sub">Cash across visible accounts</div>
+      </div>
+      <div class="dashboard-kpi-card">
+        <div class="dashboard-kpi-label">Net Cash Flow</div>
+        <div class="dashboard-kpi-value" id="dash-monthly-cashflow">₱0.00</div>
+        <div class="dashboard-kpi-sub" id="dash-monthly-cashflow-sub">Income minus expenses</div>
+      </div>
+      <div class="dashboard-kpi-card">
+        <div class="dashboard-kpi-label">Passive Income</div>
+        <div class="dashboard-kpi-value" id="dash-passive-total">₱0.00</div>
+        <div class="dashboard-kpi-sub" id="dash-passive-total-sub">Rental, affiliate, and farm</div>
+      </div>
+      <div class="dashboard-kpi-card">
+        <div class="dashboard-kpi-label">Sugarcane Goal</div>
+        <div class="dashboard-kpi-value" id="kpi-sugar">₱0 / ₱2M</div>
+        <div class="dashboard-kpi-sub"><div class="progress-bar-wrap"><div class="progress-bar" id="sugar-progress" style="width:0%"></div></div></div>
+      </div>
     </div>
 
     <div class="insight-grid mb-14">
-      <div class="mini-stat"><div class="mini-stat-label">Monthly Cash Flow</div><div class="mini-stat-value" id="dash-monthly-cashflow">₱0.00</div><div class="mini-stat-sub" id="dash-monthly-cashflow-sub">Income minus expenses this month</div></div>
       <div class="mini-stat"><div class="mini-stat-label">Burn Rate</div><div class="mini-stat-value" id="dash-burn-rate">₱0.00</div><div class="mini-stat-sub" id="dash-burn-rate-sub">Average monthly expense outflow</div></div>
       <div class="mini-stat"><div class="mini-stat-label">Investment Growth</div><div class="mini-stat-value" id="dash-investment-growth">0%</div><div class="mini-stat-sub" id="dash-investment-growth-sub">Portfolio return</div></div>
       <div class="mini-stat"><div class="mini-stat-label">Business Split</div><div class="mini-stat-value" id="dash-business-split">0%</div><div class="mini-stat-sub" id="dash-business-split-sub">Of total tracked cash</div></div>
       <div class="mini-stat"><div class="mini-stat-label">Personal Split</div><div class="mini-stat-value" id="dash-personal-split">0%</div><div class="mini-stat-sub" id="dash-personal-split-sub">Of total tracked cash</div></div>
+      <div class="mini-stat"><div class="mini-stat-label">Outstanding Loans</div><div class="mini-stat-value" id="kpi-lend">₱0.00</div><div class="mini-stat-sub">Money lent out</div></div>
     </div>
 
     <div class="grid grid-2 gap-14 mt-16">
@@ -713,10 +911,37 @@ tr.subcat-row.visible{display:table-row}
       </div>
     </div>
 
-    <div class="grid grid-3 gap-14 mt-16">
-      <div class="chart-card"><div class="section-title">📈 Net Worth Graph</div><canvas id="dash-chart-networth"></canvas></div>
-      <div class="chart-card"><div class="section-title">💸 Monthly Cash Flow</div><canvas id="dash-chart-cashflow"></canvas></div>
-      <div class="chart-card"><div class="section-title">🧾 Category Breakdown</div><canvas id="dash-chart-category"></canvas></div>
+    <div class="dashboard-chart-grid">
+      <div class="dashboard-chart-card">
+        <div class="dashboard-chart-head">
+          <div>
+            <div class="section-title" style="margin-bottom:0">📈 Net Worth Graph</div>
+            <div class="dashboard-chart-meta" id="dash-networth-meta">Trend over selected range</div>
+          </div>
+          <span class="sync-pill" id="dash-networth-badge">Range</span>
+        </div>
+        <canvas id="dash-chart-networth"></canvas>
+      </div>
+      <div class="dashboard-chart-card">
+        <div class="dashboard-chart-head">
+          <div>
+            <div class="section-title" style="margin-bottom:0">💸 Income vs Expense</div>
+            <div class="dashboard-chart-meta" id="dash-cashflow-meta">Monthly cash flow comparison</div>
+          </div>
+          <span class="sync-pill" id="dash-cashflow-badge">Monthly</span>
+        </div>
+        <canvas id="dash-chart-cashflow"></canvas>
+      </div>
+      <div class="dashboard-chart-card">
+        <div class="dashboard-chart-head">
+          <div>
+            <div class="section-title" style="margin-bottom:0">🧾 Expense Breakdown</div>
+            <div class="dashboard-chart-meta" id="dash-category-meta">Top categories by spend</div>
+          </div>
+          <span class="sync-pill">Top 8</span>
+        </div>
+        <canvas id="dash-chart-category"></canvas>
+      </div>
     </div>
 
     <div class="grid grid-4 gap-14 mt-16" id="dash-passive-grid"></div>
@@ -3212,120 +3437,306 @@ const fns = { dashboard: renderDash, transactions: renderTransactions, budget: r
 }
 
 
+
 let dashNetWorthChart = null;
 let dashCashflowChart = null;
 let dashCategoryChart = null;
+let dashboardFiltersBound = false;
 
-function getPassiveIncomeSummary(year = new Date().getFullYear()) {
-  const rows = (db.transactions || []).filter(t => t.type === 'Income' && t.date && new Date(t.date + 'T00:00:00').getFullYear() === year);
-  const rental = rows.filter(t => /rental|rent|home share/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
-  const affiliate = rows.filter(t => /affiliate/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
-  const farm = rows.filter(t => /farm income|farm|harvest|sugarcane/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
+function getPassiveIncomeSummaryFromRows(rows = []) {
+  const incomeRows = rows.filter(t => t.type === 'Income');
+  const rental = incomeRows.filter(t => /rental|rent|home share/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
+  const affiliate = incomeRows.filter(t => /affiliate/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
+  const farm = incomeRows.filter(t => /farm income|farm|harvest|sugarcane/i.test(`${t.desc||''} ${t.subcat||''} ${t.cat||''}`)).reduce((s,t)=>s+(+t.amount||0),0);
   return { rental, affiliate, farm, total: rental + affiliate + farm };
 }
+function getPassiveIncomeSummary(year = new Date().getFullYear()) {
+  const rows = (db.transactions || []).filter(t => t.type === 'Income' && t.date && new Date(t.date + 'T00:00:00').getFullYear() === year);
+  return getPassiveIncomeSummaryFromRows(rows);
+}
+function getDashboardFilterValues() {
+  return {
+    preset: document.getElementById('dash-date-preset')?.value || 'last12',
+    source: document.getElementById('dash-income-source')?.value || 'all',
+    accountView: document.getElementById('dash-account-view')?.value || 'all',
+    category: document.getElementById('dash-category-filter')?.value || 'all',
+    search: (document.getElementById('dash-search-filter')?.value || '').trim().toLowerCase()
+  };
+}
+function dashboardPresetLabel(preset) {
+  const labels = { thisMonth:'This Month', last3:'Last 3 Months', last6:'Last 6 Months', last12:'Last 12 Months', thisYear:'This Year', all:'All Time' };
+  return labels[preset] || 'Custom Range';
+}
+function getDashboardDateRange(preset) {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  let start = null;
+  if (preset === 'thisMonth') start = new Date(now.getFullYear(), now.getMonth(), 1);
+  else if (preset === 'last3') start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  else if (preset === 'last6') start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  else if (preset === 'last12') start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+  else if (preset === 'thisYear') start = new Date(now.getFullYear(), 0, 1);
+  return { start, end };
+}
+function matchesDashboardIncomeSource(tx, source) {
+  if (source === 'all') return true;
+  const hay = `${tx.desc||''} ${tx.subcat||''} ${tx.cat||''} ${tx.notes||''}`.toLowerCase();
+  if (source === 'salary') return /salary|client payment|psycle/i.test(hay);
+  if (source === 'rental') return /rental|rent|home share/i.test(hay);
+  if (source === 'affiliate') return /affiliate/i.test(hay);
+  if (source === 'farm') return /farm|harvest|sugarcane/i.test(hay);
+  return true;
+}
+function getDashboardFilteredTransactions() {
+  const filters = getDashboardFilterValues();
+  const range = getDashboardDateRange(filters.preset);
+  return (db.transactions || []).filter(tx => {
+    const date = tx.date ? new Date(tx.date + 'T00:00:00') : null;
+    if (!date || isNaN(date)) return false;
+    if (range.start && date < range.start) return false;
+    if (range.end && date > range.end) return false;
+    if (filters.source !== 'all' && tx.type === 'Income' && !matchesDashboardIncomeSource(tx, filters.source)) return false;
+    if (filters.category !== 'all' && tx.type !== 'Income' && (tx.cat || '') !== filters.category) return false;
+    if (filters.search) {
+      const hay = `${tx.desc||''} ${tx.cat||''} ${tx.subcat||''} ${tx.notes||''} ${tx.acct||''}`.toLowerCase();
+      if (!hay.includes(filters.search)) return false;
+    }
+    return true;
+  });
+}
+function renderDashboardFilterOptions() {
+  const categorySel = document.getElementById('dash-category-filter');
+  if (categorySel) {
+    const current = categorySel.value || 'all';
+    const cats = [...new Set((db.transactions || []).filter(t => t.type !== 'Income').map(t => t.cat).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
+    categorySel.innerHTML = '<option value="all">All Categories</option>' + cats.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    categorySel.value = cats.includes(current) ? current : 'all';
+  }
+}
+function bindDashboardFilters() {
+  if (dashboardFiltersBound) return;
+  dashboardFiltersBound = true;
+  ['dash-date-preset','dash-income-source','dash-account-view','dash-category-filter','dash-search-filter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', renderDash);
+    el.addEventListener('input', renderDash);
+  });
+}
+function getDashboardMonths(filteredTransactions, preset) {
+  const keys = [...new Set(filteredTransactions.map(tx => (tx.date || '').slice(0,7)).filter(Boolean))].sort();
+  if (keys.length) return keys;
+  const range = getDashboardDateRange(preset);
+  if (!range.start) return [];
+  const months = [];
+  const cursor = new Date(range.start.getFullYear(), range.start.getMonth(), 1);
+  const limit = new Date(range.end.getFullYear(), range.end.getMonth(), 1);
+  while (cursor <= limit) {
+    months.push(`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`);
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  return months;
+}
+function monthLabelFromKey(key) {
+  if (!key) return '';
+  const [y, m] = key.split('-');
+  const d = new Date(Number(y), Number(m) - 1, 1);
+  return d.toLocaleDateString('en-PH', { month:'short', year:'numeric' });
+}
+function getDashboardData() {
+  const filters = getDashboardFilterValues();
+  const filteredTransactions = getDashboardFilteredTransactions();
+  const months = getDashboardMonths(filteredTransactions, filters.preset);
+  const monthlyMap = {};
+  months.forEach(m => monthlyMap[m] = { income:0, expense:0, investment:0 });
+  filteredTransactions.forEach(tx => {
+    const key = (tx.date || '').slice(0,7);
+    if (!monthlyMap[key]) monthlyMap[key] = { income:0, expense:0, investment:0 };
+    const amt = +tx.amount || 0;
+    if (tx.type === 'Income') monthlyMap[key].income += amt;
+    else if (tx.type === 'Investment') monthlyMap[key].investment += amt;
+    else monthlyMap[key].expense += amt;
+  });
 
-function renderDashboardCharts() {
+  const expenseByCat = {};
+  filteredTransactions.filter(t => t.type !== 'Income').forEach(t => {
+    const key = t.cat || 'Uncategorized';
+    expenseByCat[key] = (expenseByCat[key] || 0) + (+t.amount || 0);
+  });
+
+  const passive = getPassiveIncomeSummaryFromRows(filteredTransactions);
+  const totalIncome = filteredTransactions.filter(t => t.type === 'Income').reduce((s,t)=>s+(+t.amount||0),0);
+  const totalExpense = filteredTransactions.filter(t => t.type === 'Expense').reduce((s,t)=>s+(+t.amount||0),0);
+  const totalInvestment = filteredTransactions.filter(t => t.type === 'Investment').reduce((s,t)=>s+(+t.amount||0),0);
+  const burnRate = months.length ? Object.values(monthlyMap).reduce((s,row)=>s+row.expense,0) / Math.max(1, Object.values(monthlyMap).filter(row => row.expense > 0).length || months.length) : 0;
+
+  const accountView = filters.accountView;
+  const personalAccounts = (db.accounts || []).filter(a => a.group === 'personal' && a.currency === 'PHP');
+  const businessAccounts = (db.accounts || []).filter(a => a.group === 'business' && a.currency === 'PHP');
+  const rainyAccounts = (db.accounts || []).filter(a => a.group === 'rainy' && a.currency === 'PHP');
+  let visibleAccounts = (db.accounts || []).filter(a => a.currency === 'PHP');
+  if (accountView !== 'all') visibleAccounts = visibleAccounts.filter(a => a.group === accountView);
+  const trackedCash = visibleAccounts.reduce((s, a) => s + (+a.balance || 0), 0);
+  const personalTotal = personalAccounts.reduce((s, a) => s + (+a.balance || 0), 0);
+  const businessTotal = businessAccounts.reduce((s, a) => s + (+a.balance || 0), 0);
+  const rainyTotal = rainyAccounts.reduce((s, a) => s + (+a.balance || 0), 0);
+  const allTrackedCash = personalTotal + businessTotal + rainyTotal;
+  const personalPct = allTrackedCash ? (personalTotal / allTrackedCash) * 100 : 0;
+  const businessPct = allTrackedCash ? (businessTotal / allTrackedCash) * 100 : 0;
+
+  const lendOut = (db.lend || []).reduce((s, l) => s + ((+l.amount || 0) - (+l.repaid || 0)), 0);
+  const sugarProfit = (db.sugarcaneActuals || []).reduce((s, r) => s + ((+r.grossProfit || 0) - (+r.phase1Expense || 0) - (+r.phase2Expense || 0)), 0);
+  const investmentCost = (db.investments || []).reduce((s, i) => s + (+i.invested || 0), 0);
+  const investmentValue = (db.investments || []).reduce((s, i) => s + (+i.current || 0), 0);
+  const investmentGrowth = investmentCost ? ((investmentValue - investmentCost) / investmentCost) * 100 : 0;
+  const assets = (db.networth || []).filter(x=>x.type==='Asset').reduce((s,x)=>s + +(getNetWorthCurrentValue(x) || 0),0) + trackedCash;
+  const liabs = (db.networth || []).filter(x=>x.type==='Liability').reduce((s,x)=>s + +((x.val || x.initialVal) || 0),0);
+  const netWorth = assets - liabs;
+
+  let runningNetWorth = netWorth;
+  const netWorthSeries = [...months].reverse().map(month => {
+    const row = monthlyMap[month] || { income:0, expense:0, investment:0 };
+    const point = { month, value: runningNetWorth };
+    runningNetWorth -= (row.income - row.expense - row.investment);
+    return point;
+  }).reverse();
+
+  return {
+    filters,
+    filteredTransactions,
+    months,
+    monthlyMap,
+    expenseByCat,
+    passive,
+    totalIncome,
+    totalExpense,
+    totalInvestment,
+    cashFlow: totalIncome - totalExpense - totalInvestment,
+    burnRate,
+    trackedCash,
+    personalAccounts,
+    businessAccounts,
+    personalTotal,
+    businessTotal,
+    personalPct,
+    businessPct,
+    lendOut,
+    sugarProfit,
+    investmentCost,
+    investmentValue,
+    investmentGrowth,
+    netWorth,
+    netWorthSeries
+  };
+}
+function renderDashboardCharts(data) {
   if (typeof Chart === 'undefined') return;
   const nwCtx = document.getElementById('dash-chart-networth');
   const cfCtx = document.getElementById('dash-chart-cashflow');
   const catCtx = document.getElementById('dash-chart-category');
   if (!nwCtx || !cfCtx || !catCtx) return;
 
-  const monthly = Array.from({length:12}, (_,i)=>i);
-  const year = new Date().getFullYear();
-  const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const cashflow = monthly.map(i => {
-    const income = (db.transactions||[]).filter(t => t.date && new Date(t.date + 'T00:00:00').getFullYear()===year && new Date(t.date + 'T00:00:00').getMonth()===i && t.type==='Income').reduce((s,t)=>s+(+t.amount||0),0);
-    const out = (db.transactions||[]).filter(t => t.date && new Date(t.date + 'T00:00:00').getFullYear()===year && new Date(t.date + 'T00:00:00').getMonth()===i && t.type!=='Income').reduce((s,t)=>s+(+t.amount||0),0);
-    return income - out;
-  });
-  let running = 0;
-  const nwSeries = cashflow.map(v => running += v);
-  const expenseByCat = {};
-  (db.transactions||[]).filter(t => t.type !== 'Income').forEach(t => { const key = t.cat || 'Uncategorized'; expenseByCat[key] = (expenseByCat[key]||0) + (+t.amount||0); });
-  const catEntries = Object.entries(expenseByCat).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const labels = data.months.map(monthLabelFromKey);
+  const cashIn = data.months.map(m => data.monthlyMap[m]?.income || 0);
+  const cashOut = data.months.map(m => (data.monthlyMap[m]?.expense || 0) + (data.monthlyMap[m]?.investment || 0));
+  const catEntries = Object.entries(data.expenseByCat).sort((a,b)=>b[1]-a[1]).slice(0,8);
 
   if (dashNetWorthChart) dashNetWorthChart.destroy();
-  dashNetWorthChart = new Chart(nwCtx, { type: 'line', data: { labels, datasets: [{ label: 'Net Worth Trend', data: nwSeries, borderWidth: 2, tension: 0.25 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
-  if (dashCashflowChart) dashCashflowChart.destroy();
-  dashCashflowChart = new Chart(cfCtx, { type: 'bar', data: { labels, datasets: [{ label: 'Cash Flow', data: cashflow }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
-  if (dashCategoryChart) dashCategoryChart.destroy();
-  dashCategoryChart = new Chart(catCtx, { type: 'doughnut', data: { labels: catEntries.map(x=>x[0]), datasets: [{ data: catEntries.map(x=>x[1]) }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
-}
+  dashNetWorthChart = new Chart(nwCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ label: 'Net Worth Trend', data: data.netWorthSeries.map(x=>x.value), borderWidth: 3, tension: 0.35, fill: true, backgroundColor: 'rgba(107,143,113,0.10)', borderColor: '#6B8F71', pointRadius: 3 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
 
-function renderDashboardPassiveIncome() {
+  if (dashCashflowChart) dashCashflowChart.destroy();
+  dashCashflowChart = new Chart(cfCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Income', data: cashIn, backgroundColor: 'rgba(107,143,113,0.90)', borderRadius: 8 },
+        { label: 'Expense + Investment', data: cashOut, backgroundColor: 'rgba(176,106,90,0.82)', borderRadius: 8 }
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { display: true } } }
+  });
+
+  if (dashCategoryChart) dashCategoryChart.destroy();
+  dashCategoryChart = new Chart(catCtx, {
+    type: 'doughnut',
+    data: { labels: catEntries.map(x=>x[0]), datasets: [{ data: catEntries.map(x=>x[1]), backgroundColor:['#4A5A49','#6B8F71','#D8A45A','#B77A44','#8A5A4A','#A7B3A5','#C7B8AE','#E5D7CE'] }] },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  const rangeLabel = dashboardPresetLabel(data.filters.preset);
+  const networthBadge = document.getElementById('dash-networth-badge');
+  const cashflowBadge = document.getElementById('dash-cashflow-badge');
+  const networthMeta = document.getElementById('dash-networth-meta');
+  const cashflowMeta = document.getElementById('dash-cashflow-meta');
+  const categoryMeta = document.getElementById('dash-category-meta');
+  if (networthBadge) networthBadge.textContent = rangeLabel;
+  if (cashflowBadge) cashflowBadge.textContent = `${data.months.length || 0} months`;
+  if (networthMeta) networthMeta.textContent = `Trend over ${rangeLabel.toLowerCase()}`;
+  if (cashflowMeta) cashflowMeta.textContent = `Income vs expense across ${data.months.length || 0} active months`;
+  if (categoryMeta) categoryMeta.textContent = `${Object.keys(data.expenseByCat).length} tracked categories in view`;
+}
+function renderDashboardPassiveIncome(data) {
   const wrap = document.getElementById('dash-passive-grid');
   if (!wrap) return;
-  const data = getPassiveIncomeSummary();
+  const totalIncome = Math.max(1, data.totalIncome);
   const cards = [
-    ['Rental Income', data.rental, 'Rental and home share income'],
-    ['Affiliate Income', data.affiliate, 'Affiliate and referral income'],
-    ['Farm Income', data.farm, 'Farm and sugarcane income'],
-    ['Passive Total', data.total, 'Combined passive income tracked']
+    ['Rental Income', data.passive.rental, 'Rental and home share income'],
+    ['Affiliate Income', data.passive.affiliate, 'Affiliate and referral income'],
+    ['Farm Income', data.passive.farm, 'Farm and sugarcane income'],
+    ['Passive Total', data.passive.total, `${data.totalIncome ? ((data.passive.total / data.totalIncome) * 100).toFixed(1) : '0.0'}% of total income`]
   ];
-  wrap.innerHTML = cards.map(([label,val,sub]) => `<div class="passive-card"><div class="passive-label">${label}</div><div class="passive-value">${fmt(val)}</div><div class="passive-sub">${sub}</div><div class="passive-bar-wrap"><div class="passive-bar" style="width:${Math.min(100, data.total ? (val / Math.max(data.total,1))*100 : 0)}%"></div></div></div>`).join('');
+  wrap.innerHTML = cards.map(([label,val,sub]) => `<div class="passive-card"><div class="passive-label">${label}</div><div class="passive-value">${fmt(val)}</div><div class="passive-sub">${sub}</div><div class="passive-bar-wrap"><div class="passive-bar" style="width:${Math.min(100, (val / totalIncome) * 100)}%"></div></div></div>`).join('');
 }
-
 function renderDash() {
-  document.getElementById('dashboard-date').textContent = new Date().toLocaleDateString('en-PH', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  bindDashboardFilters();
+  renderDashboardFilterOptions();
 
-  const currentMonth = today().slice(0,7);
-  const transactionsThisMonth = (db.transactions || []).filter(t => (t.date || '').slice(0,7) === currentMonth);
-  const monthIncome = transactionsThisMonth.filter(t => t.type === 'Income').reduce((s, t) => s + (+t.amount || 0), 0);
-  const monthExpense = transactionsThisMonth.filter(t => t.type === 'Expense').reduce((s, t) => s + (+t.amount || 0), 0);
-  const monthInvestment = transactionsThisMonth.filter(t => t.type === 'Investment').reduce((s, t) => s + (+t.amount || 0), 0);
-  const monthlyCashFlow = monthIncome - monthExpense - monthInvestment;
+  const data = getDashboardData();
+  const rangeLabel = dashboardPresetLabel(data.filters.preset);
+  const dateEl = document.getElementById('dashboard-date');
+  const rangeNote = document.getElementById('dashboard-range-note');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-PH', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  if (rangeNote) rangeNote.textContent = `Premium Dashboard • ${rangeLabel}`;
 
-  const expenseByMonth = {};
-  (db.transactions || []).filter(t => t.type === 'Expense' && t.date).forEach(t => {
-    const month = (t.date || '').slice(0,7);
-    expenseByMonth[month] = (expenseByMonth[month] || 0) + (+t.amount || 0);
-  });
-  const monthlyExpenseValues = Object.values(expenseByMonth);
-  const burnRate = monthlyExpenseValues.length ? monthlyExpenseValues.reduce((a,b)=>a+b,0) / monthlyExpenseValues.length : 0;
+  document.getElementById('kpi-networth').textContent = fmt(data.netWorth);
+  document.getElementById('kpi-bank').textContent = fmt(data.trackedCash);
+  document.getElementById('kpi-lend').textContent = fmt(data.lendOut);
+  document.getElementById('kpi-sugar').textContent = fmt(data.sugarProfit) + ' / ₱2M';
+  document.getElementById('sugar-progress').style.width = Math.min(100, (data.sugarProfit / 2000000) * 100) + '%';
 
-  const personalAccounts = (db.accounts || []).filter(a => a.group === 'personal' && a.currency === 'PHP');
-  const businessAccounts = (db.accounts || []).filter(a => a.group === 'business' && a.currency === 'PHP');
-  const personalTotal = personalAccounts.reduce((s, a) => s + (+a.balance || 0), 0);
-  const businessTotal = businessAccounts.reduce((s, a) => s + (+a.balance || 0), 0);
-  const bankTotal = (db.accounts || []).reduce((s, a) => s + (a.currency === 'PHP' ? +a.balance || 0 : 0), 0);
-  const totalTrackedCash = personalTotal + businessTotal;
-  const personalPct = totalTrackedCash ? (personalTotal / totalTrackedCash) * 100 : 0;
-  const businessPct = totalTrackedCash ? (businessTotal / totalTrackedCash) * 100 : 0;
+  document.getElementById('dash-monthly-cashflow').textContent = fmt(data.cashFlow);
+  document.getElementById('dash-monthly-cashflow').style.color = data.cashFlow >= 0 ? 'var(--accent2)' : 'var(--accent3)';
+  document.getElementById('dash-monthly-cashflow-sub').textContent = `${fmt(data.totalIncome)} in, ${fmt(data.totalExpense)} expense, ${fmt(data.totalInvestment)} investment outflow`;
+  const passiveTotalEl = document.getElementById('dash-passive-total');
+  if (passiveTotalEl) passiveTotalEl.textContent = fmt(data.passive.total);
+  const passiveTotalSub = document.getElementById('dash-passive-total-sub');
+  if (passiveTotalSub) passiveTotalSub.textContent = `${data.totalIncome ? ((data.passive.total / data.totalIncome) * 100).toFixed(1) : '0.0'}% of total income`;
 
-  const lendOut = (db.lend || []).reduce((s, l) => s + ((+l.amount || 0) - (+l.repaid || 0)), 0);
-  const scProfit = (db.sugarcane || []).reduce((s, r) => s + (+r.net || 0), 0);
-  const assets = (db.networth || []).filter(x=>x.type==='Asset').reduce((s,x)=>s+ +(getNetWorthCurrentValue(x) || 0),0) + bankTotal;
-  const liabs = (db.networth || []).filter(x=>x.type==='Liability').reduce((s,x)=>s+ +((x.val || x.initialVal) || 0),0);
-  const nw = assets - liabs;
-  document.getElementById('kpi-networth').textContent = fmt(nw);
-  document.getElementById('kpi-bank').textContent = fmt(bankTotal);
-  document.getElementById('kpi-lend').textContent = fmt(lendOut);
-  document.getElementById('kpi-sugar').textContent = fmt(scProfit) + ' / ₱2M';
-  document.getElementById('sugar-progress').style.width = Math.min(100, (scProfit / 2000000) * 100) + '%';
+  document.getElementById('dash-burn-rate').textContent = fmt(data.burnRate);
+  document.getElementById('dash-burn-rate-sub').textContent = data.burnRate ? `Average expense outflow for ${rangeLabel.toLowerCase()}` : 'Waiting for expense history';
+  document.getElementById('dash-investment-growth').textContent = fmtPct(data.investmentGrowth);
+  document.getElementById('dash-investment-growth').style.color = data.investmentGrowth >= 0 ? 'var(--accent2)' : 'var(--accent3)';
+  document.getElementById('dash-investment-growth-sub').textContent = `${fmt(data.investmentValue)} current vs ${fmt(data.investmentCost)} invested`;
+  document.getElementById('dash-business-split').textContent = data.businessPct.toFixed(1) + '%';
+  document.getElementById('dash-business-split-sub').textContent = `${fmt(data.businessTotal)} in business cash`;
+  document.getElementById('dash-personal-split').textContent = data.personalPct.toFixed(1) + '%';
+  document.getElementById('dash-personal-split-sub').textContent = `${fmt(data.personalTotal)} in personal cash`;
+  document.getElementById('dash-personal-bar').style.width = data.personalPct + '%';
+  document.getElementById('dash-business-bar').style.width = data.businessPct + '%';
+  document.getElementById('dash-personal-amount').textContent = fmt(data.personalTotal);
+  document.getElementById('dash-business-amount').textContent = fmt(data.businessTotal);
 
-  const investmentCost = (db.investments || []).reduce((s, i) => s + (+i.invested || 0), 0);
-  const investmentValue = (db.investments || []).reduce((s, i) => s + (+i.current || 0), 0);
-  const investmentGrowth = investmentCost ? ((investmentValue - investmentCost) / investmentCost) * 100 : 0;
-  document.getElementById('dash-monthly-cashflow').textContent = fmt(monthlyCashFlow);
-  document.getElementById('dash-monthly-cashflow').style.color = monthlyCashFlow >= 0 ? 'var(--accent2)' : 'var(--accent3)';
-  document.getElementById('dash-monthly-cashflow-sub').textContent = `${fmt(monthIncome)} in, ${fmt(monthExpense)} expense, and ${fmt(monthInvestment)} investment outflow for ${currentMonth}`;
-  document.getElementById('dash-burn-rate').textContent = fmt(burnRate);
-  document.getElementById('dash-burn-rate-sub').textContent = burnRate ? `Average expense outflow per active month` : 'Waiting for expense history';
-  document.getElementById('dash-investment-growth').textContent = fmtPct(investmentGrowth);
-  document.getElementById('dash-investment-growth').style.color = investmentGrowth >= 0 ? 'var(--accent2)' : 'var(--accent3)';
-  document.getElementById('dash-investment-growth-sub').textContent = `${fmt(investmentValue)} current vs ${fmt(investmentCost)} invested`;
-  document.getElementById('dash-business-split').textContent = businessPct.toFixed(1) + '%';
-  document.getElementById('dash-business-split-sub').textContent = `${fmt(businessTotal)} in business cash`; 
-  document.getElementById('dash-personal-split').textContent = personalPct.toFixed(1) + '%';
-  document.getElementById('dash-personal-split-sub').textContent = `${fmt(personalTotal)} in personal cash`;
-  document.getElementById('dash-personal-bar').style.width = personalPct + '%';
-  document.getElementById('dash-business-bar').style.width = businessPct + '%';
-  document.getElementById('dash-personal-amount').textContent = fmt(personalTotal);
-  document.getElementById('dash-business-amount').textContent = fmt(businessTotal);
-  const monthsCovered = burnRate > 0 ? bankTotal / burnRate : 0;
-  document.getElementById('dash-burn-note').textContent = burnRate > 0 ? `Tracked cash covers about ${monthsCovered.toFixed(1)} month${monthsCovered >= 2 ? 's' : ''} at your current burn.` : 'Burn runway is waiting for expense data.';
-  document.getElementById('dash-pulse-summary').innerHTML = `This month is <strong style="color:${monthlyCashFlow >= 0 ? 'var(--accent2)' : 'var(--accent3)'}">${monthlyCashFlow >= 0 ? 'cash-flow positive' : 'cash-flow negative'}</strong> at ${fmt(monthlyCashFlow)}. Business cash is <strong>${businessPct.toFixed(1)}%</strong> of tracked PHP cash, while investments are <strong style="color:${investmentGrowth >= 0 ? 'var(--accent2)' : 'var(--accent3)'}">${fmtPct(investmentGrowth)}</strong>.`;
+  const monthsCovered = data.burnRate > 0 ? data.trackedCash / data.burnRate : 0;
+  document.getElementById('dash-burn-note').textContent = data.burnRate > 0 ? `Visible cash covers about ${monthsCovered.toFixed(1)} month${monthsCovered >= 2 ? 's' : ''} at current burn.` : 'Burn runway is waiting for expense data.';
+  document.getElementById('dash-pulse-summary').innerHTML = `For <strong>${rangeLabel.toLowerCase()}</strong>, CathOS shows a <strong style="color:${data.cashFlow >= 0 ? 'var(--accent2)' : 'var(--accent3)'}">${data.cashFlow >= 0 ? 'positive' : 'negative'}</strong> cash flow of ${fmt(data.cashFlow)}. Passive income contributed <strong>${data.totalIncome ? ((data.passive.total / data.totalIncome) * 100).toFixed(1) : '0.0'}%</strong> of income, while investments sit at <strong style="color:${data.investmentGrowth >= 0 ? 'var(--accent2)' : 'var(--accent3)'}">${fmtPct(data.investmentGrowth)}</strong>.`;
 
   const creditCards = db.creditcards || [];
   const creditTotals = creditCards.reduce((acc, card) => {
@@ -3335,30 +3746,33 @@ function renderDash() {
     acc.dueBalance += metrics.dueBalance;
     return acc;
   }, {yearSpend:0, rewards:0, dueBalance:0});
+
   document.getElementById('dash-creditcards').innerHTML = creditCards.length ? creditCards.map(card => {
     const metrics = getCreditCardMetrics(card);
     return `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(176,106,90,0.12)">💳</div><div><div class="account-name">${card.name}</div><div class="account-type">Stmt ${metrics.statementLabel} · Due ${metrics.dueLabel}</div></div></div><div class="mono">${fmt(metrics.dueBalance)}</div></div>`;
   }).join('') : '<div class="empty"><div class="empty-text">No credit cards yet</div></div>';
-  document.getElementById('dash-credit-summary').innerHTML = creditCards.length ? `Year card spend is <strong>${fmt(creditTotals.yearSpend)}</strong>. Expected rewards/cashback: <strong style="color:var(--accent2)">${fmt(creditTotals.rewards)}</strong>. Current due balance across cards: <strong style="color:var(--accent3)">${fmt(creditTotals.dueBalance)}</strong>. Due balances refresh automatically each month based on each card's statement day.` : 'No credit cards added yet.';
+  document.getElementById('dash-credit-summary').innerHTML = creditCards.length ? `Year card spend is <strong>${fmt(creditTotals.yearSpend)}</strong>. Expected rewards/cashback: <strong style="color:var(--accent2)">${fmt(creditTotals.rewards)}</strong>. Current due balance across cards: <strong style="color:var(--accent3)">${fmt(creditTotals.dueBalance)}</strong>.` : 'No credit cards added yet.';
 
   const totalBudget = (db.budget || []).reduce((s,b)=>s + (+b.plan || 0),0);
   const totalActual = (db.budget || []).reduce((s,b)=>s + (+b.actual || 0),0);
   const alerts = [];
   if (totalBudget > 0 && totalActual > totalBudget) alerts.push({type:'err', icon:'⚠️', title:'Overspending alert', sub:`Actual spending is ${fmt(totalActual - totalBudget)} over total budget.`});
-  if (bankTotal > 0 && burnRate > 0 && monthsCovered < 2) alerts.push({type:'warn', icon:'💸', title:'Low cash runway', sub:`Tracked cash covers only ${monthsCovered.toFixed(1)} month${monthsCovered >= 2 ? 's' : ''} at current burn.`});
-  if (monthlyCashFlow < 0) alerts.push({type:'warn', icon:'📉', title:'Negative monthly cash flow', sub:`You are down ${fmt(Math.abs(monthlyCashFlow))} this month.`});
-  if (investmentCost > 0 && investmentGrowth < 0) alerts.push({type:'warn', icon:'🌙', title:'Investment drawdown', sub:`Portfolio is currently ${fmtPct(investmentGrowth)} versus cost.`});
+  if (data.trackedCash > 0 && data.burnRate > 0 && monthsCovered < 2) alerts.push({type:'warn', icon:'💸', title:'Low cash runway', sub:`Visible cash covers only ${monthsCovered.toFixed(1)} month${monthsCovered >= 2 ? 's' : ''} at current burn.`});
+  if (data.cashFlow < 0) alerts.push({type:'warn', icon:'📉', title:'Negative cash flow', sub:`You are down ${fmt(Math.abs(data.cashFlow))} for ${rangeLabel.toLowerCase()}.`});
+  if (data.investmentCost > 0 && data.investmentGrowth < 0) alerts.push({type:'warn', icon:'🌙', title:'Investment drawdown', sub:`Portfolio is currently ${fmtPct(data.investmentGrowth)} versus cost.`});
   if (creditTotals.dueBalance > 0) alerts.push({type:'warn', icon:'💳', title:'Credit card due balance', sub:`You still have ${fmt(creditTotals.dueBalance)} due across tracked cards.`});
   if (!alerts.length) alerts.push({type:'ok', icon:'✅', title:'System looks stable', sub:'No major dashboard alerts right now. Keep building income-producing assets.'});
   document.getElementById('dash-alerts').innerHTML = alerts.map(a => `<div class="alert-item ${a.type}"><div class="alert-icon">${a.icon}</div><div><div class="alert-title">${a.title}</div><div class="alert-sub">${a.sub}</div></div></div>`).join('');
 
-  document.getElementById('dash-personal-accounts').innerHTML = personalAccounts.map(a => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(216,164,90,0.15)">🏦</div><div><div class="account-name">${a.name}</div><div class="account-type">${a.bank}</div></div></div><div class="mono">${fmtCur(a.balance, a.currency)}</div></div>`).join('') || '<div class="empty"><div class="empty-text">No accounts</div></div>';
-  document.getElementById('dash-business-accounts').innerHTML = businessAccounts.map(a => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(107,143,113,0.15)">💼</div><div><div class="account-name">${a.name}</div><div class="account-type">${a.purpose}</div></div></div><div class="mono">${fmtCur(a.balance, a.currency)}</div></div>`).join('') || '<div class="empty"><div class="empty-text">No accounts</div></div>';
+  document.getElementById('dash-personal-accounts').innerHTML = data.personalAccounts.map(a => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(216,164,90,0.15)">🏦</div><div><div class="account-name">${a.name}</div><div class="account-type">${a.bank}</div></div></div><div class="mono">${fmtCur(a.balance, a.currency)}</div></div>`).join('') || '<div class="empty"><div class="empty-text">No accounts</div></div>';
+  document.getElementById('dash-business-accounts').innerHTML = data.businessAccounts.map(a => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(107,143,113,0.15)">💼</div><div><div class="account-name">${a.name}</div><div class="account-type">${a.purpose}</div></div></div><div class="mono">${fmtCur(a.balance, a.currency)}</div></div>`).join('') || '<div class="empty"><div class="empty-text">No accounts</div></div>';
   document.getElementById('dash-investments').innerHTML = (db.investments || []).map(i => `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(167,179,165,0.18)">📈</div><div><div class="account-name">${i.name}</div><div class="account-type">${i.type}</div></div></div><div class="mono">${fmt(i.current)}</div></div>`).join('') || '<div class="empty"><div class="empty-text">No investments</div></div>';
   const recent = [...(db.lend || [])].slice(-5).reverse();
   document.getElementById('dash-lend').innerHTML = recent.length ? recent.map(l => { const bal = (+l.amount || 0) - (+l.repaid || 0); const paid = bal <= 0; return `<div class="account-row"><div class="account-info"><div class="account-icon" style="background:rgba(176,106,90,0.12)">🤝</div><div><div class="account-name">${l.name}</div><div class="account-type">${l.date || '—'}</div></div></div><div><span class="badge ${paid?'badge-green':'badge-red'}">${paid?'Paid':fmt(bal)}</span></div></div>`; }).join('') : '<div class="empty"><div class="empty-text">No loans tracked</div></div>';
-}
 
+  renderDashboardCharts(data);
+  renderDashboardPassiveIncome(data);
+}
 function renderTransactions() {
   const search = (document.getElementById('txn-search')?.value || '').toLowerCase();
   const filterType = document.getElementById('txn-filter-type')?.value || '';
@@ -5098,10 +5512,3 @@ const renderFns = { dashboard: renderDash, transactions: renderTransactions, bud
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
