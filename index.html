@@ -7,6 +7,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+window.__cathosQueuedAuth = false;
+window.handleAuthSubmit = function() {
+  if (typeof window.__handleAuthSubmitImpl === 'function') return window.__handleAuthSubmitImpl();
+  var err = document.getElementById('auth-error');
+  if (err) {
+    err.textContent = 'CathOS is still loading. Please try again.';
+    err.style.display = 'block';
+  }
+  window.__cathosQueuedAuth = true;
+};
+document.addEventListener('DOMContentLoaded', function() {
+  var user = document.getElementById('auth-username');
+  var pass = document.getElementById('auth-password');
+  var btn = document.getElementById('auth-submit-btn');
+  if (user) user.addEventListener('keydown', function(e){ if (e.key === 'Enter') window.handleAuthSubmit(); });
+  if (pass) pass.addEventListener('keydown', function(e){ if (e.key === 'Enter') window.handleAuthSubmit(); });
+  if (btn) btn.onclick = function(){ return window.handleAuthSubmit(); };
+});
+</script>
 <style>
   :root {
     --bg: #F7F3EF;
@@ -1983,6 +2003,11 @@ async function handleAuthSubmit() {
     }
   }
 }
+
+window.__handleAuthSubmitImpl = handleAuthSubmit;
+window.__handleAuthSubmitImpl = handleAuthSubmit;
+window.handleAuthSubmit = handleAuthSubmit;
+if (window.__cathosQueuedAuth) { window.__cathosQueuedAuth = false; }
 
 function logoutCathOS() {
   sessionStorage.removeItem(AUTH_SESSION_KEY);
@@ -5591,9 +5616,7 @@ async function saveToSupabase(options = {}) {
   } catch (error) {
     console.error('Supabase save failed:', error);
     updateSyncStatus('err', 'Supabase save failed');
-    if (!options.silent) alert('Failed to save to Supabase.
-
-' + (error.message || error));
+    if (!options.silent) alert('Failed to save to Supabase.\n\n' + (error.message || error));
   }
 }
 
