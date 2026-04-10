@@ -1091,7 +1091,7 @@ tr.subcat-row.visible{display:table-row}
       <div class="card"><div class="card-label">Net Worth</div><div class="card-value accent" id="nw-net">₱0.00</div></div>
     </div>
     <div class="grid grid-2 gap-14 mb-14">
-      <div><div class="section-title">Assets</div><div class="table-wrap"><table><thead><tr><th>Item</th><th>Category</th><th>Asset Type</th><th class="text-right">Value (₱)</th><th></th></tr></thead><tbody id="nw-assets-body"></tbody></table></div></div>
+      <div><div class="section-title">Assets</div><div class="table-wrap"><table><thead><tr><th>Item</th><th>Category</th><th>Asset Type</th><th class="text-right">Cost (₱)</th><th class="text-right">Current / Appraised (₱)</th><th class="text-right">Gain / Loss</th><th></th></tr></thead><tbody id="nw-assets-body"></tbody></table></div></div>
       <div><div class="section-title">Liabilities</div><div class="table-wrap"><table><thead><tr><th>Item</th><th>Category</th><th>Payment / Depreciation</th><th class="text-right">Amount (₱)</th><th></th></tr></thead><tbody id="nw-liab-body"></tbody></table></div></div>
     </div>
     <div class="grid grid-2 gap-14">
@@ -1506,7 +1506,7 @@ tr.subcat-row.visible{display:table-row}
 
 <div class="modal-overlay" id="modal-investment"><div class="modal"><div class="modal-header"><div class="modal-title" id="inv-modal-title">Add Investment</div><button class="modal-close" onclick="closeModal('modal-investment')">✕</button></div><input type="hidden" id="inv-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Investment Name</label><input type="text" id="inv-name" placeholder="e.g. COL Financial, Bitcoin..."></div><div class="form-group"><label>Type</label><select id="inv-type"><option>Stocks</option><option>Crypto</option><option>Gold</option><option>Real Estate</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Amount Invested (₱)</label><input type="number" id="inv-invested" placeholder="0.00" min="0" step="0.01"></div><div class="form-group"><label>Current Value (₱)</label><input type="number" id="inv-current" placeholder="0.00" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="inv-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveInvestment()">Save Investment</button></div></div>
 
-<div class="modal-overlay" id="modal-networth"><div class="modal"><div class="modal-header"><div class="modal-title" id="nw-modal-title">Add Net Worth Item</div><button class="modal-close" onclick="closeModal('modal-networth')">✕</button></div><input type="hidden" id="nw-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Type</label><select id="nw-type"><option>Asset</option><option>Liability</option></select></div><div class="form-group"><label>Category</label><select id="nw-cat"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Asset Type</label><select id="nw-asset-mode" onchange="toggleArendoFields()"><option value="standard">Standard</option><option value="arendo">Arendo Setup</option></select></div><div class="form-group"><label>Item Name</label><input type="text" id="nw-name" placeholder="e.g. Land in Lemery..."></div></div><div class="form-row"><div class="form-group"><label>Initial Value (₱)</label><input type="number" id="nw-val" placeholder="0.00" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Start / Purchase Year</label><input type="number" id="nw-start-year" placeholder="2026" min="2000" step="1"></div><div class="form-group"><label>Yearly Price Appreciation (%)</label><input type="number" id="nw-appreciation-rate" placeholder="0" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Monthly Payment / Depreciation (₱)</label><input type="number" id="nw-monthly-payment" placeholder="0" min="0" step="0.01"></div><div class="form-group"><label>Depreciation Start Date</label><input type="date" id="nw-depreciation-start"></div></div><div id="nw-arendo-fields" style="display:none;"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Years</label><input type="number" id="nw-years" placeholder="5" min="1" step="1"></div><div class="form-group"><label>Yearly Decrease (₱)</label><input type="number" id="nw-yearly-decrease" placeholder="40000" min="0" step="0.01"></div></div></div><button class="btn btn-primary w-full" onclick="saveNetWorth()">Save Item</button></div></div>
+<div class="modal-overlay" id="modal-networth"><div class="modal"><div class="modal-header"><div class="modal-title" id="nw-modal-title">Add Net Worth Item</div><button class="modal-close" onclick="closeModal('modal-networth')">✕</button></div><input type="hidden" id="nw-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Type</label><select id="nw-type"><option>Asset</option><option>Liability</option></select></div><div class="form-group"><label>Category</label><select id="nw-cat"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Asset Type</label><select id="nw-asset-mode" onchange="toggleArendoFields()"><option value="standard">Standard</option><option value="arendo">Arendo Setup</option></select></div><div class="form-group"><label>Item Name</label><input type="text" id="nw-name" placeholder="e.g. Land in Lemery..."></div></div><div class="form-row"><div class="form-group"><label>Initial Value / Cost (₱)</label><input type="number" id="nw-val" placeholder="0.00" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Appraised Value (₱)</label><input type="number" id="nw-appraised-value" placeholder="0.00" min="0" step="0.01"></div><div class="form-group"><label>Appraised Date</label><input type="date" id="nw-appraised-date"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Valuation Method</label><select id="nw-valuation-method"><option value="">Select method</option><option value="appraisal">Appraisal</option><option value="market estimate">Market Estimate</option><option value="purchase price">Purchase Price</option></select></div><div class="form-group"><label>Notes</label><input type="text" id="nw-notes" placeholder="Optional notes"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Start / Purchase Year</label><input type="number" id="nw-start-year" placeholder="2026" min="2000" step="1"></div><div class="form-group"><label>Yearly Price Appreciation (%)</label><input type="number" id="nw-appreciation-rate" placeholder="0" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Monthly Payment / Depreciation (₱)</label><input type="number" id="nw-monthly-payment" placeholder="0" min="0" step="0.01"></div><div class="form-group"><label>Depreciation Start Date</label><input type="date" id="nw-depreciation-start"></div></div><div id="nw-arendo-fields" style="display:none;"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Years</label><input type="number" id="nw-years" placeholder="5" min="1" step="1"></div><div class="form-group"><label>Yearly Decrease (₱)</label><input type="number" id="nw-yearly-decrease" placeholder="40000" min="0" step="0.01"></div></div></div><button class="btn btn-primary w-full" onclick="saveNetWorth()">Save Item</button></div></div>
 
 
 <div class="modal-overlay" id="modal-sugarcane-actual"><div class="modal"><div class="modal-header"><div class="modal-title" id="sc-actual-modal-title">Add Yearly Actual</div><button class="modal-close" onclick="closeModal('modal-sugarcane-actual')">✕</button></div><input type="hidden" id="sc-actual-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr"><div class="form-group"><label>Harvest Year</label><input type="number" id="sc-actual-year" min="2020" placeholder="2026"></div><div class="form-group"><label>Location</label><input type="text" id="sc-actual-location" list="sc-location-options" placeholder="La Carlota"></div><div class="form-group"><label>Transaction Type</label><select id="sc-actual-txn"><option>Arendo</option><option>Prenda</option><option>Owned</option><option>Other</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Total Hectares</label><input type="number" id="sc-actual-hectares" min="0" step="0.01"></div><div class="form-group"><label>Total Tons Harvested</label><input type="number" id="sc-actual-tons" min="0" step="0.01"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Phase 1 Expense (₱)</label><input type="number" id="sc-actual-p1" min="0" step="0.01"></div><div class="form-group"><label>Phase 2 Harvest Expense (₱)</label><input type="number" id="sc-actual-p2" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Gross Profit / Income (₱)</label><input type="number" id="sc-actual-gross" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="sc-actual-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveSugarcaneActual()">Save Yearly Actual</button></div></div>
@@ -5055,8 +5055,12 @@ function getYearlyOperationalRows() {
 
 const __getNetWorthCurrentValueOriginal = getNetWorthCurrentValue;
 function getNetWorthCurrentValue(item) {
-  const initialVal = Number(item.initialVal ?? item.val ?? 0);
+  const initialVal = Number(item.initialVal ?? item.val ?? item.initial_value ?? 0);
+  const appraisedVal = Number(item.appraisedValue ?? item.appraised_value ?? 0);
   const currentYear = new Date().getFullYear();
+
+  if (item.type === 'Asset' && appraisedVal > 0) return appraisedVal;
+
   let value = initialVal;
   if ((item.assetMode || 'standard') === 'arendo') {
     const startYear = Number(item.startYear || currentYear);
@@ -5090,6 +5094,10 @@ openModal = function(id, data) {
     document.getElementById('nw-appreciation-rate').value = isEdit ? (data.appreciationRate || '') : '';
     document.getElementById('nw-monthly-payment').value = isEdit ? (data.monthlyPayment || '') : '';
     document.getElementById('nw-depreciation-start').value = isEdit ? (data.depreciationStart || '') : '';
+    document.getElementById('nw-appraised-value').value = isEdit ? (data.appraisedValue ?? data.appraised_value ?? '') : '';
+    document.getElementById('nw-appraised-date').value = isEdit ? (data.appraisedDate || data.appraised_date || '') : '';
+    document.getElementById('nw-valuation-method').value = isEdit ? (data.valuationMethod || data.valuation_method || '') : '';
+    document.getElementById('nw-notes').value = isEdit ? (data.notes || '') : '';
     toggleArendoFields();
   }
 };
@@ -5114,9 +5122,27 @@ function saveNetWorth() {
   const appreciationRate = parseFloat(document.getElementById('nw-appreciation-rate').value) || 0;
   const monthlyPayment = parseFloat(document.getElementById('nw-monthly-payment').value) || 0;
   const depreciationStart = document.getElementById('nw-depreciation-start').value || '';
+  const appraisedValue = parseFloat(document.getElementById('nw-appraised-value').value) || 0;
+  const appraisedDate = document.getElementById('nw-appraised-date').value || '';
+  const valuationMethod = document.getElementById('nw-valuation-method').value || '';
+  const notes = document.getElementById('nw-notes').value || '';
   if (!name) return alert('Please fill required fields.');
   if (assetMode === 'arendo' && (!startYear || !years)) return alert('Please complete the arendo setup fields.');
-  const payload = { id: editId || uid(), type, cat, name, initialVal, val: initialVal, assetMode, startYear, years, yearlyDecrease, appreciationRate, monthlyPayment, depreciationStart };
+  const payload = {
+    id: editId || uid(),
+    type, cat, name,
+    initialVal,
+    initial_value: initialVal,
+    val: initialVal,
+    assetMode, startYear, years, yearlyDecrease, appreciationRate, monthlyPayment, depreciationStart,
+    appraisedValue,
+    appraised_value: appraisedValue,
+    appraisedDate,
+    appraised_date: appraisedDate,
+    valuationMethod,
+    valuation_method: valuationMethod,
+    notes
+  };
   upsertRecord('networth', payload);
   closeModal('modal-networth');
   render('networth');
@@ -5162,13 +5188,19 @@ function renderNetWorth() {
   document.getElementById('nw-liabilities').textContent = fmt(totalLiabs);
   document.getElementById('nw-net').textContent = fmt(nw);
   document.getElementById('nw-net').className = 'card-value ' + (nw>=0?'accent':'red');
-  const bankRow = `<tr><td>Bank Accounts (PHP)</td><td><span class="badge badge-blue">Auto</span></td><td>Standard</td><td class="accent">${fmt(bankAssets)}</td><td></td></tr>`;
-  const rainyRow = `<tr><td>Rainy Day Reserve</td><td><span class="badge badge-blue">Auto</span></td><td>Reserve</td><td class="accent">${fmt(rainyAssets)}</td><td></td></tr>`;
-  const invRow = `<tr><td>Investments (all)</td><td><span class="badge badge-blue">Auto</span></td><td>Standard</td><td class="accent">${fmt(invAssets)}</td><td></td></tr>`;
+  const bankRow = `<tr><td>Bank Accounts (PHP)</td><td><span class="badge badge-blue">Auto</span></td><td>Standard</td><td class="accent">${fmt(bankAssets)}</td><td class="accent">${fmt(bankAssets)}</td><td class="mono">—</td><td></td></tr>`;
+  const rainyRow = `<tr><td>Rainy Day Reserve</td><td><span class="badge badge-blue">Auto</span></td><td>Reserve</td><td class="accent">${fmt(rainyAssets)}</td><td class="accent">${fmt(rainyAssets)}</td><td class="mono">—</td><td></td></tr>`;
+  const invRow = `<tr><td>Investments (all)</td><td><span class="badge badge-blue">Auto</span></td><td>Standard</td><td class="accent">${fmt(invAssets)}</td><td class="accent">${fmt(invAssets)}</td><td class="mono">—</td><td></td></tr>`;
   document.getElementById('nw-assets-body').innerHTML = bankRow + rainyRow + invRow + ((assets.length ? assets.map(x => {
     const appreciationText = (+x.appreciationRate || 0) > 0 ? ` · ${Number(x.appreciationRate).toFixed(2)}%/yr` : '';
-    return `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${x.assetMode==='arendo' ? 'Arendo Setup' : 'Standard'}${appreciationText}</td><td class="accent">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth('${x.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`;
-  }).join('') : '')) + `<tr class="totals-row"><td>TOTAL</td><td></td><td></td><td>${fmt(totalAssets)}</td><td></td></tr>`;
+    const currentValue = getNetWorthCurrentValue(x);
+    const initialVal = Number(x.initialVal ?? x.val ?? x.initial_value ?? 0);
+    const gainLoss = currentValue - initialVal;
+    const hasAppraisal = Number(x.appraisedValue ?? x.appraised_value ?? 0) > 0;
+    const valuationLabel = hasAppraisal ? (x.valuationMethod || x.valuation_method || 'appraised') : '';
+    const valuationText = valuationLabel ? ` · ${valuationLabel.charAt(0).toUpperCase() + valuationLabel.slice(1)}` : '';
+    return `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${x.assetMode==='arendo' ? 'Arendo Setup' : 'Standard'}${appreciationText}${valuationText}</td><td class="mono">${fmt(initialVal)}</td><td class="accent">${fmt(currentValue)}</td><td class="${gainLoss >= 0 ? 'positive' : 'negative'}">${fmt(gainLoss)}</td><td><button onclick="editNetWorth('${x.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`;
+  }).join('') : '')) + `<tr class="totals-row"><td>TOTAL</td><td></td><td></td><td></td><td>${fmt(totalAssets)}</td><td></td><td></td></tr>`;
   document.getElementById('nw-liab-body').innerHTML = ((liabs.length ? liabs.map(x => {
     const payText = (+x.monthlyPayment || 0) > 0 ? `${fmt(x.monthlyPayment)}/month` : '—';
     return `<tr><td>${x.name}</td><td>${x.cat||'—'}</td><td>${payText}</td><td class="negative">${fmt(getNetWorthCurrentValue(x))}</td><td><button onclick="editNetWorth('${x.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('networth', x.id)}</td></tr>`;
