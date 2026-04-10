@@ -596,6 +596,13 @@ tr.subcat-row.visible{display:table-row}
 .sc-empty-block{padding:20px;border:1px dashed var(--border);border-radius:12px;background:rgba(255,255,255,0.75);font-size:12px;color:var(--text3);text-align:center}
 @media (max-width: 1180px){.location-report-grid{grid-template-columns:1fr}}
 
+
+.drilldown-card{cursor:pointer}
+.drilldown-card:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,0.06)}
+.drilldown-summary-box{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.drilldown-chip{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:rgba(74,90,73,0.08);border:1px solid rgba(74,90,73,0.12);font-size:11px;font-weight:700;color:var(--accent)}
+.drilldown-empty{padding:20px;border:1px dashed var(--border);border-radius:12px;background:rgba(255,255,255,0.7);font-size:12px;color:var(--text3);text-align:center}
+
 </style>
 </head>
 <body>
@@ -782,25 +789,25 @@ tr.subcat-row.visible{display:table-row}
         <div class="card-value accent" id="kpi-networth">₱0.00</div>
         <div class="card-sub" id="kpi-networth-sub">Assets − Liabilities</div>
       </div>
-      <div class="card premium-kpi-card">
+      <div class="card premium-kpi-card drilldown-card" onclick="openDrilldown('dash_income')">
         <div class="card-accent-bar" style="background: var(--accent2);"></div>
         <div class="card-label">Income</div>
         <div class="card-value green" id="kpi-income-range">₱0.00</div>
         <div class="card-sub" id="kpi-income-range-sub">For selected period</div>
       </div>
-      <div class="card premium-kpi-card">
+      <div class="card premium-kpi-card drilldown-card" onclick="openDrilldown('dash_expense')">
         <div class="card-accent-bar" style="background: var(--accent3);"></div>
         <div class="card-label">Expenses</div>
         <div class="card-value red" id="kpi-expense-range">₱0.00</div>
         <div class="card-sub" id="kpi-expense-range-sub">Tracked outflow</div>
       </div>
-      <div class="card premium-kpi-card">
+      <div class="card premium-kpi-card drilldown-card" onclick="openDrilldown('dash_cashflow')">
         <div class="card-accent-bar" style="background: var(--mustard);"></div>
         <div class="card-label">Net Cash Flow</div>
         <div class="card-value" id="kpi-cashflow-range">₱0.00</div>
         <div class="card-sub" id="kpi-cashflow-range-sub">Income − expense</div>
       </div>
-      <div class="card premium-kpi-card">
+      <div class="card premium-kpi-card drilldown-card" onclick="openDrilldown('dash_passive')">
         <div class="card-accent-bar" style="background: var(--accent4);"></div>
         <div class="card-label">Passive Income</div>
         <div class="card-value" id="kpi-passive-range">₱0.00</div>
@@ -1160,12 +1167,12 @@ tr.subcat-row.visible{display:table-row}
       </div>
 
       <div class="sc-kpi-grid mb-14">
-        <div class="card"><div class="card-label">Total Capital Invested</div><div class="card-value accent" id="sc-capital">₱0.00</div><div class="card-sub">All filtered investment</div></div>
-        <div class="card"><div class="card-label">Total Gross Income</div><div class="card-value green" id="sc-income">₱0.00</div><div class="card-sub">All filtered income</div></div>
-        <div class="card"><div class="card-label">Total Net Profit</div><div class="card-value" id="sc-profit">₱0.00</div><div class="card-sub">Income less phase 1 and phase 2 costs</div></div>
+        <div class="card drilldown-card" onclick="openDrilldown('sugar_capital')"><div class="card-label">Total Capital Invested</div><div class="card-value accent" id="sc-capital">₱0.00</div><div class="card-sub">All filtered investment</div></div>
+        <div class="card drilldown-card" onclick="openDrilldown('sugar_income')"><div class="card-label">Total Gross Income</div><div class="card-value green" id="sc-income">₱0.00</div><div class="card-sub">All filtered income</div></div>
+        <div class="card drilldown-card" onclick="openDrilldown('sugar_profit')"><div class="card-label">Total Net Profit</div><div class="card-value" id="sc-profit">₱0.00</div><div class="card-sub">Income less phase 1 and phase 2 costs</div></div>
         <div class="card"><div class="card-label">Progress Toward ₱2,000,000</div><div class="card-value" id="sc-goal-progress-label">0%</div><div class="card-sub"><div class="progress-bar-wrap"><div class="progress-bar" id="sc-goal-progress" style="width:0%"></div></div></div></div>
         <div class="card"><div class="card-label">Total Hectares</div><div class="card-value" id="sc-total-hectares">0.00 ha</div><div class="card-sub">Filtered hectares</div></div>
-        <div class="card"><div class="card-label">Total Tons Harvested</div><div class="card-value" id="sc-total-tons">0.00 tons</div><div class="card-sub">Filtered tons</div></div>
+        <div class="card drilldown-card" onclick="openDrilldown('sugar_tons')"><div class="card-label">Total Tons Harvested</div><div class="card-value" id="sc-total-tons">0.00 tons</div><div class="card-sub">Filtered tons</div></div>
         <div class="card"><div class="card-label">Cost per Ton</div><div class="card-value" id="sc-cost-ton">₱0.00</div><div class="card-sub">Total expenses / tons</div></div>
         <div class="card"><div class="card-label">Average Price per Ton</div><div class="card-value" id="sc-price-ton">₱0.00</div><div class="card-sub">Net income / tons paid</div></div>
         <div class="card"><div class="card-label">Profit per Ton</div><div class="card-value" id="sc-profit-ton">₱0.00</div><div class="card-sub">Net profit / tons</div></div>
@@ -1223,14 +1230,14 @@ tr.subcat-row.visible{display:table-row}
   </div>
 
   <div class="grid grid-4 mb-14">
-    <div class="card"><div class="card-accent-bar" style="background:var(--accent2)"></div><div class="card-label">Total Income</div><div class="card-value green" id="rep-total-income">₱0.00</div><div class="card-sub">Selected period</div></div>
-    <div class="card"><div class="card-accent-bar" style="background:var(--accent3)"></div><div class="card-label">Bills + Business + Expenses</div><div class="card-value red" id="rep-total-outflow">₱0.00</div><div class="card-sub">Core spending total</div></div>
-    <div class="card"><div class="card-accent-bar" style="background:var(--accent)"></div><div class="card-label">Savings + Investments</div><div class="card-value accent" id="rep-total-saveinvest">₱0.00</div><div class="card-sub">Wealth building total</div></div>
+    <div class="card drilldown-card" onclick="openDrilldown('report_income')"><div class="card-accent-bar" style="background:var(--accent2)"></div><div class="card-label">Total Income</div><div class="card-value green" id="rep-total-income">₱0.00</div><div class="card-sub">Selected period</div></div>
+    <div class="card drilldown-card" onclick="openDrilldown('report_outflow')"><div class="card-accent-bar" style="background:var(--accent3)"></div><div class="card-label">Bills + Business + Expenses</div><div class="card-value red" id="rep-total-outflow">₱0.00</div><div class="card-sub">Core spending total</div></div>
+    <div class="card drilldown-card" onclick="openDrilldown('report_savings')"><div class="card-accent-bar" style="background:var(--accent)"></div><div class="card-label">Savings + Investments</div><div class="card-value accent" id="rep-total-saveinvest">₱0.00</div><div class="card-sub">Wealth building total</div></div>
     <div class="card"><div class="card-accent-bar" style="background:var(--mustard)"></div><div class="card-label">Amount Remaining</div><div class="card-value" id="rep-amount-remaining">₱0.00</div><div class="card-sub">Income less spending & savings</div></div>
   </div>
   <div class="grid grid-4 mb-24">
-    <div class="card"><div class="card-label">Debt Payments</div><div class="card-value" id="rep-total-debt">₱0.00</div></div>
-    <div class="card"><div class="card-label">Capital Deployed</div><div class="card-value" id="rep-total-capital">₱0.00</div><div class="card-sub" style="color:var(--accent2)">Not subtracted from income</div></div>
+    <div class="card drilldown-card" onclick="openDrilldown('report_debt')"><div class="card-label">Debt Payments</div><div class="card-value" id="rep-total-debt">₱0.00</div></div>
+    <div class="card drilldown-card" onclick="openDrilldown('report_capital')"><div class="card-label">Capital Deployed</div><div class="card-value" id="rep-total-capital">₱0.00</div><div class="card-sub" style="color:var(--accent2)">Not subtracted from income</div></div>
     <div class="card"><div class="card-label">Best Investment</div><div class="card-value" id="rep-best">—</div><div class="card-sub" id="rep-best-sub"></div></div>
     <div class="card"><div class="card-label">Top Farm Location</div><div class="card-value" id="rep-farm">—</div><div class="card-sub" id="rep-farm-sub"></div></div>
   </div>
@@ -1491,6 +1498,21 @@ tr.subcat-row.visible{display:table-row}
 </main>
 
 <datalist id="sc-location-options"></datalist>
+
+
+<div class="modal-overlay" id="modal-drilldown">
+  <div class="modal" style="width:1100px;max-width:96vw;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="drilldown-title">Widget Details</div>
+        <div class="card-sub" id="drilldown-subtitle" style="margin-top:4px;">Underlying records for this widget</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-drilldown')">✕</button>
+    </div>
+    <div id="drilldown-summary" class="drilldown-summary-box"></div>
+    <div id="drilldown-body"></div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="modal-transaction"><div class="modal"><div class="modal-header"><div class="modal-title" id="txn-modal-title">Add Transaction</div><button class="modal-close" onclick="closeModal('modal-transaction')">✕</button></div><input type="hidden" id="txn-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="txn-date"></div><div class="form-group"><label>Type</label><select id="txn-type"><option>Income</option><option>Expense</option><option>Investment</option><option>Transfer</option><option>Debt Payment</option><option>Adjustment</option></select></div></div><div class="form-row"><div class="form-group"><label>Description</label><input type="text" id="txn-desc" placeholder="e.g. Salary, groceries..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Category</label><select id="txn-cat" onchange="populateTransactionSubcategorySelect()"></select></div><div class="form-group"><label>Sub-Category</label><select id="txn-subcat"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Account</label><select id="txn-account-sel"></select></div><div class="form-group"><label>Amount (₱)</label><input type="number" id="txn-amount" placeholder="0.00" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="txn-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveTransaction()">Save Transaction</button></div></div>
 
@@ -5980,5 +6002,108 @@ async function initCathOSApp() {
 const renderFns = { dashboard: renderDash, transactions: renderTransactions, budget: renderBudget, salary: renderSalary, lend: renderLend, accounts: renderAccounts, business: renderBusiness, rainy: renderRainy, investments: renderInvestments, networth: renderNetWorth, sugarcane: renderSugarcane, reports: renderReports, settings: renderSettings, yearly: renderYearly };
 
 </script>
+
+<script>
+function drilldownCurrentReportContext(){
+  const yr = document.getElementById('reports-year-filter')?.value;
+  const mo = document.getElementById('reports-month-filter')?.value;
+  return { year: parseInt(yr || new Date().getFullYear(), 10), month: mo === '' ? null : parseInt(mo,10) };
+}
+function drilldownCurrentSugarContext(){
+  return getFilteredSugarcaneData ? getFilteredSugarcaneData() : {filters:{},actuals:[],investments:[],expenses:[],incomes:[],land:[],projection:[]};
+}
+function drilldownDashboardTransactions(){
+  const filters = getDashboardFilters ? getDashboardFilters() : {};
+  return ((db.transactions||[]).map(normalizeTransactionRecord)).filter(t => transactionMatchesDashboardFilters(t, filters));
+}
+function drilldownReportTransactions(groupName){
+  const ctx = drilldownCurrentReportContext();
+  return ((db.transactions||[]).map(normalizeTransactionRecord)).filter(t => {
+    if (!t.date) return false;
+    const d = new Date(t.date);
+    if (isNaN(d) || d.getFullYear() !== ctx.year) return false;
+    if (ctx.month != null && d.getMonth() !== ctx.month) return false;
+    return reportGroup(t) === groupName;
+  });
+}
+function ddCurrency(v){ return fmt(scNum(v)); }
+function ddText(v){ return (v===null||v===undefined||v==='') ? '—' : String(v); }
+function drilldownRowsToTable(rows, columns){
+  if (!rows.length) return '<div class="drilldown-empty">No underlying records found for this widget.</div>';
+  let html = '<div class="table-wrap"><table><thead><tr>';
+  columns.forEach(c => html += `<th${c.align==='right' ? ' class="text-right"' : ''}>${c.label}</th>`);
+  html += '</tr></thead><tbody>';
+  rows.forEach(r => {
+    html += '<tr>';
+    columns.forEach(c => {
+      const raw = typeof c.get==='function' ? c.get(r) : r[c.key];
+      const val = c.type==='currency' ? ddCurrency(raw) : c.type==='number' ? scNum(raw).toLocaleString('en-PH') : ddText(raw);
+      html += `<td${c.align==='right' ? ' class="text-right mono"' : ''}>${val}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+function openDrilldown(type){
+  let title='Widget Details', subtitle='Underlying records for this widget', rows=[], columns=[], summary=[];
+  if(type==='dash_income'){
+    title='Dashboard Income'; subtitle='Transactions included in the current dashboard income widget';
+    rows=drilldownDashboardTransactions().filter(t=>t.entry_type==='income');
+    columns=[{key:'date',label:'Date'},{key:'desc',label:'Description'},{key:'acct',label:'Account'},{key:'category',label:'Category'},{key:'amount',label:'Amount',type:'currency',align:'right'}];
+    summary=[['Rows',rows.length],['Total Income', ddCurrency(rows.reduce((s,r)=>s+scNum(r.amount),0))]];
+  } else if(type==='dash_expense'){
+    title='Dashboard Expenses'; subtitle='Transactions included in the current dashboard expense widget';
+    rows=drilldownDashboardTransactions().filter(t=>t.entry_type==='expense');
+    columns=[{key:'date',label:'Date'},{key:'desc',label:'Description'},{key:'acct',label:'Account'},{key:'category',label:'Category'},{key:'amount',label:'Amount',type:'currency',align:'right'}];
+    summary=[['Rows',rows.length],['Total Expenses', ddCurrency(rows.reduce((s,r)=>s+scNum(r.amount),0))]];
+  } else if(type==='dash_cashflow'){
+    title='Dashboard Net Cash Flow'; subtitle='Income and expense transactions included in the current dashboard cash flow widget';
+    rows=drilldownDashboardTransactions().filter(t=>['income','expense'].includes(t.entry_type));
+    columns=[{key:'date',label:'Date'},{key:'entry_type',label:'Type'},{key:'desc',label:'Description'},{key:'acct',label:'Account'},{key:'amount',label:'Amount',type:'currency',align:'right'}];
+    const income=rows.filter(r=>r.entry_type==='income').reduce((s,r)=>s+scNum(r.amount),0);
+    const expense=rows.filter(r=>r.entry_type==='expense').reduce((s,r)=>s+scNum(r.amount),0);
+    summary=[['Income', ddCurrency(income)],['Expenses', ddCurrency(expense)],['Net Cash Flow', ddCurrency(income-expense)]];
+  } else if(type==='dash_passive'){
+    title='Dashboard Passive Income'; subtitle='Passive income transactions included in the current dashboard passive widget';
+    rows=drilldownDashboardTransactions().filter(t=>t.entry_type==='income' && isPassive(t));
+    columns=[{key:'date',label:'Date'},{key:'desc',label:'Description'},{key:'subcategory',label:'Subcategory'},{key:'amount',label:'Amount',type:'currency',align:'right'}];
+    summary=[['Rows',rows.length],['Passive Income', ddCurrency(rows.reduce((s,r)=>s+scNum(r.amount),0))]];
+  } else if(type.startsWith('report_')){
+    const map={report_income:'income',report_outflow:null,report_savings:'savings',report_debt:'debt',report_capital:'capital'};
+    if(type==='report_outflow') rows=((drilldownReportTransactions('bills')).concat(drilldownReportTransactions('subscriptions'),drilldownReportTransactions('expenses'),drilldownReportTransactions('business')));
+    else rows=drilldownReportTransactions(map[type]);
+    title={report_income:'Report Total Income',report_outflow:'Report Bills + Business + Expenses',report_savings:'Report Savings + Investments',report_debt:'Report Debt Payments',report_capital:'Report Capital Deployed'}[type];
+    subtitle='Transactions contributing to the selected reports widget';
+    columns=[{key:'date',label:'Date'},{key:'entry_type',label:'Type'},{key:'desc',label:'Description'},{key:'category',label:'Category'},{key:'subcategory',label:'Subcategory'},{key:'amount',label:'Amount',type:'currency',align:'right'}];
+    summary=[['Rows',rows.length],['Total', ddCurrency(rows.reduce((s,r)=>s+scNum(r.amount),0))]];
+  } else if(type.startsWith('sugar_')){
+    const filtered=drilldownCurrentSugarContext();
+    if(type==='sugar_capital'){
+      title='Sugarcane Capital Invested'; subtitle='Investment logs included in the current sugarcane filter'; rows=filtered.investments||[];
+      columns=[{key:'date',label:'Date'},{key:'harvestYear',label:'Harvest Year'},{key:'harvestCycle',label:'Cycle'},{key:'location',label:'Location'},{key:'category',label:'Category'},{key:'totalInvestment',label:'Amount',type:'currency',align:'right'}];
+      summary=[['Rows',rows.length],['Total Capital', ddCurrency(rows.reduce((s,r)=>s+scNum(r.totalInvestment),0))]];
+    } else if(type==='sugar_income'){
+      title='Sugarcane Gross Income'; subtitle='Harvest income rows included in the current sugarcane filter'; rows=filtered.incomes||[];
+      columns=[{key:'date',label:'Date'},{key:'harvestYear',label:'Harvest Year'},{key:'harvestCycle',label:'Cycle'},{key:'location',label:'Location'},{key:'tonsPaid',label:'Tons Paid',type:'number',align:'right'},{key:'grossIncome',label:'Gross Income',type:'currency',align:'right'}];
+      summary=[['Rows',rows.length],['Gross Income', ddCurrency(rows.reduce((s,r)=>s+scNum(r.grossIncome),0))]];
+    } else if(type==='sugar_profit'){
+      title='Sugarcane Net Profit'; subtitle='Actual rows included in the current sugarcane net profit widget'; rows=(filtered.actuals||[]).map(item=>({ ...item, _metrics: computeSugarcaneActualMetrics(item)}));
+      columns=[{key:'harvestYear',label:'Harvest Year'},{key:'harvestCycle',label:'Cycle'},{key:'location',label:'Location'},{key:'transactionType',label:'Transaction'},{get:r=>scNum(r._metrics.netProfit),label:'Net Profit',type:'currency',align:'right'}];
+      summary=[['Rows',rows.length],['Net Profit', ddCurrency(rows.reduce((s,r)=>s+scNum(r._metrics.netProfit),0))]];
+    } else if(type==='sugar_tons'){
+      title='Sugarcane Tons Harvested'; subtitle='Actual harvest rows included in the current sugarcane tons widget'; rows=filtered.actuals||[];
+      columns=[{key:'harvestYear',label:'Harvest Year'},{key:'harvestCycle',label:'Cycle'},{key:'location',label:'Location'},{key:'transactionType',label:'Transaction'},{key:'tonsHarvested',label:'Tons',type:'number',align:'right'}];
+      summary=[['Rows',rows.length],['Total Tons', (rows.reduce((s,r)=>s+scNum(r.tonsHarvested),0)).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})]];
+    }
+  }
+  document.getElementById('drilldown-title').textContent=title;
+  document.getElementById('drilldown-subtitle').textContent=subtitle;
+  document.getElementById('drilldown-summary').innerHTML=summary.map(([k,v])=>`<span class="drilldown-chip">${k}: ${v}</span>`).join('');
+  document.getElementById('drilldown-body').innerHTML=drilldownRowsToTable(rows, columns);
+  openModal('modal-drilldown');
+}
+</script>
+
 </body>
 </html>
