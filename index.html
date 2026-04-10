@@ -902,7 +902,7 @@ tr.subcat-row.visible{display:table-row}
       <input type="week" id="txn-filter-week" onchange="renderTransactions()" style="display:none;background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;">
       <select id="txn-filter-year" onchange="renderTransactions()" style="display:none;background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;"></select>
       <select id="txn-filter-type" onchange="renderTransactions()" style="background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;">
-        <option value="">All Types</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Investment">Investment</option>
+        <option value="">All Types</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Investment">Investment</option><option value="Transfer">Transfer</option><option value="Debt Payment">Debt Payment</option><option value="Adjustment">Adjustment</option>
       </select>
       <select id="txn-filter-cat" onchange="renderTransactions()" style="background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;">
         <option value="">All Categories</option>
@@ -1492,7 +1492,7 @@ tr.subcat-row.visible{display:table-row}
 
 <datalist id="sc-location-options"></datalist>
 
-<div class="modal-overlay" id="modal-transaction"><div class="modal"><div class="modal-header"><div class="modal-title" id="txn-modal-title">Add Transaction</div><button class="modal-close" onclick="closeModal('modal-transaction')">✕</button></div><input type="hidden" id="txn-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="txn-date"></div><div class="form-group"><label>Type</label><select id="txn-type"><option>Income</option><option>Expense</option><option>Investment</option></select></div></div><div class="form-row"><div class="form-group"><label>Description</label><input type="text" id="txn-desc" placeholder="e.g. Salary, groceries..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Category</label><select id="txn-cat" onchange="populateTransactionSubcategorySelect()"></select></div><div class="form-group"><label>Sub-Category</label><select id="txn-subcat"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Account</label><select id="txn-account-sel"></select></div><div class="form-group"><label>Amount (₱)</label><input type="number" id="txn-amount" placeholder="0.00" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="txn-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveTransaction()">Save Transaction</button></div></div>
+<div class="modal-overlay" id="modal-transaction"><div class="modal"><div class="modal-header"><div class="modal-title" id="txn-modal-title">Add Transaction</div><button class="modal-close" onclick="closeModal('modal-transaction')">✕</button></div><input type="hidden" id="txn-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Date</label><input type="date" id="txn-date"></div><div class="form-group"><label>Type</label><select id="txn-type"><option>Income</option><option>Expense</option><option>Investment</option><option>Transfer</option><option>Debt Payment</option><option>Adjustment</option></select></div></div><div class="form-row"><div class="form-group"><label>Description</label><input type="text" id="txn-desc" placeholder="e.g. Salary, groceries..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Category</label><select id="txn-cat" onchange="populateTransactionSubcategorySelect()"></select></div><div class="form-group"><label>Sub-Category</label><select id="txn-subcat"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Account</label><select id="txn-account-sel"></select></div><div class="form-group"><label>Amount (₱)</label><input type="number" id="txn-amount" placeholder="0.00" min="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><input type="text" id="txn-notes" placeholder="Optional..."></div></div><button class="btn btn-primary w-full" onclick="saveTransaction()">Save Transaction</button></div></div>
 
 <div class="modal-overlay" id="modal-budget"><div class="modal"><div class="modal-header"><div class="modal-title">Add Budget Item</div><button class="modal-close" onclick="closeModal('modal-budget')">✕</button></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Month</label><input type="month" id="bud-month"></div><div class="form-group"><label>Category</label><input type="text" id="bud-cat" placeholder="e.g. Food, rent..."></div></div><div class="form-row" style="grid-template-columns:1fr 1fr"><div class="form-group"><label>Budget Amount (₱)</label><input type="number" id="bud-plan" placeholder="0.00" min="0" step="0.01"></div><div class="form-group"><label>Actual Amount (₱)</label><input type="number" id="bud-actual-inp" placeholder="0.00" min="0" step="0.01"></div></div><button class="btn btn-primary w-full" onclick="saveBudget()">Save Budget Item</button></div></div>
 
@@ -2125,12 +2125,13 @@ function openModal(id, data) {
     if (data && typeof data === 'object') {
       if (titleEl) titleEl.textContent = 'Edit Transaction';
       document.getElementById('txn-edit-id').value = data.id || '';
-      document.getElementById('txn-date').value = data.date || today();
-      document.getElementById('txn-type').value = data.type || 'Expense';
-      populateTransactionCategorySelect(data.cat);
-      populateTransactionSubcategorySelect(data.cat, data.subcat);
-      document.getElementById('txn-desc').value = data.desc || '';
-      populateAccountSelect('txn-account-sel', data.acct || '');
+      const txn = normalizeTransactionRecord(data);
+      document.getElementById('txn-date').value = txn.date || today();
+      document.getElementById('txn-type').value = txn.type || 'Expense';
+      populateTransactionCategorySelect(txn.cat);
+      populateTransactionSubcategorySelect(txn.cat, txn.subcat);
+      document.getElementById('txn-desc').value = txn.desc || '';
+      populateAccountSelect('txn-account-sel', txn.acct || '');
       document.getElementById('txn-amount').value = data.amount ?? '';
       document.getElementById('txn-notes').value = data.notes || '';
     } else {
@@ -2449,6 +2450,72 @@ function autoCategorizeTransaction(payload) {
   return payload;
 }
 
+function transactionDisplayType(value) {
+  const v = String(value || '').trim().toLowerCase();
+  const map = {
+    income: 'Income',
+    expense: 'Expense',
+    investment: 'Investment',
+    transfer: 'Transfer',
+    debt_payment: 'Debt Payment',
+    debtpayment: 'Debt Payment',
+    adjustment: 'Adjustment'
+  };
+  return map[v] || (value ? String(value).trim() : 'Expense');
+}
+
+function transactionEntryTypeFromValue(value) {
+  const v = String(value || '').trim().toLowerCase();
+  const map = {
+    income: 'income',
+    expense: 'expense',
+    investment: 'investment',
+    transfer: 'transfer',
+    'debt payment': 'debt_payment',
+    debt_payment: 'debt_payment',
+    adjustment: 'adjustment'
+  };
+  return map[v] || (v || 'expense');
+}
+
+function getAccountNameFromId(accountId) {
+  if (!accountId) return '';
+  const account = (db.accounts || []).find(a => String(a.id) === String(accountId));
+  return account?.name || '';
+}
+
+function getAccountIdByName(name) {
+  const val = String(name || '').trim().toLowerCase();
+  if (!val) return null;
+  const account = (db.accounts || []).find(a => String(a.name || '').trim().toLowerCase() === val);
+  return account?.id || null;
+}
+
+function normalizeTransactionRecord(item) {
+  const entryType = transactionEntryTypeFromValue(item.entry_type || item.entryType || item.type);
+  const accountId = item.account_id || item.accountId || getAccountIdByName(item.acct || item.account_name || item.accountName || item.account || '');
+  const counterpartyAccountId = item.counterparty_account_id || item.counterpartyAccountId || getAccountIdByName(item.counterparty_acct || item.counterpartyAcct || item.counterparty_account_name || '');
+  const accountName = getAccountNameFromId(accountId) || item.acct || item.account_name || item.accountName || item.account || '';
+  return {
+    ...item,
+    date: item.date || item.txn_date || '',
+    desc: item.desc || item.description || '',
+    type: transactionDisplayType(item.type || item.entry_type || item.entryType),
+    entry_type: entryType,
+    amount: parseFloat(item.amount || 0) || 0,
+    acct: accountName,
+    account_id: accountId || null,
+    counterparty_account_id: counterpartyAccountId || null,
+    category_group: item.category_group || item.categoryGroup || '',
+    cat: item.cat || item.category || '',
+    category: item.category || item.cat || '',
+    subcat: item.subcat || item.subcategory || '',
+    subcategory: item.subcategory || item.subcat || '',
+    allocation_bucket: item.allocation_bucket || item.allocationBucket || 'none',
+    notes: item.notes || ''
+  };
+}
+
 function editTransaction(id) {
   const item = (db.transactions || []).find(x => String(x.id) === String(id));
   if (!item) return;
@@ -2457,19 +2524,27 @@ function editTransaction(id) {
 
 function saveTransaction() {
   const editId = document.getElementById('txn-edit-id')?.value;
+  const accountName = document.getElementById('txn-account-sel').value || '';
   let payload = {
     id: editId || uid(),
     date: document.getElementById('txn-date').value || today(),
     type: document.getElementById('txn-type').value || 'Expense',
+    entry_type: transactionEntryTypeFromValue(document.getElementById('txn-type').value || 'Expense'),
+    category_group: '',
     cat: document.getElementById('txn-cat').value || 'Expenses',
+    category: document.getElementById('txn-cat').value || 'Expenses',
     subcat: document.getElementById('txn-subcat').value || 'General',
+    subcategory: document.getElementById('txn-subcat').value || 'General',
     desc: document.getElementById('txn-desc').value.trim(),
-    acct: document.getElementById('txn-account-sel').value || '',
+    acct: accountName,
+    account_id: getAccountIdByName(accountName),
+    counterparty_account_id: null,
+    allocation_bucket: 'none',
     amount: parseFloat(document.getElementById('txn-amount').value) || 0,
     notes: document.getElementById('txn-notes').value.trim()
   };
   if (!payload.date || !payload.desc || !payload.amount) return alert('Please fill required fields.');
-  payload = autoCategorizeTransaction(payload);
+  payload = normalizeTransactionRecord(autoCategorizeTransaction(payload));
   upsertRecord('transactions', payload);
   closeModal('modal-transaction');
   renderTransactions();
@@ -3873,14 +3948,14 @@ function renderTransactions() {
     categorySelect.innerHTML = '<option value="">All Categories</option>' + cats.map(cat => `<option value="${cat}">${cat}</option>`).join('');
     categorySelect.value = current && cats.includes(current) ? current : '';
   }
-  const data = (db.transactions || []).filter(t => {
-    const hay = [t.desc, t.cat, t.subcat, t.notes, t.acct].join(' ').toLowerCase();
+  const data = (db.transactions || []).map(normalizeTransactionRecord).filter(t => {
+    const hay = [t.desc, t.cat, t.subcat, t.notes, t.acct, t.entry_type].join(' ').toLowerCase();
     return (!search || hay.includes(search)) && (!filterType || t.type === filterType) && (!filterCat || t.cat === filterCat);
   }).sort((a,b) => (b.date||'').localeCompare(a.date||''));
 
-  const income = data.filter(t=>t.type==='Income').reduce((s,t)=>s + (+t.amount || 0),0);
-  const expense = data.filter(t=>t.type==='Expense').reduce((s,t)=>s + (+t.amount || 0),0);
-  const investment = data.filter(t=>t.type==='Investment').reduce((s,t)=>s + (+t.amount || 0),0);
+  const income = data.filter(t=>t.entry_type==='income').reduce((s,t)=>s + (+t.amount || 0),0);
+  const expense = data.filter(t=>t.entry_type==='expense' || t.entry_type==='debt_payment').reduce((s,t)=>s + (+t.amount || 0),0);
+  const investment = data.filter(t=>t.entry_type==='investment').reduce((s,t)=>s + (+t.amount || 0),0);
 
   document.getElementById('txn-income').textContent = fmt(income);
   document.getElementById('txn-expense').textContent = fmt(expense + investment);
@@ -3888,10 +3963,10 @@ function renderTransactions() {
   document.getElementById('txn-count').textContent = data.length;
 
   document.getElementById('txn-body').innerHTML = data.length ? data.map(t => {
-    const typeClass = t.type === 'Income' ? 'badge-green' : t.type === 'Investment' ? 'badge-blue' : 'badge-red';
-    const amountClass = t.type === 'Income' ? 'positive' : t.type === 'Investment' ? 'accent' : 'negative';
+    const typeClass = t.type === 'Income' ? 'badge-green' : t.type === 'Investment' ? 'badge-blue' : t.type === 'Transfer' ? 'badge-yellow' : 'badge-red';
+    const amountClass = t.type === 'Income' ? 'positive' : t.type === 'Investment' ? 'accent' : t.type === 'Transfer' ? 'accent' : 'negative';
     return `<tr><td class="mono">${t.date||'—'}</td><td>${t.desc||'—'}</td><td><span class="badge badge-blue">${t.cat||'—'}</span></td><td>${t.subcat||'—'}</td><td>${t.acct||'—'}</td><td><span class="badge ${typeClass}">${t.type||'—'}</span></td><td class="${amountClass}">${fmt(t.amount)}</td><td style="color:var(--text3)">${t.notes||'—'}</td><td><div class="flex gap-10"><button onclick="editTransaction('${t.id}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 6px;" title="Edit">✏️</button>${deleteBtn('transactions', t.id)}</div></td></tr>`;
-  }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No transactions yet</div></div></td></tr>`;
+  }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No transactions found for this filter</div></div></td></tr>`;
 }
 function renderBudget() {
   const data = [...db.budget].sort((a,b) => b.month.localeCompare(a.month));
@@ -4328,24 +4403,30 @@ function destroyChart(ref) { try { ref && ref.destroy(); } catch(e){} }
 
 // ─── GROUP CLASSIFIER ───
 function reportGroup(t) {
-  const cat  = String(t.cat  || '').toLowerCase();
-  const desc = String(t.desc || '').toLowerCase();
-  const tx   = cat + ' ' + desc;
-  if (t.type === 'Income') return 'income';
+  const txn = normalizeTransactionRecord(t);
+  const cat  = String(txn.cat || '').toLowerCase();
+  const desc = String(txn.desc || '').toLowerCase();
+  const bucket = String(txn.allocation_bucket || '').toLowerCase();
+  const tx   = cat + ' ' + desc + ' ' + bucket;
+  if (txn.entry_type === 'income') return 'income';
+  if (txn.entry_type === 'transfer') return 'capital';
+  if (txn.entry_type === 'debt_payment') return 'debt';
+  if (txn.entry_type === 'adjustment') return 'capital';
   if (/subscription|netflix|spotify|chatgpt|claude|canva|icloud|google one|software/.test(tx)) return 'subscriptions';
   if (/bill|electric|electricity|water|internet|wifi|phone|insurance|rent(?!al)|loan bill/.test(tx)) return 'bills';
   if (/debt|loan payment|credit card|cc payment|amort|installment/.test(tx)) return 'debt';
-  if (/saving|investment|invest|stock|crypto|fund|col|gotrade|bitcoin|btc|gold/.test(tx)) return 'savings';
+  if (txn.entry_type === 'investment' || /saving|investment|invest|stock|crypto|fund|col|gotrade|bitcoin|btc|gold/.test(tx)) return 'savings';
   if (/business|motoworks|farm|inventory|salary team|payroll|supplier|clinic|ads|marketing|operating/.test(tx)) return 'business';
-  if (/capital|deployment|equipment|asset purchase|project|build|construction|land/.test(tx)) return 'capital';
+  if (/capital|deployment|equipment|asset purchase|project|build|construction|land|transfer/.test(tx)) return 'capital';
   return 'expenses';
 }
 
 // ─── PASSIVE INCOME DETECTOR ───
 function isPassive(t) {
-  const sub  = (t.subcat || '').toLowerCase();
-  const desc = (t.desc   || '').toLowerCase();
-  return t.type === 'Income' && PASSIVE_CATS.some(p => sub.includes(p.toLowerCase()) || desc.includes(p.toLowerCase()));
+  const txn  = normalizeTransactionRecord(t);
+  const sub  = (txn.subcat || '').toLowerCase();
+  const desc = (txn.desc   || '').toLowerCase();
+  return txn.entry_type === 'income' && PASSIVE_CATS.some(p => sub.includes(p.toLowerCase()) || desc.includes(p.toLowerCase()));
 }
 
 // ─── BUILD MATRICES ───
@@ -4356,13 +4437,13 @@ function buildMatrices(year) {
   groups.forEach(g => data[g] = {});
   const passive = {};
 
-  (db.transactions || []).forEach(t => {
+  (db.transactions || []).map(normalizeTransactionRecord).forEach(t => {
     if (!t.date) return;
     const d = new Date(t.date);
     if (isNaN(d) || d.getFullYear() !== year) return;
     const m   = d.getMonth();
     const g   = reportGroup(t);
-    const cat = t.cat    || 'Uncategorized';
+    const cat = t.cat || 'Uncategorized';
     const sub = t.subcat || 'General';
     const amt = +t.amount || 0;
 
@@ -4376,25 +4457,22 @@ function buildMatrices(year) {
     }
   });
 
-  // Salary entries → income + savings matrices
-  (db.salary || []).forEach(s => {
-    if (!s.month) return;
-    const yr = parseInt(s.month.split('-')[0]);
-    if (yr !== year) return;
-    const m   = parseInt(s.month.split('-')[1]) - 1;
-    const amt = +s.amount || 0;
-    const cat = 'Income';
-    const sub = s.cat || 'Salary';
-    if (!data.income[cat])      data.income[cat] = {};
-    if (!data.income[cat][sub]) data.income[cat][sub] = Array(12).fill(0);
-    data.income[cat][sub][m] += amt;
-
-    if ((+s.alloc || 0) > 0) {
-      const sCat = 'Savings & Investments';
-      const sSub = s.cat || 'Salary Allocation';
-      if (!data.savings[sCat])      data.savings[sCat] = {};
-      if (!data.savings[sCat][sSub]) data.savings[sCat][sSub] = Array(12).fill(0);
-      data.savings[sCat][sSub][m] += +s.alloc;
+  // Historical monthly summaries (legacy 2020-2023 bridge only)
+  (db.monthlySummaries || []).forEach(s => {
+    const yr = +s.year || +s.summary_year || 0;
+    if (yr !== year || year >= 2024) return;
+    const m = (+s.month || +s.summary_month || 1) - 1;
+    const incomeAmt = +s.income || +s.total_income || 0;
+    const expenseAmt = +s.expense || +s.total_expense || 0;
+    if (incomeAmt) {
+      if (!data.income['Income']) data.income['Income'] = {};
+      if (!data.income['Income']['Legacy Summary']) data.income['Income']['Legacy Summary'] = Array(12).fill(0);
+      data.income['Income']['Legacy Summary'][m] += incomeAmt;
+    }
+    if (expenseAmt) {
+      if (!data.expenses['Expenses']) data.expenses['Expenses'] = {};
+      if (!data.expenses['Expenses']['Legacy Summary']) data.expenses['Expenses']['Legacy Summary'] = Array(12).fill(0);
+      data.expenses['Expenses']['Legacy Summary'][m] += expenseAmt;
     }
   });
 
@@ -4403,22 +4481,14 @@ function buildMatrices(year) {
     if (!l.date) return;
     const d = new Date(l.date);
     if (isNaN(d) || d.getFullYear() !== year) return;
-    const m   = d.getMonth();
+    const m = d.getMonth();
+    const repaid = +l.repaid || 0;
+    if (!repaid) return;
     const cat = 'Debt';
-    const sub = l.name || 'Loan Repayment';
-    if (!data.debt[cat])      data.debt[cat] = {};
+    const sub = l.name || 'Repayment';
+    if (!data.debt[cat]) data.debt[cat] = {};
     if (!data.debt[cat][sub]) data.debt[cat][sub] = Array(12).fill(0);
-    data.debt[cat][sub][m] += +l.repaid || 0;
-  });
-
-  // Sugarcane capital → capital matrix (logged in Dec of that year)
-  (db.sugarcane || []).forEach(r => {
-    if (parseInt(r.year, 10) !== year) return;
-    const cat = 'Capital Deployment';
-    const sub = `${r.location || 'Farm'} ${r.txn || ''}`.trim();
-    if (!data.capital[cat])      data.capital[cat] = {};
-    if (!data.capital[cat][sub]) data.capital[cat][sub] = Array(12).fill(0);
-    data.capital[cat][sub][11] += +r.capital || 0;
+    data.debt[cat][sub][m] += repaid;
   });
 
   return { data, passive };
@@ -5258,33 +5328,25 @@ function showSupabaseInfo() {
 }
 
 function mapSupabaseTransactionRow(row) {
-  const rawType = String(row.type || '').trim();
-  const normalizedTypeMap = {
-    bill: 'Expense',
-    bills: 'Expense',
-    subscription: 'Expense',
-    subscriptions: 'Expense',
-    savings: 'Investment',
-    debt: 'Expense',
-    expense: 'Expense',
-    expenses: 'Expense',
-    income: 'Income',
-    investment: 'Investment',
-    'capital deployment': 'Investment'
-  };
-  const lowerType = rawType.toLowerCase();
-  return {
+  return normalizeTransactionRecord({
     id: ensureUuid(row.id),
     date: row.txn_date || row.date || '',
     desc: row.description || row.desc || '',
-    type: normalizedTypeMap[lowerType] || (rawType ? rawType.charAt(0).toUpperCase() + rawType.slice(1) : 'Expense'),
+    type: row.type || row.entry_type || '',
+    entry_type: row.entry_type || row.entryType || row.type || '',
     amount: parseFloat(row.amount || 0) || 0,
     acct: row.acct || row.account_name || row.account || '',
+    account_id: row.account_id || row.accountId || null,
+    counterparty_account_id: row.counterparty_account_id || row.counterpartyAccountId || null,
+    category_group: row.category_group || row.categoryGroup || '',
+    category: row.category || row.cat || '',
     cat: row.cat || row.category || '',
+    subcategory: row.subcategory || row.subcat || '',
     subcat: row.subcat || row.subcategory || '',
+    allocation_bucket: row.allocation_bucket || row.allocationBucket || 'none',
     notes: row.notes || '',
     harvestCycle: row.harvest_cycle || row.harvestCycle || null
-  };
+  });
 }
 
 function mapSupabaseAccountRow(row) {
@@ -5650,6 +5712,7 @@ async function hydrateDbFromSupabase() {
 
   db.transactions = transactionsRows.map(mapSupabaseTransactionRow);
   db.accounts = accountsRows.map(mapSupabaseAccountRow);
+  db.transactions = db.transactions.map(normalizeTransactionRecord);
   db.creditcards = creditCardRows.map(mapSupabaseCreditCardRow);
   db.lend = lendingRows.map(mapSupabaseLendingRow);
   db.investments = investmentRows.map(mapSupabaseInvestmentRow);
@@ -5670,16 +5733,24 @@ async function hydrateDbFromSupabase() {
 }
 
 function mapTransactionToSupabaseRow(item) {
+  const txn = normalizeTransactionRecord(item);
   return {
-    id: ensureUuid(item.id),
-    txn_date: item.date || null,
-    description: item.desc || '',
-    type: item.type || '',
-    amount: parseFloat(item.amount || 0) || 0,
-    acct: item.acct || '',
-    cat: item.cat || '',
-    subcat: item.subcat || '',
-    notes: item.notes || ''
+    id: ensureUuid(txn.id),
+    txn_date: txn.date || null,
+    description: txn.desc || '',
+    type: txn.type || '',
+    entry_type: txn.entry_type || transactionEntryTypeFromValue(txn.type),
+    amount: parseFloat(txn.amount || 0) || 0,
+    acct: txn.acct || '',
+    account_id: txn.account_id || null,
+    counterparty_account_id: txn.counterparty_account_id || null,
+    category_group: txn.category_group || '',
+    category: txn.category || txn.cat || '',
+    subcategory: txn.subcategory || txn.subcat || '',
+    allocation_bucket: txn.allocation_bucket || 'none',
+    cat: txn.cat || txn.category || '',
+    subcat: txn.subcat || txn.subcategory || '',
+    notes: txn.notes || ''
   };
 }
 function mapAccountToSupabaseRow(item) {
