@@ -2472,32 +2472,53 @@ function autoCategorizeTransaction(payload) {
   return payload;
 }
 
+const VALID_TRANSACTION_ENTRY_TYPES = [
+  'income',
+  'expense',
+  'transfer',
+  'investment',
+  'debt_payment',
+  'adjustment'
+];
+
 function transactionDisplayType(value) {
-  const v = String(value || '').trim().toLowerCase();
+  const entryType = transactionEntryTypeFromValue(value);
   const map = {
     income: 'Income',
     expense: 'Expense',
     investment: 'Investment',
     transfer: 'Transfer',
     debt_payment: 'Debt Payment',
-    debtpayment: 'Debt Payment',
     adjustment: 'Adjustment'
   };
-  return map[v] || (value ? String(value).trim() : 'Expense');
+  return map[entryType] || 'Expense';
 }
 
 function transactionEntryTypeFromValue(value) {
-  const v = String(value || '').trim().toLowerCase();
+  const v = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\/]+/g, ' ')
+    .replace(/[-\s]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
   const map = {
     income: 'income',
     expense: 'expense',
-    investment: 'investment',
     transfer: 'transfer',
-    'debt payment': 'debt_payment',
+    investment: 'investment',
     debt_payment: 'debt_payment',
-    adjustment: 'adjustment'
+    debtpayment: 'debt_payment',
+    debt: 'debt_payment',
+    adjustment: 'adjustment',
+    savings: 'transfer',
+    saving: 'transfer',
+    save: 'transfer'
   };
-  return map[v] || (v || 'expense');
+
+  const normalized = map[v] || 'expense';
+  return VALID_TRANSACTION_ENTRY_TYPES.includes(normalized) ? normalized : 'expense';
 }
 
 function getAccountNameFromId(accountId) {
@@ -2547,11 +2568,18 @@ function editTransaction(id) {
 function saveTransaction() {
   const editId = document.getElementById('txn-edit-id')?.value;
   const accountName = document.getElementById('txn-account-sel').value || '';
+  const rawType = document.getElementById('txn-type').value || 'Expense';
+  const entryType = transactionEntryTypeFromValue(rawType);
+
+  if (!VALID_TRANSACTION_ENTRY_TYPES.includes(entryType)) {
+    return alert(`Invalid transaction type: ${rawType}`);
+  }
+
   let payload = {
     id: editId || uid(),
     date: document.getElementById('txn-date').value || today(),
-    type: document.getElementById('txn-type').value || 'Expense',
-    entry_type: transactionEntryTypeFromValue(document.getElementById('txn-type').value || 'Expense'),
+    type: transactionDisplayType(rawType),
+    entry_type: entryType,
     category_group: '',
     cat: document.getElementById('txn-cat').value || 'Expenses',
     category: document.getElementById('txn-cat').value || 'Expenses',
@@ -2567,6 +2595,13 @@ function saveTransaction() {
   };
   if (!payload.date || !payload.desc || !payload.amount) return alert('Please fill required fields.');
   payload = normalizeTransactionRecord(autoCategorizeTransaction(payload));
+  payload.type = transactionDisplayType(payload.entry_type || payload.type);
+  payload.entry_type = transactionEntryTypeFromValue(payload.entry_type || payload.type);
+
+  if (!VALID_TRANSACTION_ENTRY_TYPES.includes(payload.entry_type)) {
+    return alert(`Invalid normalized transaction type: ${payload.entry_type}`);
+  }
+
   upsertRecord('transactions', payload);
   closeModal('modal-transaction');
   renderTransactions();
@@ -5793,7 +5828,7 @@ function mapTransactionToSupabaseRow(item) {
     txn_date: txn.date || null,
     description: txn.desc || '',
     type: txn.type || '',
-    entry_type: txn.entry_type || transactionEntryTypeFromValue(txn.type),
+    entry_type: transactionEntryTypeFromValue(txn.entry_type || txn.type),
     amount: parseFloat(txn.amount || 0) || 0,
     acct: txn.acct || '',
     account_id: txn.account_id || null,
