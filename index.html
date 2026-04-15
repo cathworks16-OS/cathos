@@ -5526,7 +5526,14 @@ function mapSupabaseNetWorthRow(row) {
     yearlyDecrease: parseFloat(row.yearly_decrease ?? row.yearlyDecrease ?? 0) || 0,
     monthlyPayment: parseFloat(row.monthly_payment ?? row.monthlyPayment ?? 0) || 0,
     depreciationStart: row.depreciation_start || row.depreciationStart || '',
-    appreciationRate: parseFloat(row.appreciation_rate ?? row.appreciationRate ?? 0) || 0
+    appreciationRate: parseFloat(row.appreciation_rate ?? row.appreciationRate ?? 0) || 0,
+    appraisedValue: parseFloat(row.appraised_value ?? row.appraisedValue ?? 0) || 0,
+    appraised_value: parseFloat(row.appraised_value ?? row.appraisedValue ?? 0) || 0,
+    appraisedDate: row.appraised_date || row.appraisedDate || '',
+    appraised_date: row.appraised_date || row.appraisedDate || '',
+    valuationMethod: row.valuation_method || row.valuationMethod || '',
+    valuation_method: row.valuation_method || row.valuationMethod || '',
+    notes: row.notes || ''
   };
 }
 function mapSupabaseMonthlySummaryRow(row) {
@@ -5923,7 +5930,11 @@ function mapNetWorthToSupabaseRow(item) {
     yearly_decrease: parseFloat(item.yearlyDecrease || 0) || 0,
     monthly_payment: parseFloat(item.monthlyPayment || 0) || 0,
     depreciation_start: item.depreciationStart || null,
-    appreciation_rate: parseFloat(item.appreciationRate || 0) || 0
+    appreciation_rate: parseFloat(item.appreciationRate || 0) || 0,
+    appraised_value: parseFloat(item.appraisedValue ?? item.appraised_value ?? 0) || 0,
+    appraised_date: item.appraisedDate || item.appraised_date || null,
+    valuation_method: item.valuationMethod || item.valuation_method || '',
+    notes: item.notes || ''
   };
 }
 function mapMonthlySummaryToSupabaseRow(item) {
