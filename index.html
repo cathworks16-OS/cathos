@@ -1,154 +1,768 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>CathOS Lite</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: Arial; padding: 20px; background:#f5f5f5; }
-    h1 { margin-bottom: 10px; }
-    .card { background:#fff; padding:15px; margin-bottom:15px; border-radius:10px; }
-    input, select { padding:8px; margin:5px; }
-    button { padding:8px 12px; cursor:pointer; }
-    table { width:100%; margin-top:10px; border-collapse:collapse; }
-    th, td { padding:8px; border-bottom:1px solid #ddd; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CathOS Lite — Simplified</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #F7F3EF;
+  --surface: #FFFFFF;
+  --surface2: #EFE7E1;
+  --border: #E2D6CE;
+  --accent: #4A5A49;
+  --accent2: #6B8F71;
+  --accent3: #B06A5A;
+  --accent4: #A7B3A5;
+  --mustard: #D8A45A;
+  --rust: #B77A44;
+  --brick: #8A5A4A;
+  --text: #2F2F2F;
+  --text2: #6F5B55;
+  --text3: #A89B94;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 13px;
+}
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 238px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+.logo { padding: 22px 20px 18px; border-bottom: 1px solid var(--border); }
+.logo-mark-wrap { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.logo-mark {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: linear-gradient(145deg, #F1E2D1, #FFFFFF);
+  border: 1px solid var(--border);
+  position: relative;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 8px 18px rgba(74,90,73,0.10);
+  overflow:hidden;
+}
+.logo-mark::before {
+  content:''; position:absolute; width:22px; height:22px; border-radius:50%;
+  background: rgba(216,164,90,0.45); left:8px; top:10px;
+}
+.logo-mark::after {
+  content:''; position:absolute; width:28px; height:4px; background: var(--accent);
+  transform: rotate(-35deg); border-radius:999px; right:5px; top:14px;
+}
+.logo-mark span { position:relative; z-index:2; font-size:13px; font-weight:700; color:var(--accent); }
+.logo-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--accent); line-height: 1.1; }
+.logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 1.9px; text-transform: uppercase; margin-top: 2px; }
+.nav-section { padding: 14px 12px 6px; }
+.nav-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); padding: 0 8px; margin-bottom: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: 10px;
+  cursor: pointer; font-size: 12px; color: var(--text2);
+  transition: all 0.15s; margin-bottom: 2px;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: rgba(74,90,73,0.10); color: var(--accent); border-color: rgba(74,90,73,0.12); }
+.nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+.main { margin-left: 238px; min-height: 100vh; padding: 30px 30px 70px; }
+.page { display: none; }
+.page.active { display: block; }
+.page-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
+}
+.page-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+.page-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+.grid { display:grid; gap:14px; }
+.grid-2 { grid-template-columns:1fr 1fr; }
+.grid-3 { grid-template-columns:1fr 1fr 1fr; }
+.grid-4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px;
+  position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+.card-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+.card-value { font-family: 'DM Mono', monospace; font-size: 21px; font-weight: 500; color: var(--text); }
+.card-value.accent { color: var(--accent); }
+.card-value.green { color: var(--accent2); }
+.card-value.red { color: var(--accent3); }
+.card-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.card-accent-bar { position:absolute; top:0; left:0; right:0; height:3px; }
+.section-title {
+  font-family:'Playfair Display', serif; font-size:16px; font-weight:700; color:var(--text);
+  margin-bottom:12px; display:flex; align-items:center; gap:8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.table-wrap { overflow-x:auto; border-radius:14px; border:1px solid var(--border); background:var(--surface); box-shadow:0 4px 20px rgba(0,0,0,0.03); }
+table { width:100%; border-collapse:collapse; }
+thead tr { background:#F6F0EB; }
+th {
+  padding: 11px 14px; text-align:left; font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--text3); font-weight:600; border-bottom:1px solid var(--border); white-space:nowrap;
+}
+td {
+  padding: 11px 14px; font-size:12px; color:var(--text2); border-bottom:1px solid rgba(226,214,206,0.75);
+  vertical-align:middle;
+}
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover td { background: rgba(239,231,225,0.5); }
+.positive { color: var(--accent2); font-family:'DM Mono', monospace; }
+.negative { color: var(--accent3); font-family:'DM Mono', monospace; }
+.accent { color: var(--accent); font-family:'DM Mono', monospace; }
+.mono { font-family:'DM Mono', monospace; }
+.badge { display:inline-block; padding:3px 8px; border-radius:999px; font-size:10px; font-weight:600; }
+.badge-green { background: rgba(107,143,113,0.14); color: var(--accent2); }
+.badge-yellow { background: rgba(216,164,90,0.16); color: var(--mustard); }
+.badge-red { background: rgba(176,106,90,0.14); color: var(--accent3); }
+.badge-blue { background: rgba(167,179,165,0.18); color: var(--accent); }
+.btn {
+  display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border-radius:10px; font-size:12px;
+  font-weight:600; cursor:pointer; border:none; transition:all .15s; font-family:'Inter', sans-serif;
+}
+.btn-primary { background: var(--accent); color:#fff; }
+.btn-primary:hover { background:#3d4b3c; }
+.btn-ghost { background: var(--surface2); color: var(--text2); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--text); border-color:var(--accent4); }
+.btn-danger { background: rgba(176,106,90,0.12); color: var(--accent3); border:1px solid rgba(176,106,90,0.18); }
+.btn-sm { padding:6px 10px; font-size:11px; }
+.form-row { display:grid; gap:12px; margin-bottom:12px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group label { font-size:11px; color:var(--text3); letter-spacing:.5px; }
+.form-group input, .form-group select, .form-group textarea {
+  background:#fff; border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:10px;
+  font-size:12px; font-family:'Inter', sans-serif; outline:none;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--accent4); box-shadow:0 0 0 3px rgba(74,90,73,0.08); }
+.top-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.sync-pill {
+  display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
+  border:1px solid var(--border); background:rgba(255,255,255,0.82); color:var(--text2); font-size:11px; font-weight:600;
+}
+.sync-dot { width:8px; height:8px; border-radius:50%; background: var(--accent2); }
+.sync-banner {
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background: rgba(255,255,255,0.9);
+  border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:18px; box-shadow:0 4px 18px rgba(0,0,0,0.03);
+}
+.sync-banner-title { font-size:12px; font-weight:700; color:var(--accent); }
+.sync-banner-sub { font-size:11px; color:var(--text3); margin-top:3px; }
+.empty { text-align:center; padding:36px 20px; color:var(--text3); }
+.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,.04); }
+.chart-card canvas { max-height:300px; }
+.modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(47,47,47,0.38); z-index:999; align-items:center; justify-content:center; padding:18px;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:24px; width:720px; max-width:95vw; max-height:90vh;
+  overflow-y:auto; box-shadow:0 18px 40px rgba(0,0,0,0.12);
+}
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.modal-title { font-family:'Playfair Display', serif; font-size:19px; }
+.modal-close { cursor:pointer; background:none; border:none; color:var(--text2); font-size:22px; }
+.kpi-grid-6 { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; }
+.note-box { background:rgba(216,164,90,0.10); border:1px solid rgba(216,164,90,0.18); border-radius:12px; padding:12px 14px; font-size:11px; color:var(--text2); }
+.inline-split { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mb-14{margin-bottom:14px}.text-right{text-align:right}.w-full{width:100%}
+@media (max-width:1180px){ .grid-4,.kpi-grid-6{grid-template-columns:1fr 1fr 1fr;} .grid-3{grid-template-columns:1fr 1fr;} }
+@media (max-width:900px){ .sidebar{position:relative;width:100%;height:auto;} .main{margin-left:0;padding:20px;} .grid-2,.grid-3,.grid-4,.kpi-grid-6{grid-template-columns:1fr;} .page-header{flex-direction:column;align-items:flex-start;gap:12px;} }
+</style>
 </head>
 <body>
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark-wrap">
+      <div class="logo-mark"><span>₱</span></div>
+      <div>
+        <div class="logo-title">CathOS</div>
+        <div class="logo-sub">Personal Wealth OS</div>
+      </div>
+    </div>
+  </div>
 
-<h1>💰 CathOS Lite</h1>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">🏠</span> Dashboard</div>
+    <div class="nav-item" onclick="navigate('networth')"><span class="icon">📊</span> Net Worth</div>
+    <div class="nav-item" onclick="navigate('reports')"><span class="icon">🧾</span> Reports</div>
+  </div>
 
-<!-- DASHBOARD -->
-<div class="card">
-  <h2>Net Worth</h2>
-  <div id="networth">₱0</div>
-</div>
+  <div class="nav-section">
+    <div class="nav-label">Tracking</div>
+    <div class="nav-item" onclick="navigate('transactions')"><span class="icon">📋</span> Transaction Logs</div>
+    <div class="nav-item" onclick="navigate('lend')"><span class="icon">🤝</span> Lending Tracker</div>
+    <div class="nav-item" onclick="navigate('accounts')"><span class="icon">🏦</span> Bank Accounts</div>
+    <div class="nav-item" onclick="navigate('creditcards')"><span class="icon">💳</span> Credit Cards</div>
+    <div class="nav-item" onclick="navigate('investments')"><span class="icon">🌙</span> Investments</div>
+    <div class="nav-item" onclick="navigate('sugarcane')"><span class="icon">🌾</span> Sugarcane</div>
+  </div>
+</nav>
 
-<!-- ADD ACCOUNT -->
-<div class="card">
-  <h2>Add Account</h2>
-  <input id="acc_name" placeholder="Account Name">
-  <input id="acc_balance" type="number" placeholder="Balance">
-  <select id="acc_type">
-    <option value="personal">Personal</option>
-    <option value="business">Business</option>
-    <option value="reserve">Reserve</option>
-  </select>
-  <button onclick="addAccount()">Add</button>
-</div>
+<main class="main">
+  <div class="sync-banner">
+    <div>
+      <div class="sync-banner-title">CathOS Lite</div>
+      <div class="sync-banner-sub">Same CathOS aesthetic. Simpler pages. Local save built in. Supabase can be reconnected later without the old complexity.</div>
+    </div>
+    <div class="top-actions">
+      <span class="sync-pill"><span class="sync-dot"></span><span id="save-status">Saved locally</span></span>
+      <button class="btn btn-ghost" onclick="seedDemoData()">Load Demo</button>
+      <button class="btn btn-ghost" onclick="resetAllData()">Reset</button>
+    </div>
+  </div>
 
-<!-- TRANSACTIONS -->
-<div class="card">
-  <h2>Add Transaction</h2>
-  <input id="t_desc" placeholder="Description">
-  <input id="t_amount" type="number" placeholder="Amount">
-  <select id="t_type">
-    <option value="income">Income</option>
-    <option value="expense">Expense</option>
-  </select>
-  <button onclick="addTransaction()">Add</button>
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Good day! 👋</div>
+        <div class="page-sub">Open CathOS and know your numbers in 5 seconds.</div>
+      </div>
+      <div class="card-sub mono" id="today-label"></div>
+    </div>
 
-  <table id="txn_table"></table>
-</div>
+    <div class="kpi-grid-6 mb-14">
+      <div class="card"><div class="card-accent-bar" style="background:var(--accent)"></div><div class="card-label">Net Worth</div><div class="card-value accent" id="dash-net-worth">₱0.00</div><div class="card-sub">Assets minus liabilities</div></div>
+      <div class="card"><div class="card-accent-bar" style="background:var(--accent2)"></div><div class="card-label">Cash</div><div class="card-value green" id="dash-cash">₱0.00</div><div class="card-sub">All bank accounts</div></div>
+      <div class="card"><div class="card-accent-bar" style="background:var(--mustard)"></div><div class="card-label">Investments</div><div class="card-value" id="dash-investments">₱0.00</div><div class="card-sub">Current value</div></div>
+      <div class="card"><div class="card-accent-bar" style="background:var(--rust)"></div><div class="card-label">Lending</div><div class="card-value" id="dash-lending">₱0.00</div><div class="card-sub">Outstanding receivables</div></div>
+      <div class="card"><div class="card-accent-bar" style="background:var(--accent3)"></div><div class="card-label">Card Balance</div><div class="card-value red" id="dash-credit">₱0.00</div><div class="card-sub">Liabilities</div></div>
+      <div class="card"><div class="card-accent-bar" style="background:var(--accent4)"></div><div class="card-label">This Month Cash Flow</div><div class="card-value" id="dash-month-flow">₱0.00</div><div class="card-sub">Income minus expenses</div></div>
+    </div>
 
-<!-- SUGARCANE -->
-<div class="card">
-  <h2>Sugarcane (Yearly)</h2>
-  <input id="sc_year" placeholder="Year">
-  <input id="sc_income" placeholder="Income">
-  <input id="sc_expense" placeholder="Expense">
-  <input id="sc_tons" placeholder="Tons">
-  <button onclick="addSugarcane()">Add</button>
+    <div class="grid grid-2">
+      <div class="chart-card">
+        <div class="section-title">📈 Net Worth Trend</div>
+        <canvas id="chart-networth"></canvas>
+      </div>
+      <div class="card">
+        <div class="section-title">🧠 Quick Summary</div>
+        <div id="dashboard-insights"></div>
+      </div>
+    </div>
 
-  <table id="sc_table"></table>
-</div>
+    <div class="grid grid-2 mt-16">
+      <div class="chart-card">
+        <div class="section-title">💸 Income vs Expense</div>
+        <canvas id="chart-cashflow"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="section-title">🌾 Sugarcane Profit by Year</div>
+        <canvas id="chart-sugarcane"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-networth">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Net Worth</div>
+        <div class="page-sub">Simple asset and liability view.</div>
+      </div>
+    </div>
+    <div class="grid grid-4 mb-14">
+      <div class="card"><div class="card-label">Total Assets</div><div class="card-value green" id="nw-assets">₱0.00</div></div>
+      <div class="card"><div class="card-label">Total Liabilities</div><div class="card-value red" id="nw-liabilities">₱0.00</div></div>
+      <div class="card"><div class="card-label">Net Worth</div><div class="card-value accent" id="nw-net">₱0.00</div></div>
+      <div class="card"><div class="card-label">Investment ROI</div><div class="card-value" id="nw-investment-roi">0.0%</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Bucket</th><th>Description</th><th class="text-right">Amount</th></tr></thead>
+        <tbody id="networth-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="page" id="page-reports">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Reports</div>
+        <div class="page-sub">Monthly and yearly visibility without the clutter.</div>
+      </div>
+      <div class="inline-split">
+        <select id="reports-year-filter" onchange="renderReports()"></select>
+        <select id="reports-month-filter" onchange="renderReports()"></select>
+      </div>
+    </div>
+    <div class="grid grid-4 mb-14">
+      <div class="card"><div class="card-label">Income</div><div class="card-value green" id="rep-income">₱0.00</div></div>
+      <div class="card"><div class="card-label">Expenses</div><div class="card-value red" id="rep-expenses">₱0.00</div></div>
+      <div class="card"><div class="card-label">Net</div><div class="card-value accent" id="rep-net">₱0.00</div></div>
+      <div class="card"><div class="card-label">Transactions</div><div class="card-value" id="rep-count">0</div></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="chart-card"><div class="section-title">📊 Income vs Expense</div><canvas id="chart-reports-cashflow"></canvas></div>
+      <div class="chart-card"><div class="section-title">🧾 Category Breakdown</div><canvas id="chart-category"></canvas></div>
+    </div>
+    <div class="table-wrap mt-16">
+      <table>
+        <thead><tr><th>Month</th><th class="text-right">Income</th><th class="text-right">Expenses</th><th class="text-right">Net</th></tr></thead>
+        <tbody id="reports-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="page" id="page-transactions">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Transaction Logs</div>
+        <div class="page-sub">One simple source of truth.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-transaction')">+ Add Transaction</button>
+    </div>
+    <div class="inline-split mb-14">
+      <input id="txn-search" placeholder="Search description, notes, category..." oninput="renderTransactions()" style="background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;min-width:260px;">
+      <input id="txn-month-filter" type="month" onchange="renderTransactions()" style="background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Account</th><th>Category</th><th>Notes</th><th class="text-right">Amount</th><th></th></tr></thead>
+        <tbody id="transactions-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="page" id="page-lend">
+    <div class="page-header">
+      <div><div class="page-title">Lending Tracker</div><div class="page-sub">Track who owes you and what is still outstanding.</div></div>
+      <button class="btn btn-primary" onclick="openModal('modal-lending')">+ Add Lending Entry</button>
+    </div>
+    <div class="grid grid-3 mb-14">
+      <div class="card"><div class="card-label">Total Lent</div><div class="card-value red" id="lend-total-lent">₱0.00</div></div>
+      <div class="card"><div class="card-label">Total Repaid</div><div class="card-value green" id="lend-total-repaid">₱0.00</div></div>
+      <div class="card"><div class="card-label">Outstanding</div><div class="card-value accent" id="lend-outstanding">₱0.00</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Borrower</th><th>Date Lent</th><th>Due Date</th><th>Status</th><th class="text-right">Lent</th><th class="text-right">Repaid</th><th class="text-right">Balance</th><th>Notes</th><th></th></tr></thead><tbody id="lending-body"></tbody></table></div>
+  </div>
+
+  <div class="page" id="page-accounts">
+    <div class="page-header">
+      <div><div class="page-title">Bank Accounts</div><div class="page-sub">Personal, business, and reserve in one clean page.</div></div>
+      <button class="btn btn-primary" onclick="openModal('modal-account')">+ Add Account</button>
+    </div>
+    <div class="grid grid-4 mb-14">
+      <div class="card"><div class="card-label">Personal</div><div class="card-value" id="acc-personal-total">₱0.00</div></div>
+      <div class="card"><div class="card-label">Business</div><div class="card-value" id="acc-business-total">₱0.00</div></div>
+      <div class="card"><div class="card-label">Reserve</div><div class="card-value" id="acc-reserve-total">₱0.00</div></div>
+      <div class="card"><div class="card-label">Total Cash</div><div class="card-value accent" id="acc-total">₱0.00</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Account Name</th><th>Type</th><th>Notes</th><th class="text-right">Balance</th><th></th></tr></thead><tbody id="accounts-body"></tbody></table></div>
+  </div>
+
+  <div class="page" id="page-creditcards">
+    <div class="page-header">
+      <div><div class="page-title">Credit Cards</div><div class="page-sub">Keep balances and utilization visible.</div></div>
+      <button class="btn btn-primary" onclick="openModal('modal-creditcard')">+ Add Credit Card</button>
+    </div>
+    <div class="grid grid-3 mb-14">
+      <div class="card"><div class="card-label">Total Limit</div><div class="card-value" id="cc-limit">₱0.00</div></div>
+      <div class="card"><div class="card-label">Total Balance</div><div class="card-value red" id="cc-balance">₱0.00</div></div>
+      <div class="card"><div class="card-label">Utilization</div><div class="card-value accent" id="cc-util">0%</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Card</th><th>Due Date</th><th class="text-right">Limit</th><th class="text-right">Balance</th><th class="text-right">Utilization</th><th></th></tr></thead><tbody id="creditcards-body"></tbody></table></div>
+  </div>
+
+  <div class="page" id="page-investments">
+    <div class="page-header">
+      <div><div class="page-title">Investments</div><div class="page-sub">Just the numbers that matter.</div></div>
+      <button class="btn btn-primary" onclick="openModal('modal-investment')">+ Add Investment</button>
+    </div>
+    <div class="grid grid-4 mb-14">
+      <div class="card"><div class="card-label">Amount Invested</div><div class="card-value" id="inv-invested">₱0.00</div></div>
+      <div class="card"><div class="card-label">Current Value</div><div class="card-value green" id="inv-current">₱0.00</div></div>
+      <div class="card"><div class="card-label">Gain / Loss</div><div class="card-value accent" id="inv-gain">₱0.00</div></div>
+      <div class="card"><div class="card-label">ROI</div><div class="card-value" id="inv-roi">0.0%</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th class="text-right">Invested</th><th class="text-right">Current Value</th><th class="text-right">Gain / Loss</th><th></th></tr></thead><tbody id="investments-body"></tbody></table></div>
+  </div>
+
+  <div class="page" id="page-sugarcane">
+    <div class="page-header">
+      <div><div class="page-title">Sugarcane</div><div class="page-sub">Yearly comparison only. No detailed logs.</div></div>
+      <button class="btn btn-primary" onclick="openModal('modal-sugarcane')">+ Add Year</button>
+    </div>
+    <div class="grid grid-4 mb-14">
+      <div class="card"><div class="card-label">Best Year</div><div class="card-value" id="sc-best-year">—</div><div class="card-sub" id="sc-best-year-sub"></div></div>
+      <div class="card"><div class="card-label">Latest Profit</div><div class="card-value accent" id="sc-latest-profit">₱0.00</div><div class="card-sub" id="sc-latest-profit-sub"></div></div>
+      <div class="card"><div class="card-label">Average ROI</div><div class="card-value" id="sc-avg-roi">0.0%</div></div>
+      <div class="card"><div class="card-label">Goal Progress</div><div class="card-value" id="sc-goal">₱0 / ₱2M</div><div class="card-sub">Based on latest yearly profit</div></div>
+    </div>
+    <div class="note-box mb-14">Input one row per year. The dashboard calculates profit, ROI, cost per ton, profit per ton, and year-over-year comparison automatically.</div>
+    <div class="grid grid-2 mb-14">
+      <div class="chart-card"><div class="section-title">📈 Profit Trend</div><canvas id="chart-sugar-profit-detail"></canvas></div>
+      <div class="card"><div class="section-title">⚡ Year-over-Year Comparison</div><div id="sugarcane-comparison-box"></div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Year</th><th class="text-right">Hectares</th><th class="text-right">Tons</th><th class="text-right">Income</th><th class="text-right">Expenses</th><th class="text-right">Investment</th><th class="text-right">Profit</th><th class="text-right">ROI</th><th class="text-right">Cost/Ton</th><th class="text-right">Profit/Ton</th><th></th></tr></thead><tbody id="sugarcane-body"></tbody></table></div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-transaction"><div class="modal"><div class="modal-header"><div class="modal-title">Add Transaction</div><button class="modal-close" onclick="closeModal('modal-transaction')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Date</label><input type="date" id="txn-date"></div><div class="form-group"><label>Type</label><select id="txn-type"><option value="income">Income</option><option value="expense">Expense</option><option value="transfer">Transfer</option><option value="investment">Investment</option><option value="debt_payment">Debt Payment</option></select></div></div><div class="form-row"><div class="form-group"><label>Description</label><input id="txn-description"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Amount</label><input type="number" id="txn-amount"></div><div class="form-group"><label>Account</label><input id="txn-account"></div><div class="form-group"><label>Category</label><input id="txn-category"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="txn-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addTransaction()">Save Transaction</button></div></div>
+
+<div class="modal-overlay" id="modal-lending"><div class="modal"><div class="modal-header"><div class="modal-title">Add Lending Entry</div><button class="modal-close" onclick="closeModal('modal-lending')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Borrower</label><input id="lend-borrower"></div><div class="form-group"><label>Status</label><select id="lend-status"><option>Pending</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr;"><div class="form-group"><label>Date Lent</label><input type="date" id="lend-date"></div><div class="form-group"><label>Due Date</label><input type="date" id="lend-due"></div><div class="form-group"><label>Amount Lent</label><input type="number" id="lend-amount"></div><div class="form-group"><label>Amount Repaid</label><input type="number" id="lend-repaid-input"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="lend-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addLending()">Save Lending</button></div></div>
+
+<div class="modal-overlay" id="modal-account"><div class="modal"><div class="modal-header"><div class="modal-title">Add Account</div><button class="modal-close" onclick="closeModal('modal-account')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Account Name</label><input id="acc-name"></div><div class="form-group"><label>Type</label><select id="acc-type"><option value="personal">Personal</option><option value="business">Business</option><option value="reserve">Reserve</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Balance</label><input type="number" id="acc-balance"></div><div class="form-group"><label>Notes</label><input id="acc-notes"></div></div><button class="btn btn-primary" onclick="addAccount()">Save Account</button></div></div>
+
+<div class="modal-overlay" id="modal-creditcard"><div class="modal"><div class="modal-header"><div class="modal-title">Add Credit Card</div><button class="modal-close" onclick="closeModal('modal-creditcard')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Card Name</label><input id="cc-name"></div><div class="form-group"><label>Limit</label><input type="number" id="cc-limit-input"></div><div class="form-group"><label>Balance</label><input type="number" id="cc-balance-input"></div></div><div class="form-row"><div class="form-group"><label>Due Date</label><input type="date" id="cc-due"></div></div><button class="btn btn-primary" onclick="addCreditCard()">Save Card</button></div></div>
+
+<div class="modal-overlay" id="modal-investment"><div class="modal"><div class="modal-header"><div class="modal-title">Add Investment</div><button class="modal-close" onclick="closeModal('modal-investment')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Investment Name</label><input id="inv-name"></div><div class="form-group"><label>Type</label><input id="inv-type"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Amount Invested</label><input type="number" id="inv-invested-input"></div><div class="form-group"><label>Current Value</label><input type="number" id="inv-current-input"></div></div><button class="btn btn-primary" onclick="addInvestment()">Save Investment</button></div></div>
+
+<div class="modal-overlay" id="modal-sugarcane"><div class="modal"><div class="modal-header"><div class="modal-title">Add Sugarcane Year</div><button class="modal-close" onclick="closeModal('modal-sugarcane')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Year</label><input type="number" id="sc-year"></div><div class="form-group"><label>Hectares</label><input type="number" id="sc-hectares"></div><div class="form-group"><label>Total Tons</label><input type="number" id="sc-tons"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Total Income</label><input type="number" id="sc-income"></div><div class="form-group"><label>Total Expenses</label><input type="number" id="sc-expenses"></div><div class="form-group"><label>Total Investment</label><input type="number" id="sc-investment"></div></div><button class="btn btn-primary" onclick="addSugarcane()">Save Year</button></div></div>
 
 <script>
-const supabase = window.supabase.createClient(
-  "YOUR_URL",
-  "YOUR_KEY"
-);
-
-let state = {
-  accounts: [],
+const STORAGE_KEY = 'cathos-lite-v1';
+let charts = {};
+let db = {
   transactions: [],
+  lending: [],
+  accounts: [],
+  creditcards: [],
+  investments: [],
   sugarcane: []
 };
 
-function calculateNetWorth() {
-  let cash = state.accounts.reduce((a,b)=>a+b.balance,0);
-  let income = state.transactions
-    .filter(t=>t.type==='income')
-    .reduce((a,b)=>a+b.amount,0);
-  let expense = state.transactions
-    .filter(t=>t.type==='expense')
-    .reduce((a,b)=>a+b.amount,0);
-
-  let net = cash + income - expense;
-  document.getElementById('networth').innerText = "₱" + net.toLocaleString();
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function currentMonth(){ return new Date().toISOString().slice(0,7); }
+function fmt(n){ return '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function pct(n){ return Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
+function saveDb(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); document.getElementById('save-status').textContent = 'Saved locally'; }
+function loadDb(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ try { db = Object.assign(db, JSON.parse(raw)); } catch(e){} } }
+function setDefaults(){
+  document.getElementById('today-label').textContent = new Date().toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('txn-date').value = today();
+  document.getElementById('lend-date').value = today();
+  document.getElementById('txn-month-filter').value = currentMonth();
+  buildReportFilters();
 }
-
-function addAccount() {
-  let acc = {
-    name: acc_name.value,
-    balance: Number(acc_balance.value),
-    type: acc_type.value
+function buildReportFilters(){
+  const years = new Set();
+  const now = new Date().getFullYear();
+  for(let y = now - 5; y <= now + 1; y++) years.add(y);
+  (db.transactions||[]).forEach(t => years.add(new Date(t.date).getFullYear()));
+  (db.sugarcane||[]).forEach(r => years.add(Number(r.year)));
+  const yearSel = document.getElementById('reports-year-filter');
+  yearSel.innerHTML = [...years].sort((a,b)=>b-a).map(y => `<option value="${y}">${y}</option>`).join('');
+  yearSel.value = String(now);
+  const monthSel = document.getElementById('reports-month-filter');
+  monthSel.innerHTML = `<option value="">All Months</option>` + Array.from({length:12}, (_,i)=> `<option value="${String(i+1).padStart(2,'0')}">${new Date(2000,i,1).toLocaleString('en-US',{month:'long'})}</option>`).join('');
+}
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function navigate(page){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => { if((n.getAttribute('onclick') || '').includes(`'${page}'`)) n.classList.add('active'); });
+  render(page);
+}
+function removeItem(type, id){ db[type] = (db[type] || []).filter(x => x.id !== id); saveDb(); renderAll(); }
+function addTransaction(){
+  const row = {
+    id: uid(),
+    date: document.getElementById('txn-date').value || today(),
+    type: document.getElementById('txn-type').value,
+    description: document.getElementById('txn-description').value.trim(),
+    amount: Number(document.getElementById('txn-amount').value || 0),
+    account: document.getElementById('txn-account').value.trim(),
+    category: document.getElementById('txn-category').value.trim(),
+    notes: document.getElementById('txn-notes').value.trim()
   };
-  state.accounts.push(acc);
-  calculateNetWorth();
+  if(!row.description || !row.amount) return;
+  db.transactions.unshift(row); saveDb(); closeModal('modal-transaction'); renderAll();
 }
-
-function addTransaction() {
-  let t = {
-    desc: t_desc.value,
-    amount: Number(t_amount.value),
-    type: t_type.value
+function addLending(){
+  const row = {
+    id: uid(), borrower: document.getElementById('lend-borrower').value.trim(), status: document.getElementById('lend-status').value,
+    date_lent: document.getElementById('lend-date').value || today(), due_date: document.getElementById('lend-due').value || '',
+    amount_lent: Number(document.getElementById('lend-amount').value || 0), amount_repaid: Number(document.getElementById('lend-repaid-input').value || 0),
+    notes: document.getElementById('lend-notes').value.trim()
   };
-  state.transactions.push(t);
-  renderTransactions();
-  calculateNetWorth();
+  if(!row.borrower || !row.amount_lent) return;
+  db.lending.unshift(row); saveDb(); closeModal('modal-lending'); renderAll();
 }
-
-function renderTransactions() {
-  let html = "<tr><th>Description</th><th>Amount</th><th>Type</th></tr>";
-  state.transactions.forEach(t=>{
-    html += `<tr>
-      <td>${t.desc}</td>
-      <td>${t.amount}</td>
-      <td>${t.type}</td>
-    </tr>`;
+function addAccount(){
+  const row = { id: uid(), name: document.getElementById('acc-name').value.trim(), type: document.getElementById('acc-type').value, balance: Number(document.getElementById('acc-balance').value || 0), notes: document.getElementById('acc-notes').value.trim() };
+  if(!row.name) return;
+  db.accounts.unshift(row); saveDb(); closeModal('modal-account'); renderAll();
+}
+function addCreditCard(){
+  const row = { id: uid(), name: document.getElementById('cc-name').value.trim(), limit: Number(document.getElementById('cc-limit-input').value || 0), balance: Number(document.getElementById('cc-balance-input').value || 0), due_date: document.getElementById('cc-due').value || '' };
+  if(!row.name) return;
+  db.creditcards.unshift(row); saveDb(); closeModal('modal-creditcard'); renderAll();
+}
+function addInvestment(){
+  const row = { id: uid(), name: document.getElementById('inv-name').value.trim(), type: document.getElementById('inv-type').value.trim(), amount_invested: Number(document.getElementById('inv-invested-input').value || 0), current_value: Number(document.getElementById('inv-current-input').value || 0) };
+  if(!row.name) return;
+  db.investments.unshift(row); saveDb(); closeModal('modal-investment'); renderAll();
+}
+function addSugarcane(){
+  const row = { id: uid(), year: Number(document.getElementById('sc-year').value || 0), hectares: Number(document.getElementById('sc-hectares').value || 0), total_tons: Number(document.getElementById('sc-tons').value || 0), total_income: Number(document.getElementById('sc-income').value || 0), total_expenses: Number(document.getElementById('sc-expenses').value || 0), total_investment: Number(document.getElementById('sc-investment').value || 0) };
+  if(!row.year) return;
+  db.sugarcane = (db.sugarcane || []).filter(r => Number(r.year) !== row.year);
+  db.sugarcane.push(row);
+  saveDb(); closeModal('modal-sugarcane'); renderAll();
+}
+function computeNetWorth(){
+  const cash = sum(db.accounts, 'balance');
+  const investments = sum(db.investments, 'current_value');
+  const lending = (db.lending || []).reduce((s,r)=> s + Math.max(0, Number(r.amount_lent||0) - Number(r.amount_repaid||0)), 0);
+  const credit = sum(db.creditcards, 'balance');
+  return { cash, investments, lending, credit, assets: cash + investments + lending, liabilities: credit, net: cash + investments + lending - credit };
+}
+function sum(arr, key){ return (arr || []).reduce((s,x)=> s + Number(x[key] || 0), 0); }
+function monthFlow(month){
+  return (db.transactions || []).filter(t => (t.date || '').slice(0,7) === month).reduce((s,t)=> {
+    const amt = Number(t.amount || 0);
+    if(t.type === 'income') return s + amt;
+    if(['expense','debt_payment'].includes(t.type)) return s - amt;
+    return s;
+  }, 0);
+}
+function getMonthlySeries(){
+  const months = new Set();
+  (db.transactions || []).forEach(t => months.add((t.date || '').slice(0,7)));
+  if(months.size === 0) months.add(currentMonth());
+  const labels = [...months].sort();
+  const income = labels.map(m => (db.transactions || []).filter(t => (t.date||'').slice(0,7) === m && t.type === 'income').reduce((s,t)=>s+Number(t.amount||0),0));
+  const expense = labels.map(m => (db.transactions || []).filter(t => (t.date||'').slice(0,7) === m && ['expense','debt_payment'].includes(t.type)).reduce((s,t)=>s+Number(t.amount||0),0));
+  const cumulative = [];
+  let running = 0;
+  const baseNet = computeNetWorth().net - (income.reduce((a,b)=>a+b,0) - expense.reduce((a,b)=>a+b,0));
+  labels.forEach((m, i) => { running += income[i] - expense[i]; cumulative.push(baseNet + running); });
+  return { labels, income, expense, cumulative };
+}
+function getCategoryBreakdown(year, month){
+  const rows = (db.transactions || []).filter(t => {
+    const d = new Date(t.date);
+    return t.type === 'expense' && d.getFullYear() === Number(year) && (!month || String(d.getMonth()+1).padStart(2,'0') === month);
   });
-  txn_table.innerHTML = html;
+  const map = {};
+  rows.forEach(r => { const key = r.category || 'Uncategorized'; map[key] = (map[key] || 0) + Number(r.amount || 0); });
+  return map;
 }
-
-function addSugarcane() {
-  let row = {
-    year: Number(sc_year.value),
-    income: Number(sc_income.value),
-    expense: Number(sc_expense.value),
-    tons: Number(sc_tons.value)
-  };
-
-  row.profit = row.income - row.expense;
-
-  state.sugarcane.push(row);
-  renderSugarcane();
+function sugarMetrics(row){
+  const profit = Number(row.total_income||0) - Number(row.total_expenses||0);
+  const roi = Number(row.total_investment||0) ? (profit / Number(row.total_investment||0)) * 100 : 0;
+  const costPerTon = Number(row.total_tons||0) ? Number(row.total_expenses||0) / Number(row.total_tons||0) : 0;
+  const profitPerTon = Number(row.total_tons||0) ? profit / Number(row.total_tons||0) : 0;
+  const profitPerHectare = Number(row.hectares||0) ? profit / Number(row.hectares||0) : 0;
+  return { ...row, profit, roi, costPerTon, profitPerTon, profitPerHectare };
 }
+function destroyChart(id){ if(charts[id]) { charts[id].destroy(); charts[id] = null; } }
+function renderChart(id, config){ destroyChart(id); const ctx = document.getElementById(id); if(ctx) charts[id] = new Chart(ctx, config); }
 
-function renderSugarcane() {
-  let html = "<tr><th>Year</th><th>Income</th><th>Expense</th><th>Profit</th></tr>";
-  state.sugarcane
-    .sort((a,b)=>a.year-b.year)
-    .forEach(r=>{
-      html += `<tr>
-        <td>${r.year}</td>
-        <td>${r.income}</td>
-        <td>${r.expense}</td>
-        <td>${r.profit}</td>
-      </tr>`;
+function renderDashboard(){
+  const nw = computeNetWorth();
+  document.getElementById('dash-net-worth').textContent = fmt(nw.net);
+  document.getElementById('dash-cash').textContent = fmt(nw.cash);
+  document.getElementById('dash-investments').textContent = fmt(nw.investments);
+  document.getElementById('dash-lending').textContent = fmt(nw.lending);
+  document.getElementById('dash-credit').textContent = fmt(nw.credit);
+  document.getElementById('dash-month-flow').textContent = fmt(monthFlow(currentMonth()));
+
+  const monthly = getMonthlySeries();
+  renderChart('chart-networth', { type:'line', data:{ labels: monthly.labels, datasets:[{ label:'Net Worth', data: monthly.cumulative, tension:.35 }]}, options:{ responsive:true, plugins:{ legend:{ display:false }}}});
+  renderChart('chart-cashflow', { type:'bar', data:{ labels: monthly.labels, datasets:[{ label:'Income', data: monthly.income }, { label:'Expenses', data: monthly.expense }]}, options:{ responsive:true }});
+
+  const sugar = (db.sugarcane || []).map(sugarMetrics).sort((a,b)=>a.year-b.year);
+  renderChart('chart-sugarcane', { type:'bar', data:{ labels:sugar.map(r=>String(r.year)), datasets:[{ label:'Profit', data:sugar.map(r=>r.profit) }]}, options:{ responsive:true }});
+
+  const insightLines = [
+    { title:'Assets', text:`Cash ${fmt(nw.cash)} + investments ${fmt(nw.investments)} + lending ${fmt(nw.lending)}.` },
+    { title:'Liabilities', text:`Tracked credit card balances total ${fmt(nw.credit)}.` },
+    { title:'This month', text:`Net cash flow for ${currentMonth()} is ${fmt(monthFlow(currentMonth()))}.` },
+    { title:'Sugarcane', text:sugar.length ? `Latest tracked year is ${sugar[sugar.length-1].year} with ${fmt(sugar[sugar.length-1].profit)} profit.` : 'No sugarcane year added yet.' }
+  ];
+  document.getElementById('dashboard-insights').innerHTML = insightLines.map(i => `<div class="card" style="padding:12px 14px; margin-bottom:10px;"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">${i.title}</div><div class="card-sub" style="font-size:12px;line-height:1.6;">${i.text}</div></div>`).join('');
+}
+function renderNetWorth(){
+  const nw = computeNetWorth();
+  const invested = sum(db.investments, 'amount_invested');
+  const current = sum(db.investments, 'current_value');
+  const roi = invested ? ((current - invested) / invested) * 100 : 0;
+  document.getElementById('nw-assets').textContent = fmt(nw.assets);
+  document.getElementById('nw-liabilities').textContent = fmt(nw.liabilities);
+  document.getElementById('nw-net').textContent = fmt(nw.net);
+  document.getElementById('nw-investment-roi').textContent = pct(roi);
+  const rows = [
+    ['Asset', 'Bank accounts', nw.cash],
+    ['Asset', 'Investments', nw.investments],
+    ['Asset', 'Lending outstanding', nw.lending],
+    ['Liability', 'Credit card balances', nw.credit * -1]
+  ];
+  document.getElementById('networth-body').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="text-right ${r[2] >= 0 ? 'positive' : 'negative'}">${fmt(Math.abs(r[2]))}</td></tr>`).join('');
+}
+function renderReports(){
+  const year = Number(document.getElementById('reports-year-filter').value || new Date().getFullYear());
+  const month = document.getElementById('reports-month-filter').value || '';
+  const filtered = (db.transactions || []).filter(t => {
+    const d = new Date(t.date);
+    return d.getFullYear() === year && (!month || String(d.getMonth()+1).padStart(2,'0') === month);
+  });
+  const income = filtered.filter(t => t.type === 'income').reduce((s,t)=>s+Number(t.amount||0),0);
+  const expenses = filtered.filter(t => ['expense','debt_payment'].includes(t.type)).reduce((s,t)=>s+Number(t.amount||0),0);
+  document.getElementById('rep-income').textContent = fmt(income);
+  document.getElementById('rep-expenses').textContent = fmt(expenses);
+  document.getElementById('rep-net').textContent = fmt(income - expenses);
+  document.getElementById('rep-count').textContent = filtered.length;
+
+  const monthRows = Array.from({length:12}, (_,i) => {
+    const mm = String(i+1).padStart(2,'0');
+    const rows = (db.transactions || []).filter(t => {
+      const d = new Date(t.date); return d.getFullYear()===year && String(d.getMonth()+1).padStart(2,'0')===mm;
     });
-  sc_table.innerHTML = html;
+    const inc = rows.filter(t => t.type==='income').reduce((s,t)=>s+Number(t.amount||0),0);
+    const exp = rows.filter(t => ['expense','debt_payment'].includes(t.type)).reduce((s,t)=>s+Number(t.amount||0),0);
+    return { month:mm, label:new Date(year, i, 1).toLocaleString('en-US',{month:'short'}), income:inc, expenses:exp, net:inc-exp };
+  });
+  renderChart('chart-reports-cashflow', { type:'bar', data:{ labels:monthRows.map(r=>r.label), datasets:[{ label:'Income', data:monthRows.map(r=>r.income) }, { label:'Expenses', data:monthRows.map(r=>r.expenses) }]}, options:{ responsive:true }});
+  const categories = getCategoryBreakdown(year, month);
+  renderChart('chart-category', { type:'doughnut', data:{ labels:Object.keys(categories), datasets:[{ data:Object.values(categories) }]}, options:{ responsive:true }});
+  document.getElementById('reports-table-body').innerHTML = monthRows.map(r => `<tr><td>${r.label}</td><td class="text-right positive">${fmt(r.income)}</td><td class="text-right negative">${fmt(r.expenses)}</td><td class="text-right ${r.net >= 0 ? 'positive' : 'negative'}">${fmt(r.net)}</td></tr>`).join('');
 }
-</script>
+function renderTransactions(){
+  const q = (document.getElementById('txn-search').value || '').toLowerCase();
+  const month = document.getElementById('txn-month-filter').value || '';
+  const rows = (db.transactions || []).filter(t => {
+    const hay = [t.description, t.notes, t.category, t.account, t.type].join(' ').toLowerCase();
+    const okText = !q || hay.includes(q);
+    const okMonth = !month || (t.date || '').slice(0,7) === month;
+    return okText && okMonth;
+  });
+  document.getElementById('transactions-body').innerHTML = rows.length ? rows.map(t => `<tr><td>${t.date || ''}</td><td>${t.description || ''}</td><td><span class="badge ${t.type === 'income' ? 'badge-green' : t.type === 'expense' ? 'badge-red' : 'badge-blue'}">${(t.type || '').replaceAll('_',' ')}</span></td><td>${t.account || '—'}</td><td>${t.category || '—'}</td><td>${t.notes || '—'}</td><td class="text-right ${t.type === 'income' ? 'positive' : 'negative'}">${fmt(t.amount)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('transactions','${t.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="8"><div class="empty">No transactions found.</div></td></tr>`;
+}
+function renderLending(){
+  const totalLent = sum(db.lending, 'amount_lent');
+  const totalRepaid = sum(db.lending, 'amount_repaid');
+  document.getElementById('lend-total-lent').textContent = fmt(totalLent);
+  document.getElementById('lend-total-repaid').textContent = fmt(totalRepaid);
+  document.getElementById('lend-outstanding').textContent = fmt(totalLent - totalRepaid);
+  document.getElementById('lending-body').innerHTML = (db.lending || []).length ? db.lending.map(r => {
+    const balance = Number(r.amount_lent||0) - Number(r.amount_repaid||0);
+    const badge = r.status === 'Paid' ? 'badge-green' : r.status === 'Overdue' ? 'badge-red' : 'badge-yellow';
+    return `<tr><td>${r.borrower}</td><td>${r.date_lent || '—'}</td><td>${r.due_date || '—'}</td><td><span class="badge ${badge}">${r.status}</span></td><td class="text-right negative">${fmt(r.amount_lent)}</td><td class="text-right positive">${fmt(r.amount_repaid)}</td><td class="text-right ${balance > 0 ? 'accent' : 'positive'}">${fmt(balance)}</td><td>${r.notes || '—'}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('lending','${r.id}')">Delete</button></td></tr>`;
+  }).join('') : `<tr><td colspan="9"><div class="empty">No lending entries yet.</div></td></tr>`;
+}
+function renderAccounts(){
+  const personal = (db.accounts || []).filter(a => a.type === 'personal');
+  const business = (db.accounts || []).filter(a => a.type === 'business');
+  const reserve = (db.accounts || []).filter(a => a.type === 'reserve');
+  document.getElementById('acc-personal-total').textContent = fmt(sum(personal, 'balance'));
+  document.getElementById('acc-business-total').textContent = fmt(sum(business, 'balance'));
+  document.getElementById('acc-reserve-total').textContent = fmt(sum(reserve, 'balance'));
+  document.getElementById('acc-total').textContent = fmt(sum(db.accounts, 'balance'));
+  document.getElementById('accounts-body').innerHTML = (db.accounts || []).length ? db.accounts.map(a => `<tr><td>${a.name}</td><td><span class="badge badge-blue">${a.type}</span></td><td>${a.notes || '—'}</td><td class="text-right accent">${fmt(a.balance)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('accounts','${a.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="5"><div class="empty">No accounts added yet.</div></td></tr>`;
+}
+function renderCreditCards(){
+  const totalLimit = sum(db.creditcards, 'limit');
+  const totalBalance = sum(db.creditcards, 'balance');
+  document.getElementById('cc-limit').textContent = fmt(totalLimit);
+  document.getElementById('cc-balance').textContent = fmt(totalBalance);
+  document.getElementById('cc-util').textContent = pct(totalLimit ? (totalBalance / totalLimit) * 100 : 0);
+  document.getElementById('creditcards-body').innerHTML = (db.creditcards || []).length ? db.creditcards.map(c => {
+    const util = c.limit ? (Number(c.balance || 0) / Number(c.limit || 0)) * 100 : 0;
+    return `<tr><td>${c.name}</td><td>${c.due_date || '—'}</td><td class="text-right">${fmt(c.limit)}</td><td class="text-right negative">${fmt(c.balance)}</td><td class="text-right ${util > 50 ? 'negative' : 'accent'}">${pct(util)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('creditcards','${c.id}')">Delete</button></td></tr>`;
+  }).join('') : `<tr><td colspan="6"><div class="empty">No credit cards yet.</div></td></tr>`;
+}
+function renderInvestments(){
+  const invested = sum(db.investments, 'amount_invested');
+  const current = sum(db.investments, 'current_value');
+  const gain = current - invested;
+  document.getElementById('inv-invested').textContent = fmt(invested);
+  document.getElementById('inv-current').textContent = fmt(current);
+  document.getElementById('inv-gain').textContent = fmt(gain);
+  document.getElementById('inv-roi').textContent = pct(invested ? (gain / invested) * 100 : 0);
+  document.getElementById('investments-body').innerHTML = (db.investments || []).length ? db.investments.map(i => {
+    const diff = Number(i.current_value||0) - Number(i.amount_invested||0);
+    return `<tr><td>${i.name}</td><td>${i.type || '—'}</td><td class="text-right">${fmt(i.amount_invested)}</td><td class="text-right positive">${fmt(i.current_value)}</td><td class="text-right ${diff >= 0 ? 'positive' : 'negative'}">${fmt(diff)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('investments','${i.id}')">Delete</button></td></tr>`;
+  }).join('') : `<tr><td colspan="6"><div class="empty">No investments added yet.</div></td></tr>`;
+}
+function renderSugarcane(){
+  const rows = (db.sugarcane || []).map(sugarMetrics).sort((a,b)=>a.year-b.year);
+  const latest = rows[rows.length-1];
+  const best = rows.slice().sort((a,b)=>b.profit-a.profit)[0];
+  const avgRoi = rows.length ? rows.reduce((s,r)=>s+r.roi,0) / rows.length : 0;
+  document.getElementById('sc-best-year').textContent = best ? String(best.year) : '—';
+  document.getElementById('sc-best-year-sub').textContent = best ? `${fmt(best.profit)} profit` : 'No data yet';
+  document.getElementById('sc-latest-profit').textContent = latest ? fmt(latest.profit) : fmt(0);
+  document.getElementById('sc-latest-profit-sub').textContent = latest ? `Year ${latest.year}` : 'No data yet';
+  document.getElementById('sc-avg-roi').textContent = pct(avgRoi);
+  document.getElementById('sc-goal').textContent = `${fmt(latest ? latest.profit : 0)} / ₱2,000,000`;
+  renderChart('chart-sugar-profit-detail', { type:'line', data:{ labels:rows.map(r=>String(r.year)), datasets:[{ label:'Profit', data:rows.map(r=>r.profit), tension:.35 }, { label:'ROI %', data:rows.map(r=>r.roi), tension:.35 }]}, options:{ responsive:true }});
+  let compareHtml = '<div class="empty">Add at least 2 years to compare year over year.</div>';
+  if(rows.length >= 2){
+    const cur = rows[rows.length-1], prev = rows[rows.length-2];
+    const profitDelta = cur.profit - prev.profit;
+    const tonsDelta = cur.total_tons - prev.total_tons;
+    const roiDelta = cur.roi - prev.roi;
+    compareHtml = `
+      <div class="card" style="padding:12px 14px;margin-bottom:10px;"><div style="font-size:12px;font-weight:700;margin-bottom:4px;">${cur.year} vs ${prev.year}</div><div class="card-sub" style="font-size:12px;line-height:1.7;">
+      Profit: <strong class="${profitDelta >= 0 ? 'positive':'negative'}">${fmt(profitDelta)}</strong><br>
+      Tons: <strong class="${tonsDelta >= 0 ? 'positive':'negative'}">${tonsDelta.toLocaleString('en-PH')}</strong><br>
+      ROI: <strong class="${roiDelta >= 0 ? 'positive':'negative'}">${pct(roiDelta)}</strong><br>
+      Cost per Ton: <strong class="${cur.costPerTon <= prev.costPerTon ? 'positive':'negative'}">${fmt(cur.costPerTon)}</strong>
+      </div></div>`;
+  }
+  document.getElementById('sugarcane-comparison-box').innerHTML = compareHtml;
+  document.getElementById('sugarcane-body').innerHTML = rows.length ? rows.map(r => `<tr><td>${r.year}</td><td class="text-right">${r.hectares.toLocaleString('en-PH')}</td><td class="text-right">${r.total_tons.toLocaleString('en-PH')}</td><td class="text-right positive">${fmt(r.total_income)}</td><td class="text-right negative">${fmt(r.total_expenses)}</td><td class="text-right">${fmt(r.total_investment)}</td><td class="text-right ${r.profit >= 0 ? 'positive':'negative'}">${fmt(r.profit)}</td><td class="text-right">${pct(r.roi)}</td><td class="text-right">${fmt(r.costPerTon)}</td><td class="text-right">${fmt(r.profitPerTon)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('sugarcane','${r.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="11"><div class="empty">No sugarcane years yet.</div></td></tr>`;
+}
+function render(page){
+  const fns = { dashboard:renderDashboard, networth:renderNetWorth, reports:renderReports, transactions:renderTransactions, lend:renderLending, accounts:renderAccounts, creditcards:renderCreditCards, investments:renderInvestments, sugarcane:renderSugarcane };
+  if(fns[page]) fns[page]();
+}
+function renderAll(){ buildReportFilters(); renderDashboard(); renderNetWorth(); renderReports(); renderTransactions(); renderLending(); renderAccounts(); renderCreditCards(); renderInvestments(); renderSugarcane(); }
+function seedDemoData(){
+  db = {
+    transactions:[
+      {id:uid(), date:'2026-01-15', type:'income', description:'Salary', amount:185000, account:'BDO', category:'Salary', notes:''},
+      {id:uid(), date:'2026-01-18', type:'expense', description:'Household', amount:42000, account:'BDO', category:'Living', notes:''},
+      {id:uid(), date:'2026-02-15', type:'income', description:'Salary', amount:185000, account:'BDO', category:'Salary', notes:''},
+      {id:uid(), date:'2026-02-20', type:'expense', description:'Travel', amount:18000, account:'BDO', category:'Travel', notes:''},
+      {id:uid(), date:'2026-03-15', type:'income', description:'Salary', amount:185000, account:'BDO', category:'Salary', notes:''},
+      {id:uid(), date:'2026-03-22', type:'expense', description:'Business tools', amount:12000, account:'UB', category:'Business', notes:''},
+      {id:uid(), date:'2026-04-01', type:'income', description:'Affiliate', amount:32000, account:'SeaBank', category:'Affiliate', notes:''},
+      {id:uid(), date:'2026-04-10', type:'expense', description:'Car maintenance', amount:9000, account:'BDO', category:'Car', notes:''}
+    ],
+    lending:[
+      {id:uid(), borrower:'Mark', status:'Pending', date_lent:'2026-02-01', due_date:'2026-06-01', amount_lent:25000, amount_repaid:10000, notes:'Installments'},
+      {id:uid(), borrower:'Anna', status:'Paid', date_lent:'2025-11-10', due_date:'2026-01-10', amount_lent:12000, amount_repaid:12000, notes:''}
+    ],
+    accounts:[
+      {id:uid(), name:'BDO Personal', type:'personal', balance:210000, notes:'Main cash'},
+      {id:uid(), name:'UnionBank Business', type:'business', balance:145000, notes:'Ops'},
+      {id:uid(), name:'Rainy Day Reserve', type:'reserve', balance:300000, notes:'Protected'}
+    ],
+    creditcards:[
+      {id:uid(), name:'BDO Premium Visa', limit:300000, balance:48000, due_date:'2026-05-08'},
+      {id:uid(), name:'AMEX Premium', limit:250000, balance:22000, due_date:'2026-05-14'}
+    ],
+    investments:[
+      {id:uid(), name:'Gold', type:'Commodity', amount_invested:120000, current_value:155000},
+      {id:uid(), name:'Business Equity', type:'Business', amount_invested:250000, current_value:330000}
+    ],
+    sugarcane:[
+      {id:uid(), year:2024, hectares:5, total_tons:320, total_income:480000, total_expenses:300000, total_investment:250000},
+      {id:uid(), year:2025, hectares:6, total_tons:410, total_income:650000, total_expenses:360000, total_investment:280000},
+      {id:uid(), year:2026, hectares:6, total_tons:445, total_income:730000, total_expenses:390000, total_investment:300000}
+    ]
+  };
+  saveDb(); setDefaults(); renderAll();
+}
+function resetAllData(){ if(!confirm('Reset all CathOS Lite data?')) return; localStorage.removeItem(STORAGE_KEY); db = { transactions:[], lending:[], accounts:[], creditcards:[], investments:[], sugarcane:[] }; setDefaults(); renderAll(); }
 
+loadDb();
+setDefaults();
+renderAll();
+</script>
 </body>
 </html>
