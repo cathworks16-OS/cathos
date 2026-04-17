@@ -312,21 +312,51 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     </div>
   </div>
 
+  
   <div class="page" id="page-transactions">
     <div class="page-header">
       <div>
         <div class="page-title">Transaction Logs</div>
-        <div class="page-sub">One simple source of truth.</div>
+        <div class="page-sub">Original CathOS-style categories with dropdowns and editable settings.</div>
       </div>
       <button class="btn btn-primary" onclick="openModal('modal-transaction')">+ Add Transaction</button>
     </div>
     <div class="inline-split mb-14">
       <input id="txn-search" placeholder="Search description, notes, category..." oninput="renderTransactions()" style="background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;min-width:260px;">
       <input id="txn-month-filter" type="month" onchange="renderTransactions()" style="background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;">
+      <select id="txn-category-filter" onchange="renderTransactions()" style="background:#fff;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;outline:none;">
+        <option value="">All Categories</option>
+      </select>
     </div>
+
+    <div class="grid grid-2 mb-14">
+      <div class="card">
+        <div class="section-title">⚙️ Transaction Settings</div>
+        <div class="form-row" style="grid-template-columns:1fr 1fr auto;">
+          <div class="form-group">
+            <label>Main Category</label>
+            <input id="txn-settings-main" placeholder="e.g. Bills">
+          </div>
+          <div class="form-group">
+            <label>Sub Category</label>
+            <input id="txn-settings-sub" placeholder="e.g. Electricity">
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" onclick="addTransactionCategorySetting()">Add</button>
+          </div>
+        </div>
+        <div class="card-sub">Adjust your transaction categories and sub categories here. These dropdowns feed the transaction form directly.</div>
+      </div>
+      <div class="card">
+        <div class="section-title">📚 Current Category Map</div>
+        <div id="txn-settings-map"></div>
+      </div>
+    </div>
+
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Account</th><th>Category</th><th>Notes</th><th class="text-right">Amount</th><th></th></tr></thead>
+        <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Account</th><th>Category</th><th>Sub Category</th><th>Notes</th><th class="text-right">Amount</th><th></th></tr></thead>
         <tbody id="transactions-body"></tbody>
       </table>
     </div>
@@ -386,27 +416,38 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     <div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th class="text-right">Invested</th><th class="text-right">Current Value</th><th class="text-right">Gain / Loss</th><th></th></tr></thead><tbody id="investments-body"></tbody></table></div>
   </div>
 
+  
   <div class="page" id="page-sugarcane">
     <div class="page-header">
-      <div><div class="page-title">Sugarcane</div><div class="page-sub">Yearly comparison only. No detailed logs.</div></div>
-      <button class="btn btn-primary" onclick="openModal('modal-sugarcane')">+ Add Year</button>
+      <div><div class="page-title">Sugarcane</div><div class="page-sub">Per location yearly dashboard with current area and yearly comparison.</div></div>
+      <button class="btn btn-primary" onclick="openModal('modal-sugarcane')">+ Add Location Year</button>
     </div>
     <div class="grid grid-4 mb-14">
-      <div class="card"><div class="card-label">Best Year</div><div class="card-value" id="sc-best-year">—</div><div class="card-sub" id="sc-best-year-sub"></div></div>
-      <div class="card"><div class="card-label">Latest Profit</div><div class="card-value accent" id="sc-latest-profit">₱0.00</div><div class="card-sub" id="sc-latest-profit-sub"></div></div>
-      <div class="card"><div class="card-label">Average ROI</div><div class="card-value" id="sc-avg-roi">0.0%</div></div>
-      <div class="card"><div class="card-label">Goal Progress</div><div class="card-value" id="sc-goal">₱0 / ₱2M</div><div class="card-sub">Based on latest yearly profit</div></div>
+      <div class="card"><div class="card-label">Current Year Locations</div><div class="card-value" id="sc-current-locations">0</div><div class="card-sub" id="sc-current-locations-sub">No records yet</div></div>
+      <div class="card"><div class="card-label">Current Year Hectares</div><div class="card-value accent" id="sc-current-hectares">₱0.00</div><div class="card-sub">How much area you have right now</div></div>
+      <div class="card"><div class="card-label">Latest Year Profit</div><div class="card-value green" id="sc-latest-profit">₱0.00</div><div class="card-sub" id="sc-latest-profit-sub">Based on all locations</div></div>
+      <div class="card"><div class="card-label">Average ROI</div><div class="card-value" id="sc-avg-roi">0.0%</div><div class="card-sub">Across all yearly location records</div></div>
     </div>
-    <div class="note-box mb-14">Input one row per year. The dashboard calculates profit, ROI, cost per ton, profit per ton, and year-over-year comparison automatically.</div>
+    <div class="note-box mb-14">Each row is one location for one year. CathOS rolls these up into yearly totals and current area tracking automatically.</div>
     <div class="grid grid-2 mb-14">
-      <div class="chart-card"><div class="section-title">📈 Profit Trend</div><canvas id="chart-sugar-profit-detail"></canvas></div>
-      <div class="card"><div class="section-title">⚡ Year-over-Year Comparison</div><div id="sugarcane-comparison-box"></div></div>
+      <div class="chart-card"><div class="section-title">📈 Yearly Profit Trend</div><canvas id="chart-sugar-profit-detail"></canvas></div>
+      <div class="card"><div class="section-title">⚡ Current Snapshot</div><div id="sugarcane-comparison-box"></div></div>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>Year</th><th class="text-right">Hectares</th><th class="text-right">Tons</th><th class="text-right">Income</th><th class="text-right">Expenses</th><th class="text-right">Investment</th><th class="text-right">Profit</th><th class="text-right">ROI</th><th class="text-right">Cost/Ton</th><th class="text-right">Profit/Ton</th><th></th></tr></thead><tbody id="sugarcane-body"></tbody></table></div>
+    <div class="grid grid-2 mb-14">
+      <div class="card">
+        <div class="section-title">🌾 Yearly Comparison</div>
+        <div class="table-wrap"><table><thead><tr><th>Year</th><th class="text-right">Locations</th><th class="text-right">Hectares</th><th class="text-right">Tons</th><th class="text-right">Income</th><th class="text-right">Expenses</th><th class="text-right">Profit</th><th class="text-right">ROI</th></tr></thead><tbody id="sugarcane-yearly-body"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="section-title">📍 Location Summary</div>
+        <div class="table-wrap"><table><thead><tr><th>Location</th><th class="text-right">Tracked Years</th><th class="text-right">Latest Hectares</th><th class="text-right">Latest Profit</th></tr></thead><tbody id="sugarcane-location-body"></tbody></table></div>
+      </div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Year</th><th>Location</th><th class="text-right">Hectares</th><th class="text-right">Tons</th><th class="text-right">Income</th><th class="text-right">Expenses</th><th class="text-right">Investment</th><th class="text-right">Profit</th><th class="text-right">ROI</th><th class="text-right">Cost/Ton</th><th class="text-right">Profit/Ton</th><th></th></tr></thead><tbody id="sugarcane-body"></tbody></table></div>
   </div>
 </main>
 
-<div class="modal-overlay" id="modal-transaction"><div class="modal"><div class="modal-header"><div class="modal-title">Add Transaction</div><button class="modal-close" onclick="closeModal('modal-transaction')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Date</label><input type="date" id="txn-date"></div><div class="form-group"><label>Type</label><select id="txn-type"><option value="income">Income</option><option value="expense">Expense</option><option value="transfer">Transfer</option><option value="investment">Investment</option><option value="debt_payment">Debt Payment</option></select></div></div><div class="form-row"><div class="form-group"><label>Description</label><input id="txn-description"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Amount</label><input type="number" id="txn-amount"></div><div class="form-group"><label>Account</label><input id="txn-account"></div><div class="form-group"><label>Category</label><input id="txn-category"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="txn-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addTransaction()">Save Transaction</button></div></div>
+<div class="modal-overlay" id="modal-transaction"><div class="modal"><div class="modal-header"><div class="modal-title">Add Transaction</div><button class="modal-close" onclick="closeModal('modal-transaction')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Date</label><input type="date" id="txn-date"></div><div class="form-group"><label>Type</label><select id="txn-type"><option value="income">Income</option><option value="expense">Expense</option><option value="transfer">Transfer</option><option value="investment">Investment</option><option value="debt_payment">Debt Payment</option></select></div></div><div class="form-row"><div class="form-group"><label>Description</label><input id="txn-description"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Amount</label><input type="number" id="txn-amount"></div><div class="form-group"><label>Account</label><input id="txn-account" list="txn-account-list"></div><div class="form-group"><label>Category</label><select id="txn-category" onchange="populateTransactionSubcategorySelect()"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Sub Category</label><select id="txn-subcategory"></select></div><div class="form-group"><label>Notes</label><textarea id="txn-notes" rows="3"></textarea></div></div><datalist id="txn-account-list"></datalist><button class="btn btn-primary" onclick="addTransaction()">Save Transaction</button></div></div>
 
 <div class="modal-overlay" id="modal-lending"><div class="modal"><div class="modal-header"><div class="modal-title">Add Lending Entry</div><button class="modal-close" onclick="closeModal('modal-lending')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Borrower</label><input id="lend-borrower"></div><div class="form-group"><label>Status</label><select id="lend-status"><option>Pending</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr;"><div class="form-group"><label>Date Lent</label><input type="date" id="lend-date"></div><div class="form-group"><label>Due Date</label><input type="date" id="lend-due"></div><div class="form-group"><label>Amount Lent</label><input type="number" id="lend-amount"></div><div class="form-group"><label>Amount Repaid</label><input type="number" id="lend-repaid-input"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="lend-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addLending()">Save Lending</button></div></div>
 
@@ -416,18 +457,34 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
 
 <div class="modal-overlay" id="modal-investment"><div class="modal"><div class="modal-header"><div class="modal-title">Add Investment</div><button class="modal-close" onclick="closeModal('modal-investment')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Investment Name</label><input id="inv-name"></div><div class="form-group"><label>Type</label><input id="inv-type"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Amount Invested</label><input type="number" id="inv-invested-input"></div><div class="form-group"><label>Current Value</label><input type="number" id="inv-current-input"></div></div><button class="btn btn-primary" onclick="addInvestment()">Save Investment</button></div></div>
 
-<div class="modal-overlay" id="modal-sugarcane"><div class="modal"><div class="modal-header"><div class="modal-title">Add Sugarcane Year</div><button class="modal-close" onclick="closeModal('modal-sugarcane')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Year</label><input type="number" id="sc-year"></div><div class="form-group"><label>Hectares</label><input type="number" id="sc-hectares"></div><div class="form-group"><label>Total Tons</label><input type="number" id="sc-tons"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Total Income</label><input type="number" id="sc-income"></div><div class="form-group"><label>Total Expenses</label><input type="number" id="sc-expenses"></div><div class="form-group"><label>Total Investment</label><input type="number" id="sc-investment"></div></div><button class="btn btn-primary" onclick="addSugarcane()">Save Year</button></div></div>
+<div class="modal-overlay" id="modal-sugarcane"><div class="modal"><div class="modal-header"><div class="modal-title">Add Sugarcane Location Year</div><button class="modal-close" onclick="closeModal('modal-sugarcane')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Year</label><input type="number" id="sc-year"></div><div class="form-group"><label>Location</label><input id="sc-location" list="sc-location-list" placeholder="e.g. Calatrava Lot 1"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Hectares</label><input type="number" id="sc-hectares"></div><div class="form-group"><label>Total Tons</label><input type="number" id="sc-tons"></div><div class="form-group"><label>Total Investment</label><input type="number" id="sc-investment"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Total Income</label><input type="number" id="sc-income"></div><div class="form-group"><label>Total Expenses</label><input type="number" id="sc-expenses"></div></div><datalist id="sc-location-list"></datalist><button class="btn btn-primary" onclick="addSugarcane()">Save Location Year</button></div></div>
 
 <script>
 const STORAGE_KEY = 'cathos-lite-v1';
 let charts = {};
+const defaultTransactionCategoryMap = {
+  'Income': ['Salary', 'Affiliate', 'Interest', 'Refund', 'Farm Income', 'Home Share', 'Other Income'],
+  'Bills': ['Electricity', 'Water', 'Internet', 'WiFi', 'Starlink', 'Insurance', 'Helper', 'Groceries', 'General'],
+  'Subscriptions': ['iCloud', 'Google One', 'Netflix', 'Spotify', 'Apple Bill', 'Other Subscription'],
+  'Savings & Investments': ['GoTrade', 'COL Financial', 'Crypto', 'Savings', 'Travel Fund', 'House Fund', 'Farm Expansion', 'Emergency Fund', 'Jimny Fund'],
+  'Debt': ['BDO Visa CA', 'Loan Payment', 'CA Payment', 'Other Debt'],
+  'Business Expenses': ['Farm', 'Harvest', 'Fertilizer', 'Spray', 'Motoworks', 'Inventory', 'Business Operations'],
+  'Personal Expenses': ['Food', 'Dining', 'Shopping', 'Health', 'Lifestyle', 'Family', 'General'],
+  'Transportation': ['Fuel', 'Maintenance', 'Parking', 'Commute', 'Registration'],
+  'Travel': ['Accommodation', 'Flights', 'Leisure', 'Camping', 'Rides', 'Travel Meals'],
+  'Transfers': ['Own Account Transfer', 'Reserve Transfer', 'Business Transfer'],
+  'Other': ['General']
+};
 let db = {
   transactions: [],
   lending: [],
   accounts: [],
   creditcards: [],
   investments: [],
-  sugarcane: []
+  sugarcane: [],
+  settings: {
+    transactionCategoryMap: JSON.parse(JSON.stringify(defaultTransactionCategoryMap))
+  }
 };
 
 function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -436,25 +493,197 @@ function currentMonth(){ return new Date().toISOString().slice(0,7); }
 function fmt(n){ return '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function pct(n){ return Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
 function saveDb(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); document.getElementById('save-status').textContent = 'Saved locally'; }
-function loadDb(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ try { db = Object.assign(db, JSON.parse(raw)); } catch(e){} } }
+function loadDb(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ try {
+  const parsed = JSON.parse(raw);
+  db = Object.assign(db, parsed || {});
+  db.settings = db.settings || {};
+  db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
+} catch(e){} } }
+function getTransactionCategoryMap(){
+  db.settings = db.settings || {};
+  db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
+  return db.settings.transactionCategoryMap;
+}
+function getTransactionAccountOptions(){
+  return [...new Set([...(db.accounts||[]).map(a=>a.name).filter(Boolean), ...(db.creditcards||[]).map(c=>c.name).filter(Boolean)])];
+}
+function refreshTransactionAccountOptions(){
+  const list = document.getElementById('txn-account-list');
+  if(list) list.innerHTML = getTransactionAccountOptions().map(name => `<option value="${name}"></option>`).join('');
+}
+function refreshSugarcaneLocationOptions(){
+  const list = document.getElementById('sc-location-list');
+  if(list){
+    const options = [...new Set((db.sugarcane||[]).map(r => r.location).filter(Boolean))];
+    list.innerHTML = options.map(name => `<option value="${name}"></option>`).join('');
+  }
+}
+function populateTransactionCategorySelect(selected=''){
+  const select = document.getElementById('txn-category');
+  const filter = document.getElementById('txn-category-filter');
+  const map = getTransactionCategoryMap();
+  const keys = Object.keys(map);
+  if(select){
+    select.innerHTML = keys.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    select.value = keys.includes(selected) ? selected : (keys[0] || '');
+  }
+  if(filter){
+    const current = filter.value;
+    filter.innerHTML = '<option value="">All Categories</option>' + keys.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    filter.value = keys.includes(current) ? current : '';
+  }
+}
+function populateTransactionSubcategorySelect(selected=''){
+  const cat = document.getElementById('txn-category')?.value || '';
+  const select = document.getElementById('txn-subcategory');
+  if(!select) return;
+  const options = (getTransactionCategoryMap()[cat] || ['General']).slice();
+  select.innerHTML = options.map(sub => `<option value="${sub}">${sub}</option>`).join('');
+  select.value = options.includes(selected) ? selected : (options[0] || 'General');
+}
+function addTransactionCategorySetting(){
+  const main = (document.getElementById('txn-settings-main').value || '').trim();
+  const sub = (document.getElementById('txn-settings-sub').value || '').trim();
+  if(!main || !sub) return alert('Enter both a main category and a sub category.');
+  const map = getTransactionCategoryMap();
+  map[main] = map[main] || [];
+  if(!map[main].includes(sub)) map[main].push(sub);
+  db.settings.transactionCategoryMap = map;
+  document.getElementById('txn-settings-main').value = '';
+  document.getElementById('txn-settings-sub').value = '';
+  saveDb();
+  populateTransactionCategorySelect(main);
+  populateTransactionSubcategorySelect(sub);
+  renderTransactionSettings();
+  renderTransactions();
+}
+function renameTransactionCategory(main){
+  const next = prompt('Rename main category:', main);
+  if(next === null) return;
+  const clean = next.trim();
+  if(!clean) return alert('Category name cannot be empty.');
+  const map = getTransactionCategoryMap();
+  if(clean !== main){
+    map[clean] = map[main] || [];
+    delete map[main];
+    (db.transactions||[]).forEach(t => { if(t.category === main) t.category = clean; });
+  }
+  db.settings.transactionCategoryMap = map;
+  saveDb();
+  populateTransactionCategorySelect(clean);
+  renderTransactionSettings();
+  renderTransactions();
+}
+function removeTransactionCategory(main){
+  const map = getTransactionCategoryMap();
+  if(!confirm(`Remove "${main}" and reset matching transactions to Other / General?`)) return;
+  delete map[main];
+  if(!Object.keys(map).length) Object.assign(map, defaultTransactionCategoryMap);
+  (db.transactions||[]).forEach(t => { if(t.category === main){ t.category = 'Other'; t.subcategory = 'General'; }});
+  db.settings.transactionCategoryMap = map;
+  saveDb();
+  populateTransactionCategorySelect('Other');
+  populateTransactionSubcategorySelect('General');
+  renderTransactionSettings();
+  renderTransactions();
+}
+function addSubcategoryToMain(main){
+  const next = prompt(`Add sub category under "${main}":`);
+  if(next === null) return;
+  const clean = next.trim();
+  if(!clean) return;
+  const map = getTransactionCategoryMap();
+  map[main] = map[main] || [];
+  if(!map[main].includes(clean)) map[main].push(clean);
+  db.settings.transactionCategoryMap = map;
+  saveDb();
+  renderTransactionSettings();
+  populateTransactionCategorySelect(main);
+  populateTransactionSubcategorySelect(clean);
+}
+function editSubcategory(main, sub){
+  const next = prompt(`Rename sub category under "${main}":`, sub);
+  if(next === null) return;
+  const clean = next.trim();
+  if(!clean) return alert('Sub category cannot be empty.');
+  const map = getTransactionCategoryMap();
+  map[main] = (map[main] || []).map(item => item === sub ? clean : item);
+  (db.transactions||[]).forEach(t => { if(t.category === main && t.subcategory === sub) t.subcategory = clean; });
+  db.settings.transactionCategoryMap = map;
+  saveDb();
+  renderTransactionSettings();
+  populateTransactionCategorySelect(main);
+  populateTransactionSubcategorySelect(clean);
+  renderTransactions();
+}
+function removeSubcategory(main, sub){
+  const map = getTransactionCategoryMap();
+  if(!confirm(`Remove sub category "${sub}" from "${main}"?`)) return;
+  map[main] = (map[main] || []).filter(item => item !== sub);
+  if(!map[main].length) map[main] = ['General'];
+  (db.transactions||[]).forEach(t => { if(t.category === main && t.subcategory === sub) t.subcategory = 'General'; });
+  db.settings.transactionCategoryMap = map;
+  saveDb();
+  renderTransactionSettings();
+  populateTransactionCategorySelect(main);
+  populateTransactionSubcategorySelect('General');
+  renderTransactions();
+}
+function renderTransactionSettings(){
+  const wrap = document.getElementById('txn-settings-map');
+  if(!wrap) return;
+  const map = getTransactionCategoryMap();
+  const entries = Object.entries(map);
+  wrap.innerHTML = entries.map(([main, subs]) => {
+    const buttons = `
+      <button class="btn btn-ghost" onclick='renameTransactionCategory(${JSON.stringify(main)})'>Rename</button>
+      <button class="btn btn-ghost" onclick='addSubcategoryToMain(${JSON.stringify(main)})'>Add Sub</button>
+      <button class="btn btn-ghost" onclick='removeTransactionCategory(${JSON.stringify(main)})'>Remove</button>
+    `;
+    const chips = (subs || []).map(sub => `
+      <span class="badge badge-blue" style="display:inline-flex;align-items:center;gap:6px;">
+        ${sub}
+        <button style="border:none;background:none;cursor:pointer;color:inherit;padding:0;" onclick='editSubcategory(${JSON.stringify(main)}, ${JSON.stringify(sub)})'>✎</button>
+        <button style="border:none;background:none;cursor:pointer;color:inherit;padding:0;" onclick='removeSubcategory(${JSON.stringify(main)}, ${JSON.stringify(sub)})'>×</button>
+      </span>
+    `).join('');
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div class="flex gap-10" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);">${main}</div>
+          <div class="card-sub" style="margin-top:4px;">${(subs||[]).join(', ') || 'General'}</div>
+        </div>
+        <div class="flex gap-10" style="flex-wrap:wrap;">${buttons}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">${chips}</div>
+    </div>`;
+  }).join('');
+}
 function setDefaults(){
   document.getElementById('today-label').textContent = new Date().toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' });
   document.getElementById('txn-date').value = today();
   document.getElementById('lend-date').value = today();
   document.getElementById('txn-month-filter').value = currentMonth();
+  document.getElementById('sc-year').value = new Date().getFullYear();
   buildReportFilters();
+  populateTransactionCategorySelect();
+  populateTransactionSubcategorySelect();
+  refreshTransactionAccountOptions();
+  refreshSugarcaneLocationOptions();
+  renderTransactionSettings();
 }
 function buildReportFilters(){
   const years = new Set();
   const now = new Date().getFullYear();
   for(let y = now - 5; y <= now + 1; y++) years.add(y);
-  (db.transactions||[]).forEach(t => years.add(new Date(t.date).getFullYear()));
-  (db.sugarcane||[]).forEach(r => years.add(Number(r.year)));
+  (db.transactions||[]).forEach(t => { if(t.date) years.add(new Date(t.date).getFullYear()); });
+  (db.sugarcane||[]).forEach(r => { if(r.year) years.add(Number(r.year)); });
   const yearSel = document.getElementById('reports-year-filter');
   yearSel.innerHTML = [...years].sort((a,b)=>b-a).map(y => `<option value="${y}">${y}</option>`).join('');
   yearSel.value = String(now);
   const monthSel = document.getElementById('reports-month-filter');
   monthSel.innerHTML = `<option value="">All Months</option>` + Array.from({length:12}, (_,i)=> `<option value="${String(i+1).padStart(2,'0')}">${new Date(2000,i,1).toLocaleString('en-US',{month:'long'})}</option>`).join('');
+  populateTransactionCategorySelect();
 }
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
@@ -474,11 +703,16 @@ function addTransaction(){
     description: document.getElementById('txn-description').value.trim(),
     amount: Number(document.getElementById('txn-amount').value || 0),
     account: document.getElementById('txn-account').value.trim(),
-    category: document.getElementById('txn-category').value.trim(),
+    category: document.getElementById('txn-category').value,
+    subcategory: document.getElementById('txn-subcategory').value,
     notes: document.getElementById('txn-notes').value.trim()
   };
   if(!row.description || !row.amount) return;
-  db.transactions.unshift(row); saveDb(); closeModal('modal-transaction'); renderAll();
+  db.transactions.unshift(row);
+  saveDb();
+  closeModal('modal-transaction');
+  refreshTransactionAccountOptions();
+  renderAll();
 }
 function addLending(){
   const row = {
@@ -506,11 +740,22 @@ function addInvestment(){
   db.investments.unshift(row); saveDb(); closeModal('modal-investment'); renderAll();
 }
 function addSugarcane(){
-  const row = { id: uid(), year: Number(document.getElementById('sc-year').value || 0), hectares: Number(document.getElementById('sc-hectares').value || 0), total_tons: Number(document.getElementById('sc-tons').value || 0), total_income: Number(document.getElementById('sc-income').value || 0), total_expenses: Number(document.getElementById('sc-expenses').value || 0), total_investment: Number(document.getElementById('sc-investment').value || 0) };
-  if(!row.year) return;
-  db.sugarcane = (db.sugarcane || []).filter(r => Number(r.year) !== row.year);
-  db.sugarcane.push(row);
-  saveDb(); closeModal('modal-sugarcane'); renderAll();
+  const row = {
+    id: uid(),
+    year: Number(document.getElementById('sc-year').value || 0),
+    location: document.getElementById('sc-location').value.trim(),
+    hectares: Number(document.getElementById('sc-hectares').value || 0),
+    total_tons: Number(document.getElementById('sc-tons').value || 0),
+    total_income: Number(document.getElementById('sc-income').value || 0),
+    total_expenses: Number(document.getElementById('sc-expenses').value || 0),
+    total_investment: Number(document.getElementById('sc-investment').value || 0)
+  };
+  if(!row.year || !row.location) return alert('Please enter both year and location.');
+  db.sugarcane.unshift(row);
+  saveDb();
+  closeModal('modal-sugarcane');
+  refreshSugarcaneLocationOptions();
+  renderAll();
 }
 function computeNetWorth(){
   const cash = sum(db.accounts, 'balance');
@@ -544,10 +789,13 @@ function getMonthlySeries(){
 function getCategoryBreakdown(year, month){
   const rows = (db.transactions || []).filter(t => {
     const d = new Date(t.date);
-    return t.type === 'expense' && d.getFullYear() === Number(year) && (!month || String(d.getMonth()+1).padStart(2,'0') === month);
+    return ['expense','debt_payment'].includes(t.type) && d.getFullYear() === Number(year) && (!month || String(d.getMonth()+1).padStart(2,'0') === month);
   });
   const map = {};
-  rows.forEach(r => { const key = r.category || 'Uncategorized'; map[key] = (map[key] || 0) + Number(r.amount || 0); });
+  rows.forEach(r => {
+    const key = r.category || 'Uncategorized';
+    map[key] = (map[key] || 0) + Number(r.amount || 0);
+  });
   return map;
 }
 function sugarMetrics(row){
@@ -557,6 +805,33 @@ function sugarMetrics(row){
   const profitPerTon = Number(row.total_tons||0) ? profit / Number(row.total_tons||0) : 0;
   const profitPerHectare = Number(row.hectares||0) ? profit / Number(row.hectares||0) : 0;
   return { ...row, profit, roi, costPerTon, profitPerTon, profitPerHectare };
+}
+function getSugarcaneYearRollup(){
+  const grouped = {};
+  (db.sugarcane || []).forEach(item => {
+    const row = sugarMetrics(item);
+    const key = String(row.year || '');
+    if(!key) return;
+    grouped[key] = grouped[key] || { year:Number(key), locations:0, hectares:0, total_tons:0, total_income:0, total_expenses:0, total_investment:0 };
+    grouped[key].locations += 1;
+    grouped[key].hectares += Number(row.hectares||0);
+    grouped[key].total_tons += Number(row.total_tons||0);
+    grouped[key].total_income += Number(row.total_income||0);
+    grouped[key].total_expenses += Number(row.total_expenses||0);
+    grouped[key].total_investment += Number(row.total_investment||0);
+  });
+  return Object.values(grouped).map(sugarMetrics).sort((a,b)=>a.year-b.year);
+}
+function getLatestSugarcaneLocationSummary(){
+  const grouped = {};
+  (db.sugarcane || []).forEach(item => {
+    const row = sugarMetrics(item);
+    const key = row.location || 'Unknown';
+    if(!grouped[key] || Number(row.year) > Number(grouped[key].year)){
+      grouped[key] = row;
+    }
+  });
+  return Object.values(grouped).sort((a,b)=>(a.location||'').localeCompare(b.location||''));
 }
 function destroyChart(id){ if(charts[id]) { charts[id].destroy(); charts[id] = null; } }
 function renderChart(id, config){ destroyChart(id); const ctx = document.getElementById(id); if(ctx) charts[id] = new Chart(ctx, config); }
@@ -574,14 +849,16 @@ function renderDashboard(){
   renderChart('chart-networth', { type:'line', data:{ labels: monthly.labels, datasets:[{ label:'Net Worth', data: monthly.cumulative, tension:.35 }]}, options:{ responsive:true, plugins:{ legend:{ display:false }}}});
   renderChart('chart-cashflow', { type:'bar', data:{ labels: monthly.labels, datasets:[{ label:'Income', data: monthly.income }, { label:'Expenses', data: monthly.expense }]}, options:{ responsive:true }});
 
-  const sugar = (db.sugarcane || []).map(sugarMetrics).sort((a,b)=>a.year-b.year);
+  const sugar = getSugarcaneYearRollup();
   renderChart('chart-sugarcane', { type:'bar', data:{ labels:sugar.map(r=>String(r.year)), datasets:[{ label:'Profit', data:sugar.map(r=>r.profit) }]}, options:{ responsive:true }});
 
+  const latestSugar = sugar[sugar.length - 1];
+  const latestLocations = latestSugar ? latestSugar.locations : 0;
   const insightLines = [
     { title:'Assets', text:`Cash ${fmt(nw.cash)} + investments ${fmt(nw.investments)} + lending ${fmt(nw.lending)}.` },
     { title:'Liabilities', text:`Tracked credit card balances total ${fmt(nw.credit)}.` },
     { title:'This month', text:`Net cash flow for ${currentMonth()} is ${fmt(monthFlow(currentMonth()))}.` },
-    { title:'Sugarcane', text:sugar.length ? `Latest tracked year is ${sugar[sugar.length-1].year} with ${fmt(sugar[sugar.length-1].profit)} profit.` : 'No sugarcane year added yet.' }
+    { title:'Sugarcane', text:latestSugar ? `${latestSugar.year} has ${latestLocations} locations over ${Number(latestSugar.hectares||0).toFixed(2)} hectares with ${fmt(latestSugar.profit)} profit.` : 'No sugarcane location-year added yet.' }
   ];
   document.getElementById('dashboard-insights').innerHTML = insightLines.map(i => `<div class="card" style="padding:12px 14px; margin-bottom:10px;"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">${i.title}</div><div class="card-sub" style="font-size:12px;line-height:1.6;">${i.text}</div></div>`).join('');
 }
@@ -631,15 +908,19 @@ function renderReports(){
   document.getElementById('reports-table-body').innerHTML = monthRows.map(r => `<tr><td>${r.label}</td><td class="text-right positive">${fmt(r.income)}</td><td class="text-right negative">${fmt(r.expenses)}</td><td class="text-right ${r.net >= 0 ? 'positive' : 'negative'}">${fmt(r.net)}</td></tr>`).join('');
 }
 function renderTransactions(){
+  refreshTransactionAccountOptions();
   const q = (document.getElementById('txn-search').value || '').toLowerCase();
   const month = document.getElementById('txn-month-filter').value || '';
+  const categoryFilter = document.getElementById('txn-category-filter').value || '';
   const rows = (db.transactions || []).filter(t => {
-    const hay = [t.description, t.notes, t.category, t.account, t.type].join(' ').toLowerCase();
+    const hay = [t.description, t.notes, t.category, t.subcategory, t.account, t.type].join(' ').toLowerCase();
     const okText = !q || hay.includes(q);
     const okMonth = !month || (t.date || '').slice(0,7) === month;
-    return okText && okMonth;
+    const okCategory = !categoryFilter || t.category === categoryFilter;
+    return okText && okMonth && okCategory;
   });
-  document.getElementById('transactions-body').innerHTML = rows.length ? rows.map(t => `<tr><td>${t.date || ''}</td><td>${t.description || ''}</td><td><span class="badge ${t.type === 'income' ? 'badge-green' : t.type === 'expense' ? 'badge-red' : 'badge-blue'}">${(t.type || '').replaceAll('_',' ')}</span></td><td>${t.account || '—'}</td><td>${t.category || '—'}</td><td>${t.notes || '—'}</td><td class="text-right ${t.type === 'income' ? 'positive' : 'negative'}">${fmt(t.amount)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('transactions','${t.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="8"><div class="empty">No transactions found.</div></td></tr>`;
+  document.getElementById('transactions-body').innerHTML = rows.length ? rows.map(t => `<tr><td>${t.date || ''}</td><td>${t.description || ''}</td><td><span class="badge ${t.type === 'income' ? 'badge-green' : t.type === 'expense' || t.type === 'debt_payment' ? 'badge-red' : 'badge-blue'}">${(t.type || '').replaceAll('_',' ')}</span></td><td>${t.account || '—'}</td><td>${t.category || '—'}</td><td>${t.subcategory || '—'}</td><td>${t.notes || '—'}</td><td class="text-right ${t.type === 'income' ? 'positive' : 'negative'}">${fmt(t.amount)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('transactions','${t.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="9"><div class="empty">No transactions found.</div></td></tr>`;
+  renderTransactionSettings();
 }
 function renderLending(){
   const totalLent = sum(db.lending, 'amount_lent');
@@ -688,75 +969,78 @@ function renderInvestments(){
   }).join('') : `<tr><td colspan="6"><div class="empty">No investments added yet.</div></td></tr>`;
 }
 function renderSugarcane(){
-  const rows = (db.sugarcane || []).map(sugarMetrics).sort((a,b)=>a.year-b.year);
-  const latest = rows[rows.length-1];
-  const best = rows.slice().sort((a,b)=>b.profit-a.profit)[0];
-  const avgRoi = rows.length ? rows.reduce((s,r)=>s+r.roi,0) / rows.length : 0;
-  document.getElementById('sc-best-year').textContent = best ? String(best.year) : '—';
-  document.getElementById('sc-best-year-sub').textContent = best ? `${fmt(best.profit)} profit` : 'No data yet';
-  document.getElementById('sc-latest-profit').textContent = latest ? fmt(latest.profit) : fmt(0);
-  document.getElementById('sc-latest-profit-sub').textContent = latest ? `Year ${latest.year}` : 'No data yet';
+  refreshSugarcaneLocationOptions();
+  const detailRows = (db.sugarcane || []).map(sugarMetrics).sort((a,b)=> b.year - a.year || String(a.location||'').localeCompare(String(b.location||'')));
+  const yearly = getSugarcaneYearRollup();
+  const locationSummary = getLatestSugarcaneLocationSummary();
+  const latestYear = yearly.length ? yearly[yearly.length - 1] : null;
+
+  document.getElementById('sc-current-locations').textContent = latestYear ? latestYear.locations : 0;
+  document.getElementById('sc-current-locations-sub').textContent = latestYear ? `Current year ${latestYear.year}` : 'No records yet';
+  document.getElementById('sc-current-hectares').textContent = fmt(latestYear ? latestYear.hectares : 0);
+  document.getElementById('sc-latest-profit').textContent = fmt(latestYear ? latestYear.profit : 0);
+  document.getElementById('sc-latest-profit-sub').textContent = latestYear ? `Across ${latestYear.locations} locations in ${latestYear.year}` : 'No records yet';
+  const avgRoi = detailRows.length ? detailRows.reduce((s,r)=>s + Number(r.roi||0), 0) / detailRows.length : 0;
   document.getElementById('sc-avg-roi').textContent = pct(avgRoi);
-  document.getElementById('sc-goal').textContent = `${fmt(latest ? latest.profit : 0)} / ₱2,000,000`;
-  renderChart('chart-sugar-profit-detail', { type:'line', data:{ labels:rows.map(r=>String(r.year)), datasets:[{ label:'Profit', data:rows.map(r=>r.profit), tension:.35 }, { label:'ROI %', data:rows.map(r=>r.roi), tension:.35 }]}, options:{ responsive:true }});
-  let compareHtml = '<div class="empty">Add at least 2 years to compare year over year.</div>';
-  if(rows.length >= 2){
-    const cur = rows[rows.length-1], prev = rows[rows.length-2];
-    const profitDelta = cur.profit - prev.profit;
-    const tonsDelta = cur.total_tons - prev.total_tons;
-    const roiDelta = cur.roi - prev.roi;
-    compareHtml = `
-      <div class="card" style="padding:12px 14px;margin-bottom:10px;"><div style="font-size:12px;font-weight:700;margin-bottom:4px;">${cur.year} vs ${prev.year}</div><div class="card-sub" style="font-size:12px;line-height:1.7;">
-      Profit: <strong class="${profitDelta >= 0 ? 'positive':'negative'}">${fmt(profitDelta)}</strong><br>
-      Tons: <strong class="${tonsDelta >= 0 ? 'positive':'negative'}">${tonsDelta.toLocaleString('en-PH')}</strong><br>
-      ROI: <strong class="${roiDelta >= 0 ? 'positive':'negative'}">${pct(roiDelta)}</strong><br>
-      Cost per Ton: <strong class="${cur.costPerTon <= prev.costPerTon ? 'positive':'negative'}">${fmt(cur.costPerTon)}</strong>
-      </div></div>`;
+
+  renderChart('chart-sugar-profit-detail', { type:'line', data:{ labels: yearly.map(r=>String(r.year)), datasets:[{ label:'Profit', data: yearly.map(r=>r.profit), tension:.35 }]}, options:{ responsive:true, plugins:{ legend:{ display:false }}}});
+
+  const previousYear = yearly.length > 1 ? yearly[yearly.length - 2] : null;
+  const comparisonBits = [];
+  if(latestYear){
+    comparisonBits.push(`<div class="card-sub" style="font-size:12px;line-height:1.7;">You currently have <strong>${latestYear.locations}</strong> sugarcane locations covering <strong>${Number(latestYear.hectares||0).toFixed(2)}</strong> hectares in <strong>${latestYear.year}</strong>.</div>`);
+    comparisonBits.push(`<div class="card-sub" style="font-size:12px;line-height:1.7;margin-top:8px;">Latest yearly profit is <strong>${fmt(latestYear.profit)}</strong> with ROI of <strong>${pct(latestYear.roi)}</strong>.</div>`);
+    if(previousYear){
+      comparisonBits.push(`<div class="card-sub" style="font-size:12px;line-height:1.7;margin-top:8px;">Compared with ${previousYear.year}, profit moved by <strong>${fmt(latestYear.profit - previousYear.profit)}</strong> and hectares moved by <strong>${Number(latestYear.hectares - previousYear.hectares).toFixed(2)}</strong>.</div>`);
+    }
+  } else {
+    comparisonBits.push('<div class="empty">No sugarcane location data yet.</div>');
   }
-  document.getElementById('sugarcane-comparison-box').innerHTML = compareHtml;
-  document.getElementById('sugarcane-body').innerHTML = rows.length ? rows.map(r => `<tr><td>${r.year}</td><td class="text-right">${r.hectares.toLocaleString('en-PH')}</td><td class="text-right">${r.total_tons.toLocaleString('en-PH')}</td><td class="text-right positive">${fmt(r.total_income)}</td><td class="text-right negative">${fmt(r.total_expenses)}</td><td class="text-right">${fmt(r.total_investment)}</td><td class="text-right ${r.profit >= 0 ? 'positive':'negative'}">${fmt(r.profit)}</td><td class="text-right">${pct(r.roi)}</td><td class="text-right">${fmt(r.costPerTon)}</td><td class="text-right">${fmt(r.profitPerTon)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('sugarcane','${r.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="11"><div class="empty">No sugarcane years yet.</div></td></tr>`;
+  document.getElementById('sugarcane-comparison-box').innerHTML = comparisonBits.join('');
+
+  document.getElementById('sugarcane-yearly-body').innerHTML = yearly.length ? yearly.slice().reverse().map(r => `<tr><td>${r.year}</td><td class="text-right">${r.locations}</td><td class="text-right accent">${Number(r.hectares||0).toFixed(2)}</td><td class="text-right">${Number(r.total_tons||0).toFixed(2)}</td><td class="text-right positive">${fmt(r.total_income)}</td><td class="text-right negative">${fmt(r.total_expenses)}</td><td class="text-right ${r.profit >= 0 ? 'positive' : 'negative'}">${fmt(r.profit)}</td><td class="text-right">${pct(r.roi)}</td></tr>`).join('') : `<tr><td colspan="8"><div class="empty">No yearly sugarcane data yet.</div></td></tr>`;
+
+  const countByLocation = {};
+  (db.sugarcane || []).forEach(r => { countByLocation[r.location] = (countByLocation[r.location] || 0) + 1; });
+  document.getElementById('sugarcane-location-body').innerHTML = locationSummary.length ? locationSummary.map(r => `<tr><td>${r.location || '—'}</td><td class="text-right">${countByLocation[r.location] || 1}</td><td class="text-right accent">${Number(r.hectares||0).toFixed(2)}</td><td class="text-right ${r.profit >= 0 ? 'positive' : 'negative'}">${fmt(r.profit)}</td></tr>`).join('') : `<tr><td colspan="4"><div class="empty">No location summary yet.</div></td></tr>`;
+
+  document.getElementById('sugarcane-body').innerHTML = detailRows.length ? detailRows.map(r => `<tr><td>${r.year}</td><td>${r.location || '—'}</td><td class="text-right accent">${Number(r.hectares||0).toFixed(2)}</td><td class="text-right">${Number(r.total_tons||0).toFixed(2)}</td><td class="text-right positive">${fmt(r.total_income)}</td><td class="text-right negative">${fmt(r.total_expenses)}</td><td class="text-right">${fmt(r.total_investment)}</td><td class="text-right ${r.profit >= 0 ? 'positive' : 'negative'}">${fmt(r.profit)}</td><td class="text-right">${pct(r.roi)}</td><td class="text-right">${fmt(r.costPerTon)}</td><td class="text-right">${fmt(r.profitPerTon)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('sugarcane','${r.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="12"><div class="empty">No sugarcane rows yet.</div></td></tr>`;
 }
 function render(page){
   const fns = { dashboard:renderDashboard, networth:renderNetWorth, reports:renderReports, transactions:renderTransactions, lend:renderLending, accounts:renderAccounts, creditcards:renderCreditCards, investments:renderInvestments, sugarcane:renderSugarcane };
   if(fns[page]) fns[page]();
 }
-function renderAll(){ buildReportFilters(); renderDashboard(); renderNetWorth(); renderReports(); renderTransactions(); renderLending(); renderAccounts(); renderCreditCards(); renderInvestments(); renderSugarcane(); }
+function renderAll(){ buildReportFilters(); refreshTransactionAccountOptions(); refreshSugarcaneLocationOptions(); renderDashboard(); renderNetWorth(); renderReports(); renderTransactions(); renderLending(); renderAccounts(); renderCreditCards(); renderInvestments(); renderSugarcane(); }
 function seedDemoData(){
-  db = {
-    transactions:[
-      {id:uid(), date:'2026-01-15', type:'income', description:'Salary', amount:185000, account:'BDO', category:'Salary', notes:''},
-      {id:uid(), date:'2026-01-18', type:'expense', description:'Household', amount:42000, account:'BDO', category:'Living', notes:''},
-      {id:uid(), date:'2026-02-15', type:'income', description:'Salary', amount:185000, account:'BDO', category:'Salary', notes:''},
-      {id:uid(), date:'2026-02-20', type:'expense', description:'Travel', amount:18000, account:'BDO', category:'Travel', notes:''},
-      {id:uid(), date:'2026-03-15', type:'income', description:'Salary', amount:185000, account:'BDO', category:'Salary', notes:''},
-      {id:uid(), date:'2026-03-22', type:'expense', description:'Business tools', amount:12000, account:'UB', category:'Business', notes:''},
-      {id:uid(), date:'2026-04-01', type:'income', description:'Affiliate', amount:32000, account:'SeaBank', category:'Affiliate', notes:''},
-      {id:uid(), date:'2026-04-10', type:'expense', description:'Car maintenance', amount:9000, account:'BDO', category:'Car', notes:''}
-    ],
-    lending:[
-      {id:uid(), borrower:'Mark', status:'Pending', date_lent:'2026-02-01', due_date:'2026-06-01', amount_lent:25000, amount_repaid:10000, notes:'Installments'},
-      {id:uid(), borrower:'Anna', status:'Paid', date_lent:'2025-11-10', due_date:'2026-01-10', amount_lent:12000, amount_repaid:12000, notes:''}
-    ],
-    accounts:[
-      {id:uid(), name:'BDO Personal', type:'personal', balance:210000, notes:'Main cash'},
-      {id:uid(), name:'UnionBank Business', type:'business', balance:145000, notes:'Ops'},
-      {id:uid(), name:'Rainy Day Reserve', type:'reserve', balance:300000, notes:'Protected'}
-    ],
-    creditcards:[
-      {id:uid(), name:'BDO Premium Visa', limit:300000, balance:48000, due_date:'2026-05-08'},
-      {id:uid(), name:'AMEX Premium', limit:250000, balance:22000, due_date:'2026-05-14'}
-    ],
-    investments:[
-      {id:uid(), name:'Gold', type:'Commodity', amount_invested:120000, current_value:155000},
-      {id:uid(), name:'Business Equity', type:'Business', amount_invested:250000, current_value:330000}
-    ],
-    sugarcane:[
-      {id:uid(), year:2024, hectares:5, total_tons:320, total_income:480000, total_expenses:300000, total_investment:250000},
-      {id:uid(), year:2025, hectares:6, total_tons:410, total_income:650000, total_expenses:360000, total_investment:280000},
-      {id:uid(), year:2026, hectares:6, total_tons:445, total_income:730000, total_expenses:390000, total_investment:300000}
-    ]
-  };
-  saveDb(); setDefaults(); renderAll();
+  db.accounts = [
+    { id:uid(), name:'BDO Personal', type:'personal', balance:125000, notes:'Daily cash' },
+    { id:uid(), name:'Motoworks', type:'business', balance:210000, notes:'Business account' },
+    { id:uid(), name:'Rainy Day Reserve', type:'reserve', balance:180000, notes:'Emergency fund' }
+  ];
+  db.creditcards = [
+    { id:uid(), name:'BDO Premium Visa', limit:250000, balance:38000, due_date:today() }
+  ];
+  db.investments = [
+    { id:uid(), name:'Gold', type:'Commodity', amount_invested:120000, current_value:145000 },
+    { id:uid(), name:'Crypto Basket', type:'Crypto', amount_invested:80000, current_value:92000 }
+  ];
+  db.lending = [
+    { id:uid(), borrower:'Aaron', status:'Pending', date_lent:today(), due_date:'', amount_lent:25000, amount_repaid:10000, notes:'Partial repayment' }
+  ];
+  db.transactions = [
+    { id:uid(), date:today(), type:'income', description:'Psycle Salary', amount:135000, account:'BDO Personal', category:'Income', subcategory:'Salary', notes:'' },
+    { id:uid(), date:today(), type:'expense', description:'Electric Bill', amount:4200, account:'BDO Personal', category:'Bills', subcategory:'Electricity', notes:'' },
+    { id:uid(), date:today(), type:'investment', description:'GoTrade top-up', amount:10000, account:'BDO Personal', category:'Savings & Investments', subcategory:'GoTrade', notes:'' },
+    { id:uid(), date:today(), type:'expense', description:'Motoworks inventory', amount:32000, account:'Motoworks', category:'Business Expenses', subcategory:'Inventory', notes:'' }
+  ];
+  db.sugarcane = [
+    { id:uid(), year:new Date().getFullYear()-1, location:'Calatrava North', hectares:4.5, total_tons:280, total_income:520000, total_expenses:310000, total_investment:260000 },
+    { id:uid(), year:new Date().getFullYear()-1, location:'Calatrava South', hectares:3.0, total_tons:190, total_income:350000, total_expenses:215000, total_investment:180000 },
+    { id:uid(), year:new Date().getFullYear(), location:'Calatrava North', hectares:5.0, total_tons:320, total_income:610000, total_expenses:360000, total_investment:300000 },
+    { id:uid(), year:new Date().getFullYear(), location:'Calatrava South', hectares:3.2, total_tons:210, total_income:390000, total_expenses:240000, total_investment:195000 }
+  ];
+  saveDb();
+  renderAll();
 }
 function resetAllData(){ if(!confirm('Reset all CathOS Lite data?')) return; localStorage.removeItem(STORAGE_KEY); db = { transactions:[], lending:[], accounts:[], creditcards:[], investments:[], sugarcane:[] }; setDefaults(); renderAll(); }
 
