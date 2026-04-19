@@ -206,7 +206,7 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     <div class="nav-item" onclick="navigate('investments')"><span class="icon">🌙</span> Investments</div>
     <div class="nav-item" onclick="navigate('sugarcane')"><span class="icon">🌾</span> Sugarcane</div>
     <div class="nav-item" onclick="navigate('admin')"><span class="icon">⚙️</span> Admin Panel</div>
-    <a class="nav-item" id="custom-sheet-nav" href="#" target="_blank" rel="noopener noreferrer" style="display:none;text-decoration:none;"><span class="icon">🔗</span><span id="custom-sheet-label">Google Sheets</span></a>
+    <div id="custom-links-nav"></div>
   </div>
 </nav>
 
@@ -431,13 +431,14 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     </div>
     <div class="grid grid-2 mb-14">
       <div class="card">
-        <div class="section-title">🔗 Menu Link</div>
+        <div class="section-title">🔗 Menu Links</div>
         <div class="form-row" style="grid-template-columns:1fr 1fr auto;">
           <div class="form-group"><label>Link Label</label><input id="admin-link-label" placeholder="Google Sheets"></div>
           <div class="form-group"><label>Link URL</label><input id="admin-link-url" placeholder="https://docs.google.com/..." /></div>
-          <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="saveCustomLinkSettings()">Save Link</button></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addCustomLinkSettings()">Add Link</button></div>
         </div>
-        <div class="card-sub">Add a custom Google Sheets or Drive shortcut directly in the sidebar.</div>
+        <div id="admin-menu-links-list"></div>
+        <div class="card-sub">Add multiple Google Sheets, Drive, or other shortcuts directly in the sidebar.</div>
       </div>
       <div class="card">
         <div class="section-title">📊 Report Settings</div>
@@ -566,8 +567,7 @@ let db = {
   settings: {
     transactionCategoryMap: JSON.parse(JSON.stringify(defaultTransactionCategoryMap)),
     networthCategories: ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'],
-    customLinkLabel: 'Google Sheets',
-    customLinkUrl: '',
+    customMenuLinks: [],
     reportDefaultYear: new Date().getFullYear(),
     reportView: 'monthly',
     reportIncludeInvestment: false,
@@ -588,8 +588,8 @@ function loadDb(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ try {
   db.settings = db.settings || {};
   db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
   db.settings.networthCategories = db.settings.networthCategories || ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'];
-  db.settings.customLinkLabel = db.settings.customLinkLabel || 'Google Sheets';
-  db.settings.customLinkUrl = db.settings.customLinkUrl || '';
+  db.settings.customMenuLinks = Array.isArray(db.settings.customMenuLinks) ? db.settings.customMenuLinks : [];
+  db.settings.customMenuLinks = Array.isArray(db.settings.customMenuLinks) ? db.settings.customMenuLinks : [];
   db.settings.reportDefaultYear = db.settings.reportDefaultYear || new Date().getFullYear();
   db.settings.reportView = db.settings.reportView || 'monthly';
   db.settings.reportIncludeInvestment = !!db.settings.reportIncludeInvestment;
@@ -603,6 +603,7 @@ function getTransactionCategoryMap(){
 }
 function ensureAdminDefaults(){
   db.settings = db.settings || {};
+  db.settings.customMenuLinks = Array.isArray(db.settings.customMenuLinks) ? db.settings.customMenuLinks : [];
   db.settings.reportDefaultYear = db.settings.reportDefaultYear || new Date().getFullYear();
   db.settings.reportView = db.settings.reportView || 'monthly';
   db.settings.reportIncludeInvestment = !!db.settings.reportIncludeInvestment;
@@ -674,8 +675,13 @@ function renderAdmin(){
   ensureAdminDefaults();
   const linkLabel = document.getElementById('admin-link-label');
   const linkUrl = document.getElementById('admin-link-url');
-  if(linkLabel) linkLabel.value = db.settings.customLinkLabel || 'Google Sheets';
-  if(linkUrl) linkUrl.value = db.settings.customLinkUrl || '';
+  if(linkLabel) linkLabel.value = '';
+  if(linkUrl) linkUrl.value = '';
+  const linksEl = document.getElementById('admin-menu-links-list');
+  if(linksEl){
+    const links = db.settings.customMenuLinks || [];
+    linksEl.innerHTML = links.length ? links.map(item => `<div class="account-row"><div class="account-info"><div class="account-name">${item.label}</div><div class="account-type mono">${item.url}</div></div><div class="inline-split"><button class="btn btn-ghost btn-sm" onclick="editCustomLinkSettings('${item.id}')">Edit</button><button class="btn btn-danger btn-sm" onclick="removeCustomLinkSettings('${item.id}')">Delete</button></div></div>`).join('') : `<div class="empty">No menu links added yet.</div>`;
+  }
   const reportYear = document.getElementById('admin-report-year');
   const reportView = document.getElementById('admin-report-view');
   const includeInv = document.getElementById('admin-include-investment');
@@ -698,20 +704,10 @@ function getNetWorthCategories(){
   return db.settings.networthCategories;
 }
 function updateCustomSheetNav(){
-  const link = document.getElementById('custom-sheet-nav');
-  const label = document.getElementById('custom-sheet-label');
-  const url = (db.settings?.customLinkUrl || '').trim();
-  const text = (db.settings?.customLinkLabel || 'Google Sheets').trim() || 'Google Sheets';
-  if(label) label.textContent = text;
-  if(link){
-    if(url){
-      link.href = url;
-      link.style.display = 'flex';
-    } else {
-      link.href = '#';
-      link.style.display = 'none';
-    }
-  }
+  const wrap = document.getElementById('custom-links-nav');
+  if(!wrap) return;
+  const links = (db.settings?.customMenuLinks || []).filter(item => item && item.url);
+  wrap.innerHTML = links.map(item => `<a class="nav-item" href="${item.url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span class="icon">🔗</span><span>${item.label || 'Link'}</span></a>`).join('');
 }
 function populateNetWorthCategorySelect(){
   const sel = document.getElementById('nw-cat');
@@ -908,14 +904,29 @@ function submitCreditCardPayment(){
   });
   saveDb(); closeModal('modal-creditcard-payment'); renderAll();
 }
-function saveCustomLinkSettings(){
-  db.settings.customLinkLabel = ((document.getElementById('admin-link-label')||{}).value || 'Google Sheets').trim() || 'Google Sheets';
-  db.settings.customLinkUrl = ((document.getElementById('admin-link-url')||{}).value || '').trim();
+function addCustomLinkSettings(){
+  ensureAdminDefaults();
+  const label = ((document.getElementById('admin-link-label')||{}).value || '').trim();
+  const url = ((document.getElementById('admin-link-url')||{}).value || '').trim();
+  if(!label || !url) return alert('Please add both a label and a URL.');
+  db.settings.customMenuLinks.unshift({ id: uid(), label, url });
   saveDb(); updateCustomSheetNav(); renderSettings();
 }
-function clearCustomLinkSettings(){
-  db.settings.customLinkLabel = 'Google Sheets';
-  db.settings.customLinkUrl = '';
+function editCustomLinkSettings(id){
+  ensureAdminDefaults();
+  const item = (db.settings.customMenuLinks || []).find(link => link.id === id);
+  if(!item) return;
+  const nextLabel = prompt('Edit link label:', item.label);
+  if(nextLabel === null) return;
+  const nextUrl = prompt('Edit link URL:', item.url);
+  if(nextUrl === null) return;
+  item.label = (nextLabel || '').trim() || item.label;
+  item.url = (nextUrl || '').trim() || item.url;
+  saveDb(); updateCustomSheetNav(); renderSettings();
+}
+function removeCustomLinkSettings(id){
+  ensureAdminDefaults();
+  db.settings.customMenuLinks = (db.settings.customMenuLinks || []).filter(link => link.id !== id);
   saveDb(); updateCustomSheetNav(); renderSettings();
 }
 function renderSettings(){ renderAdmin(); }
