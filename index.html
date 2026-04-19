@@ -882,27 +882,30 @@ function mapSettingsToSupabaseRows(settings){
   return Object.keys(APP_SETTING_IDS).map(key => ({
     id: APP_SETTING_IDS[key],
     setting_key: key,
-    value_json: settings[key] ?? null
+    value: settings[key] ?? null
   }));
 }
 function mapSupabaseSettingsRows(rows){
   const out = {};
   (rows || []).forEach(row => {
     const key = row.setting_key || row.id;
-    if(key) out[key] = row.value_json;
+    if(key) out[key] = row.value ?? row.value_json ?? null;
   });
   return out;
 }
 
 async function supabaseSelect(table){
   if(!supabaseClient) return [];
-  const { data, error } = await supabaseClient.from(table).select('*').order('created_at', { ascending:false });
+  let query = supabaseClient.from(table).select('*');
+  if(table !== 'app_settings') query = query.order('created_at', { ascending:false });
+  const { data, error } = await query;
   if(error) throw error;
   return data || [];
 }
 async function upsertRows(table, rows){
   if(!supabaseClient || !rows.length) return;
-  const { error } = await supabaseClient.from(table).upsert(rows, { onConflict:'id' });
+  const upsertOptions = table === 'app_settings' ? { onConflict:'setting_key' } : { onConflict:'id' };
+  const { error } = await supabaseClient.from(table).upsert(rows, upsertOptions);
   if(error) throw error;
 }
 async function deleteMissingRows(table, localIds){
