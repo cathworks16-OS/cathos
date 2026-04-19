@@ -205,7 +205,7 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     <div class="nav-item" onclick="navigate('creditcards')"><span class="icon">💳</span> Credit Cards</div>
     <div class="nav-item" onclick="navigate('investments')"><span class="icon">🌙</span> Investments</div>
     <div class="nav-item" onclick="navigate('sugarcane')"><span class="icon">🌾</span> Sugarcane</div>
-    <div class="nav-item" onclick="navigate('settings')"><span class="icon">⚙️</span> Settings</div>
+    <div class="nav-item" onclick="navigate('admin')"><span class="icon">⚙️</span> Admin Panel</div>
     <a class="nav-item" id="custom-sheet-nav" href="#" target="_blank" rel="noopener noreferrer" style="display:none;text-decoration:none;"><span class="icon">🔗</span><span id="custom-sheet-label">Google Sheets</span></a>
   </div>
 </nav>
@@ -346,29 +346,10 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
       </select>
     </div>
 
-    <div class="grid grid-2 mb-14">
-      <div class="card">
-        <div class="section-title">⚙️ Transaction Settings</div>
-        <div class="form-row" style="grid-template-columns:1fr 1fr auto;">
-          <div class="form-group">
-            <label>Main Category</label>
-            <input id="txn-settings-main" placeholder="e.g. Bills">
-          </div>
-          <div class="form-group">
-            <label>Sub Category</label>
-            <input id="txn-settings-sub" placeholder="e.g. Electricity">
-          </div>
-          <div class="form-group">
-            <label>&nbsp;</label>
-            <button class="btn btn-primary" onclick="addTransactionCategorySetting()">Add</button>
-          </div>
-        </div>
-        <div class="card-sub">Adjust your transaction categories and sub categories here. These dropdowns feed the transaction form directly.</div>
-      </div>
-      <div class="card">
-        <div class="section-title">📚 Current Category Map</div>
-        <div id="txn-settings-map"></div>
-      </div>
+    <div class="card mb-14">
+      <div class="section-title">⚙️ Category Controls Moved</div>
+      <div class="card-sub">Transaction categories and the category map now live inside the Admin Panel so this page stays focused on the actual logs.</div>
+      <div class="mt-16"><button class="btn btn-ghost" onclick="navigate('admin')">Open Admin Panel</button></div>
     </div>
 
     <div class="table-wrap">
@@ -441,7 +422,75 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
   </div>
 
   
-  <div class="page" id="page-sugarcane">
+    <div class="page" id="page-admin">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Admin Panel</div>
+        <div class="page-sub">Central settings for each core section of CathOS Lite.</div>
+      </div>
+    </div>
+    <div class="grid grid-2 mb-14">
+      <div class="card">
+        <div class="section-title">🔗 Menu Link</div>
+        <div class="form-row" style="grid-template-columns:1fr 1fr auto;">
+          <div class="form-group"><label>Link Label</label><input id="admin-link-label" placeholder="Google Sheets"></div>
+          <div class="form-group"><label>Link URL</label><input id="admin-link-url" placeholder="https://docs.google.com/..." /></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="saveCustomLinkSettings()">Save Link</button></div>
+        </div>
+        <div class="card-sub">Add a custom Google Sheets or Drive shortcut directly in the sidebar.</div>
+      </div>
+      <div class="card">
+        <div class="section-title">📊 Report Settings</div>
+        <div class="form-row" style="grid-template-columns:1fr 1fr;">
+          <div class="form-group"><label>Default Report Year</label><input id="admin-report-year" type="number" placeholder="2026"></div>
+          <div class="form-group"><label>Income vs Expense View</label><select id="admin-report-view"><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+        </div>
+        <div class="inline-split mt-16" style="align-items:center;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="admin-include-investment"> Include investment rows in reports</label>
+          <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="admin-include-transfer"> Include transfer rows in reports</label>
+          <button class="btn btn-primary" onclick="saveReportSettings()">Save Report Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2 mb-14">
+      <div class="card">
+        <div class="section-title">💸 Income & Expense Categories</div>
+        <div class="form-row" style="grid-template-columns:1fr 1fr auto;">
+          <div class="form-group"><label>Main Category</label><input id="admin-category-main" placeholder="e.g. Bills"></div>
+          <div class="form-group"><label>Sub Category</label><input id="admin-category-sub" placeholder="e.g. Electricity"></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addTransactionCategorySetting()">Add</button></div>
+        </div>
+        <div class="card-sub">This replaces the old transaction settings box. These dropdowns feed the transaction form directly.</div>
+      </div>
+      <div class="card">
+        <div class="section-title">📚 Category Map</div>
+        <div id="txn-settings-map"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2 mb-14">
+      <div class="card">
+        <div class="section-title">📈 Investment Types</div>
+        <div class="form-row" style="grid-template-columns:1fr auto;">
+          <div class="form-group"><label>New Investment Type</label><input id="admin-investment-type" placeholder="e.g. Gold"></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addAdminListItem('investmentTypes','admin-investment-type')">Add</button></div>
+        </div>
+        <div id="admin-investment-types-list"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">🔄 Transfer Labels</div>
+        <div class="form-row" style="grid-template-columns:1fr auto;">
+          <div class="form-group"><label>New Transfer Label</label><input id="admin-transfer-type" placeholder="e.g. Own Account Transfer"></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addTransferLabel()">Add</button></div>
+        </div>
+        <div class="card-sub">These are tied to the <strong>Transfers</strong> category in the transaction map.</div>
+        <div id="admin-transfer-types-list" class="mt-16"></div>
+      </div>
+    </div>
+  </div>
+
+<div class="page" id="page-sugarcane">
     <div class="page-header">
       <div><div class="page-title">Sugarcane</div><div class="page-sub">Per location yearly dashboard with current area and yearly comparison.</div></div>
       <button class="btn btn-primary" onclick="openModal('modal-sugarcane')">+ Add Location Year</button>
@@ -479,7 +528,7 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
 
 <div class="modal-overlay" id="modal-creditcard"><div class="modal"><div class="modal-header"><div class="modal-title" id="cc-modal-title">Add Credit Card</div><button class="modal-close" onclick="closeModal('modal-creditcard')">×</button></div><input type="hidden" id="cc-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Card Name</label><input id="cc-name"></div><div class="form-group"><label>Limit</label><input type="number" id="cc-limit-input"></div><div class="form-group"><label>Balance</label><input type="number" id="cc-balance-input"></div></div><div class="form-row"><div class="form-group"><label>Due Date</label><input type="date" id="cc-due"></div></div><button class="btn btn-primary" onclick="addCreditCard()">Save Card</button></div></div>
 
-<div class="modal-overlay" id="modal-investment"><div class="modal"><div class="modal-header"><div class="modal-title" id="inv-modal-title">Add Investment</div><button class="modal-close" onclick="closeModal('modal-investment')">×</button></div><input type="hidden" id="inv-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Investment Name</label><input id="inv-name"></div><div class="form-group"><label>Type</label><input id="inv-type"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Amount Invested</label><input type="number" id="inv-invested-input"></div><div class="form-group"><label>Current Value</label><input type="number" id="inv-current-input"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="inv-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addInvestment()">Save Investment</button></div></div>
+<div class="modal-overlay" id="modal-investment"><div class="modal"><div class="modal-header"><div class="modal-title" id="inv-modal-title">Add Investment</div><button class="modal-close" onclick="closeModal('modal-investment')">×</button></div><input type="hidden" id="inv-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Investment Name</label><input id="inv-name"></div><div class="form-group"><label>Type</label><select id="inv-type"></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Amount Invested</label><input type="number" id="inv-invested-input"></div><div class="form-group"><label>Current Value</label><input type="number" id="inv-current-input"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="inv-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addInvestment()">Save Investment</button></div></div>
 
 <div class="modal-overlay" id="modal-networth"><div class="modal"><div class="modal-header"><div class="modal-title" id="nw-modal-title">Add Net Worth Item</div><button class="modal-close" onclick="closeModal('modal-networth')">×</button></div><input type="hidden" id="nw-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Type</label><select id="nw-type"><option value="Asset">Asset</option><option value="Liability">Liability</option></select></div><div class="form-group"><label>Category</label><select id="nw-cat"></select></div><div class="form-group"><label>Mode</label><select id="nw-asset-mode" onchange="toggleArendoFields()"><option value="standard">Standard</option><option value="arendo">Arendo</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Name</label><input id="nw-name"></div><div class="form-group"><label>Initial Value</label><input type="number" id="nw-val"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Appraised Value (optional)</label><input type="number" id="nw-appraised"></div><div class="form-group"><label>Appreciation Rate % (optional)</label><input type="number" id="nw-appreciation-rate"></div></div><div id="nw-arendo-fields" style="display:none;"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Start Year</label><input type="number" id="nw-start-year"></div><div class="form-group"><label>Years</label><input type="number" id="nw-years"></div><div class="form-group"><label>Yearly Decrease</label><input type="number" id="nw-yearly-decrease"></div></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Monthly Payment (liabilities)</label><input type="number" id="nw-monthly-payment"></div><div class="form-group"><label>Depreciation Start</label><input type="date" id="nw-depreciation-start"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="nw-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="saveNetWorthItem()">Save Net Worth Item</button></div></div>
 
@@ -518,7 +567,12 @@ let db = {
     transactionCategoryMap: JSON.parse(JSON.stringify(defaultTransactionCategoryMap)),
     networthCategories: ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'],
     customLinkLabel: 'Google Sheets',
-    customLinkUrl: ''
+    customLinkUrl: '',
+    reportDefaultYear: new Date().getFullYear(),
+    reportView: 'monthly',
+    reportIncludeInvestment: false,
+    reportIncludeTransfer: false,
+    investmentTypes: ['Commodity','Crypto','Stock','Business','Farm','Other']
   }
 };
 
@@ -533,11 +587,108 @@ function loadDb(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ try {
   db = Object.assign(db, parsed || {});
   db.settings = db.settings || {};
   db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
+  db.settings.networthCategories = db.settings.networthCategories || ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'];
+  db.settings.customLinkLabel = db.settings.customLinkLabel || 'Google Sheets';
+  db.settings.customLinkUrl = db.settings.customLinkUrl || '';
+  db.settings.reportDefaultYear = db.settings.reportDefaultYear || new Date().getFullYear();
+  db.settings.reportView = db.settings.reportView || 'monthly';
+  db.settings.reportIncludeInvestment = !!db.settings.reportIncludeInvestment;
+  db.settings.reportIncludeTransfer = !!db.settings.reportIncludeTransfer;
+  db.settings.investmentTypes = Array.isArray(db.settings.investmentTypes) && db.settings.investmentTypes.length ? db.settings.investmentTypes : ['Commodity','Crypto','Stock','Business','Farm','Other'];
 } catch(e){} } }
 function getTransactionCategoryMap(){
   db.settings = db.settings || {};
   db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
   return db.settings.transactionCategoryMap;
+}
+function ensureAdminDefaults(){
+  db.settings = db.settings || {};
+  db.settings.reportDefaultYear = db.settings.reportDefaultYear || new Date().getFullYear();
+  db.settings.reportView = db.settings.reportView || 'monthly';
+  db.settings.reportIncludeInvestment = !!db.settings.reportIncludeInvestment;
+  db.settings.reportIncludeTransfer = !!db.settings.reportIncludeTransfer;
+  db.settings.investmentTypes = Array.isArray(db.settings.investmentTypes) && db.settings.investmentTypes.length ? db.settings.investmentTypes : ['Commodity','Crypto','Stock','Business','Farm','Other'];
+}
+function renderAdminList(containerId, items, kind){
+  const el = document.getElementById(containerId); if(!el) return;
+  el.innerHTML = (items||[]).length ? items.map(item => `<div class="account-row"><div class="account-info"><div class="account-name">${item}</div></div><div class="inline-split"><button class="btn btn-ghost btn-sm" onclick="renameAdminListItem('${kind}','${String(item).replace(/'/g, "&#39;")}')">Rename</button><button class="btn btn-danger btn-sm" onclick="removeAdminListItem('${kind}','${String(item).replace(/'/g, "&#39;")}')">Delete</button></div></div>`).join('') : `<div class="empty">No items added yet.</div>`;
+}
+function addAdminListItem(settingKey, inputId){
+  ensureAdminDefaults();
+  const input = document.getElementById(inputId); if(!input) return;
+  const value = (input.value||'').trim();
+  if(!value) return;
+  db.settings[settingKey] = db.settings[settingKey] || [];
+  if(!db.settings[settingKey].includes(value)) db.settings[settingKey].push(value);
+  input.value='';
+  saveDb(); renderAll();
+}
+function renameAdminListItem(settingKey, oldValue){
+  ensureAdminDefaults();
+  const next = prompt('Rename item:', oldValue); if(next===null) return;
+  const value = next.trim(); if(!value) return;
+  db.settings[settingKey] = (db.settings[settingKey]||[]).map(v => v===oldValue ? value : v);
+  if(settingKey==='investmentTypes') (db.investments||[]).forEach(i => { if(i.type===oldValue) i.type=value; });
+  saveDb(); renderAll();
+}
+function removeAdminListItem(settingKey, value){
+  ensureAdminDefaults();
+  db.settings[settingKey] = (db.settings[settingKey]||[]).filter(v => v!==value);
+  saveDb(); renderAll();
+}
+function addTransferLabel(){
+  const input = document.getElementById('admin-transfer-type'); if(!input) return;
+  const value = (input.value||'').trim(); if(!value) return;
+  const map = getTransactionCategoryMap();
+  map['Transfers'] = map['Transfers'] || [];
+  if(!map['Transfers'].includes(value)) map['Transfers'].push(value);
+  db.settings.transactionCategoryMap = map;
+  input.value='';
+  saveDb(); renderAll();
+}
+function removeTransferLabel(value){
+  const map = getTransactionCategoryMap();
+  map['Transfers'] = (map['Transfers'] || []).filter(v => v!==value);
+  db.settings.transactionCategoryMap = map;
+  (db.transactions||[]).forEach(t => { if(t.category==='Transfers' && t.subcategory===value) t.subcategory='General'; });
+  saveDb(); renderAll();
+}
+function renameTransferLabel(oldValue){
+  const next = prompt('Rename transfer label:', oldValue); if(next===null) return;
+  const value = next.trim(); if(!value) return;
+  const map = getTransactionCategoryMap();
+  map['Transfers'] = (map['Transfers'] || []).map(v => v===oldValue ? value : v);
+  db.settings.transactionCategoryMap = map;
+  (db.transactions||[]).forEach(t => { if(t.category==='Transfers' && t.subcategory===oldValue) t.subcategory=value; });
+  saveDb(); renderAll();
+}
+function saveReportSettings(){
+  ensureAdminDefaults();
+  db.settings.reportDefaultYear = Number(document.getElementById('admin-report-year').value || new Date().getFullYear());
+  db.settings.reportView = document.getElementById('admin-report-view').value || 'monthly';
+  db.settings.reportIncludeInvestment = document.getElementById('admin-include-investment').checked;
+  db.settings.reportIncludeTransfer = document.getElementById('admin-include-transfer').checked;
+  saveDb(); renderAll();
+}
+function renderAdmin(){
+  ensureAdminDefaults();
+  const linkLabel = document.getElementById('admin-link-label');
+  const linkUrl = document.getElementById('admin-link-url');
+  if(linkLabel) linkLabel.value = db.settings.customLinkLabel || 'Google Sheets';
+  if(linkUrl) linkUrl.value = db.settings.customLinkUrl || '';
+  const reportYear = document.getElementById('admin-report-year');
+  const reportView = document.getElementById('admin-report-view');
+  const includeInv = document.getElementById('admin-include-investment');
+  const includeTransfer = document.getElementById('admin-include-transfer');
+  if(reportYear) reportYear.value = db.settings.reportDefaultYear || new Date().getFullYear();
+  if(reportView) reportView.value = db.settings.reportView || 'monthly';
+  if(includeInv) includeInv.checked = !!db.settings.reportIncludeInvestment;
+  if(includeTransfer) includeTransfer.checked = !!db.settings.reportIncludeTransfer;
+  renderTransactionSettings();
+  renderAdminList('admin-investment-types-list', db.settings.investmentTypes || [], 'investmentTypes');
+  const transfers = (getTransactionCategoryMap()['Transfers'] || []);
+  const transferEl = document.getElementById('admin-transfer-types-list');
+  if(transferEl) transferEl.innerHTML = transfers.length ? transfers.map(item => `<div class="account-row"><div class="account-info"><div class="account-name">${item}</div></div><div class="inline-split"><button class="btn btn-ghost btn-sm" onclick="renameTransferLabel('${String(item).replace(/'/g, "&#39;")}')">Rename</button><button class="btn btn-danger btn-sm" onclick="removeTransferLabel('${String(item).replace(/'/g, "&#39;")}')">Delete</button></div></div>`).join('') : `<div class="empty">No transfer labels added yet.</div>`;
 }
 function getNetWorthCategories(){
   db.settings = db.settings || {};
@@ -666,11 +817,12 @@ function removeNetWorthCategorySetting(name){
   if(!db.settings.networthCategories.length) db.settings.networthCategories = ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'];
   saveDb(); populateNetWorthCategorySelect(); renderNetWorth();
 }
+function populateInvestmentTypeSelect(selected=''){ ensureAdminDefaults(); const el=document.getElementById('inv-type'); if(!el) return; el.innerHTML=(db.settings.investmentTypes||[]).map(v=>`<option value="${v}">${v}</option>`).join('') + `<option value="Other">Other</option>`; if(selected) el.value=selected; }
 function openInvestmentModal(item){
   document.getElementById('inv-modal-title').textContent = item ? 'Edit Investment' : 'Add Investment';
   document.getElementById('inv-edit-id').value = item?.id || '';
   document.getElementById('inv-name').value = item?.name || '';
-  document.getElementById('inv-type').value = item?.type || '';
+  populateInvestmentTypeSelect(item?.type || '');
   document.getElementById('inv-invested-input').value = item?.amount_invested ?? '';
   document.getElementById('inv-current-input').value = item?.current_value ?? '';
   document.getElementById('inv-notes').value = item?.notes || '';
@@ -757,8 +909,8 @@ function submitCreditCardPayment(){
   saveDb(); closeModal('modal-creditcard-payment'); renderAll();
 }
 function saveCustomLinkSettings(){
-  db.settings.customLinkLabel = (document.getElementById('settings-link-label').value || 'Google Sheets').trim() || 'Google Sheets';
-  db.settings.customLinkUrl = (document.getElementById('settings-link-url').value || '').trim();
+  db.settings.customLinkLabel = ((document.getElementById('admin-link-label')||{}).value || 'Google Sheets').trim() || 'Google Sheets';
+  db.settings.customLinkUrl = ((document.getElementById('admin-link-url')||{}).value || '').trim();
   saveDb(); updateCustomSheetNav(); renderSettings();
 }
 function clearCustomLinkSettings(){
@@ -766,13 +918,7 @@ function clearCustomLinkSettings(){
   db.settings.customLinkUrl = '';
   saveDb(); updateCustomSheetNav(); renderSettings();
 }
-function renderSettings(){
-  const labelInput = document.getElementById('settings-link-label');
-  const urlInput = document.getElementById('settings-link-url');
-  if(labelInput) labelInput.value = db.settings?.customLinkLabel || 'Google Sheets';
-  if(urlInput) urlInput.value = db.settings?.customLinkUrl || '';
-  updateCustomSheetNav();
-}
+function renderSettings(){ renderAdmin(); }
 function getTransactionAccountOptions(){
   return [...new Set([...(db.accounts||[]).map(a=>a.name).filter(Boolean), ...(db.creditcards||[]).map(c=>c.name).filter(Boolean)])];
 }
@@ -811,15 +957,15 @@ function populateTransactionSubcategorySelect(selected=''){
   select.value = options.includes(selected) ? selected : (options[0] || 'General');
 }
 function addTransactionCategorySetting(){
-  const main = (document.getElementById('txn-settings-main').value || '').trim();
-  const sub = (document.getElementById('txn-settings-sub').value || '').trim();
+  const main = ((document.getElementById('admin-category-main')||{}).value || '').trim();
+  const sub = ((document.getElementById('admin-category-sub')||{}).value || '').trim();
   if(!main || !sub) return alert('Enter both a main category and a sub category.');
   const map = getTransactionCategoryMap();
   map[main] = map[main] || [];
   if(!map[main].includes(sub)) map[main].push(sub);
   db.settings.transactionCategoryMap = map;
-  document.getElementById('txn-settings-main').value = '';
-  document.getElementById('txn-settings-sub').value = '';
+  (document.getElementById('admin-category-main')||{}).value = '';
+  (document.getElementById('admin-category-sub')||{}).value = '';
   saveDb();
   populateTransactionCategorySelect(main);
   populateTransactionSubcategorySelect(sub);
@@ -1297,10 +1443,10 @@ function renderSugarcane(){
   document.getElementById('sugarcane-body').innerHTML = detailRows.length ? detailRows.map(r => `<tr><td>${r.year}</td><td>${r.location || '—'}</td><td class="text-right accent">${Number(r.hectares||0).toFixed(2)}</td><td class="text-right">${Number(r.total_tons||0).toFixed(2)}</td><td class="text-right positive">${fmt(r.total_income)}</td><td class="text-right negative">${fmt(r.total_expenses)}</td><td class="text-right">${fmt(r.total_investment)}</td><td class="text-right ${r.profit >= 0 ? 'positive' : 'negative'}">${fmt(r.profit)}</td><td class="text-right">${pct(r.roi)}</td><td class="text-right">${fmt(r.costPerTon)}</td><td class="text-right">${fmt(r.profitPerTon)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('sugarcane','${r.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="12"><div class="empty">No sugarcane rows yet.</div></td></tr>`;
 }
 function render(page){
-  const fns = { dashboard:renderDashboard, networth:renderNetWorth, reports:renderReports, transactions:renderTransactions, lend:renderLending, accounts:renderAccounts, creditcards:renderCreditCards, investments:renderInvestments, settings:renderSettings, sugarcane:renderSugarcane };
+  const fns = { dashboard:renderDashboard, networth:renderNetWorth, reports:renderReports, transactions:renderTransactions, lend:renderLending, accounts:renderAccounts, creditcards:renderCreditCards, investments:renderInvestments, admin:renderAdmin, settings:renderAdmin, sugarcane:renderSugarcane };
   if(fns[page]) fns[page]();
 }
-function renderAll(){ buildReportFilters(); refreshTransactionAccountOptions(); refreshSugarcaneLocationOptions(); populateCreditCardSelects(); populatePaymentAccountSelect(); updateCustomSheetNav(); renderDashboard(); renderNetWorth(); renderReports(); renderTransactions(); renderLending(); renderAccounts(); renderCreditCards(); renderInvestments(); renderSettings(); renderSugarcane(); }
+function renderAll(){ buildReportFilters(); refreshTransactionAccountOptions(); refreshSugarcaneLocationOptions(); populateCreditCardSelects(); populatePaymentAccountSelect(); updateCustomSheetNav(); renderDashboard(); renderNetWorth(); renderReports(); renderTransactions(); renderLending(); renderAccounts(); renderCreditCards(); renderInvestments(); renderAdmin(); renderSugarcane(); }
 function seedDemoData(){
   db.accounts = [
     { id:uid(), name:'BDO Personal', type:'personal', balance:125000, notes:'Daily cash' },
