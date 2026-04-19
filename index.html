@@ -6,6 +6,7 @@
 <title>CathOS Lite — Simplified</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #F7F3EF;
@@ -214,10 +215,12 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
   <div class="sync-banner">
     <div>
       <div class="sync-banner-title">CathOS Lite</div>
-      <div class="sync-banner-sub">Same CathOS aesthetic. Simpler pages. Local save built in. Supabase can be reconnected later without the old complexity.</div>
+      <div class="sync-banner-sub">Same CathOS aesthetic, simplified structure, and reconnected to your existing CathOS Supabase tables where the schema already matches.</div>
     </div>
     <div class="top-actions">
-      <span class="sync-pill"><span class="sync-dot"></span><span id="save-status">Saved locally</span></span>
+      <span class="sync-pill"><span class="sync-dot" id="sync-dot"></span><span id="save-status">Connecting to database...</span></span>
+      <button class="btn btn-ghost" onclick="refreshFromSupabase()">Refresh DB</button>
+      <button class="btn btn-primary" onclick="saveToSupabase()">Sync Now</button>
       <button class="btn btn-ghost" onclick="seedDemoData()">Load Demo</button>
       <button class="btn btn-ghost" onclick="resetAllData()">Reset</button>
     </div>
@@ -313,9 +316,9 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     </div>
     <div class="grid grid-4 mb-14">
       <div class="card"><div class="card-label">Income</div><div class="card-value green" id="rep-income">₱0.00</div></div>
-      <div class="card"><div class="card-label">Expenses</div><div class="card-value red" id="rep-expenses">₱0.00</div></div>
+      <div class="card"><div class="card-label">Expense</div><div class="card-value red" id="rep-expenses">₱0.00</div></div>
+      <div class="card"><div class="card-label">Investment</div><div class="card-value" id="rep-investment">₱0.00</div></div>
       <div class="card"><div class="card-label">Net</div><div class="card-value accent" id="rep-net">₱0.00</div></div>
-      <div class="card"><div class="card-label">Transactions</div><div class="card-value" id="rep-count">0</div></div>
     </div>
     <div class="grid grid-2">
       <div class="chart-card"><div class="section-title">📊 Income vs Expense</div><canvas id="chart-reports-cashflow"></canvas></div>
@@ -323,7 +326,7 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     </div>
     <div class="table-wrap mt-16">
       <table>
-        <thead><tr><th>Month</th><th class="text-right">Income</th><th class="text-right">Expenses</th><th class="text-right">Net</th></tr></thead>
+        <thead><tr><th>Month</th><th class="text-right">Income</th><th class="text-right">Expense</th><th class="text-right">Investment</th><th class="text-right">Net</th></tr></thead>
         <tbody id="reports-table-body"></tbody>
       </table>
     </div>
@@ -540,8 +543,15 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
 <div class="modal-overlay" id="modal-sugarcane"><div class="modal"><div class="modal-header"><div class="modal-title">Add Sugarcane Location Year</div><button class="modal-close" onclick="closeModal('modal-sugarcane')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Year</label><input type="number" id="sc-year"></div><div class="form-group"><label>Location</label><input id="sc-location" list="sc-location-list" placeholder="e.g. Calatrava Lot 1"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Hectares</label><input type="number" id="sc-hectares"></div><div class="form-group"><label>Total Tons</label><input type="number" id="sc-tons"></div><div class="form-group"><label>Total Investment</label><input type="number" id="sc-investment"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Total Income</label><input type="number" id="sc-income"></div><div class="form-group"><label>Total Expenses</label><input type="number" id="sc-expenses"></div></div><datalist id="sc-location-list"></datalist><button class="btn btn-primary" onclick="addSugarcane()">Save Location Year</button></div></div>
 
 <script>
-const STORAGE_KEY = 'cathos-lite-v4';
+const STORAGE_KEY = 'cathos-lite-v7';
+const SUPABASE_URL = 'https://nthwfmeydjhowwdflkkw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_K5gkizj9MS152kpyzdXrSQ_23zuV76b';
+const supabaseClient = window.supabase && window.supabase.createClient
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 let charts = {};
+let syncSaveTimer = null;
+let syncInFlight = false;
 const defaultTransactionCategoryMap = {
   'Income': ['Salary', 'Affiliate', 'Interest', 'Refund', 'Farm Income', 'Home Share', 'Other Income'],
   'Bills': ['Electricity', 'Water', 'Internet', 'WiFi', 'Starlink', 'Insurance', 'Helper', 'Groceries', 'General'],
@@ -576,26 +586,326 @@ let db = {
   }
 };
 
-function uid(){ return Math.random().toString(36).slice(2,10); }
+function uid(){ return (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : Math.random().toString(36).slice(2,10); }
 function today(){ return new Date().toISOString().slice(0,10); }
 function currentMonth(){ return new Date().toISOString().slice(0,7); }
 function fmt(n){ return '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function pct(n){ return Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
-function saveDb(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); document.getElementById('save-status').textContent = 'Saved locally'; }
-function loadDb(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ try {
-  const parsed = JSON.parse(raw);
-  db = Object.assign(db, parsed || {});
+function ensureSettingsShape(){
   db.settings = db.settings || {};
   db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
-  db.settings.networthCategories = db.settings.networthCategories || ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'];
-  db.settings.customMenuLinks = Array.isArray(db.settings.customMenuLinks) ? db.settings.customMenuLinks : [];
+  db.settings.networthCategories = Array.isArray(db.settings.networthCategories) && db.settings.networthCategories.length ? db.settings.networthCategories : ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'];
   db.settings.customMenuLinks = Array.isArray(db.settings.customMenuLinks) ? db.settings.customMenuLinks : [];
   db.settings.reportDefaultYear = db.settings.reportDefaultYear || new Date().getFullYear();
   db.settings.reportView = db.settings.reportView || 'monthly';
   db.settings.reportIncludeInvestment = !!db.settings.reportIncludeInvestment;
   db.settings.reportIncludeTransfer = !!db.settings.reportIncludeTransfer;
   db.settings.investmentTypes = Array.isArray(db.settings.investmentTypes) && db.settings.investmentTypes.length ? db.settings.investmentTypes : ['Commodity','Crypto','Stock','Business','Farm','Other'];
-} catch(e){} } }
+  db.creditcardBills = Array.isArray(db.creditcardBills) ? db.creditcardBills : [];
+  db.sugarcane = Array.isArray(db.sugarcane) ? db.sugarcane : [];
+}
+function localSnapshot(){ return { creditcardBills: db.creditcardBills || [], sugarcane: db.sugarcane || [], settings: db.settings || {} }; }
+function saveLocalSnapshot(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(localSnapshot())); }
+function loadLocalSnapshot(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return;
+  try {
+    const parsed = JSON.parse(raw) || {};
+    db.creditcardBills = Array.isArray(parsed.creditcardBills) ? parsed.creditcardBills : [];
+    db.sugarcane = Array.isArray(parsed.sugarcane) ? parsed.sugarcane : [];
+    db.settings = Object.assign({}, db.settings || {}, parsed.settings || {});
+  } catch (e) { console.warn('Local snapshot parse failed', e); }
+}
+function setSyncStatus(mode, label){
+  const el = document.getElementById('save-status');
+  const dot = document.getElementById('sync-dot');
+  if(el) el.textContent = label;
+  if(dot){
+    dot.className = 'sync-dot';
+    if(mode === 'ok') dot.classList.add('ok');
+    else if(mode === 'warn') dot.classList.add('warn');
+    else if(mode === 'err') dot.classList.add('err');
+  }
+}
+function queueSupabaseSave(){
+  if(!supabaseClient) return;
+  clearTimeout(syncSaveTimer);
+  syncSaveTimer = setTimeout(() => saveToSupabase({ silent:true }), 900);
+}
+function saveDb(){
+  ensureSettingsShape();
+  saveLocalSnapshot();
+  setSyncStatus('warn', 'Saved locally • Sync pending');
+  queueSupabaseSave();
+}
+function normalizeTxnType(type=''){
+  const clean = String(type || '').toLowerCase().replace(/\s+/g,'_');
+  const map = { income:'income', expense:'expense', transfer:'transfer', investment:'investment', debt_payment:'debt_payment', debtpayment:'debt_payment' };
+  return map[clean] || 'expense';
+}
+function parseDayFromDate(value=''){
+  const d = String(value || '').slice(8,10);
+  return d ? Number(d) : null;
+}
+function buildDueDateFromDay(day){
+  const num = Number(day || 0);
+  if(!num) return '';
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2,'0');
+  return `${year}-${month}-${String(Math.min(Math.max(num,1),28)).padStart(2,'0')}`;
+}
+function mapTransactionToSupabaseRow(item){
+  return {
+    id: item.id || uid(),
+    txn_date: item.date || null,
+    description: item.description || '',
+    type: normalizeTxnType(item.type),
+    entry_type: normalizeTxnType(item.type),
+    amount: Number(item.amount || 0),
+    acct: item.account || '',
+    category_group: '',
+    category: item.category || '',
+    subcategory: item.subcategory || '',
+    cat: item.category || '',
+    subcat: item.subcategory || '',
+    allocation_bucket: 'none',
+    notes: item.notes || ''
+  };
+}
+function mapSupabaseTransactionRow(row){
+  return {
+    id: row.id || uid(),
+    date: row.txn_date || row.date || today(),
+    type: normalizeTxnType(row.entry_type || row.type),
+    description: row.description || row.desc || '',
+    amount: Number(row.amount || 0),
+    account: row.acct || row.account_name || row.account || '',
+    category: row.category || row.cat || 'Other',
+    subcategory: row.subcategory || row.subcat || 'General',
+    notes: row.notes || ''
+  };
+}
+function mapAccountToSupabaseRow(item){
+  return {
+    id: item.id || uid(),
+    name: item.name || '',
+    bank: item.bank || item.name || '',
+    group_name: item.type || 'personal',
+    purpose: item.notes || '',
+    currency: 'PHP',
+    balance: Number(item.balance || 0)
+  };
+}
+function mapSupabaseAccountRow(row){
+  return {
+    id: row.id || uid(),
+    name: row.name || '',
+    type: row.group_name || row.group || 'personal',
+    balance: Number(row.balance || 0),
+    notes: row.purpose || ''
+  };
+}
+function mapCreditCardToSupabaseRow(item){
+  return {
+    id: item.id || uid(),
+    name: item.name || '',
+    issuer: item.issuer || '',
+    last4: item.last4 || '',
+    credit_limit: Number(item.limit || 0),
+    balance: Number(item.balance || 0),
+    due_day: parseDayFromDate(item.due_date),
+    statement_day: null,
+    min_due: 0,
+    reward_rate: 0,
+    notes: item.notes || ''
+  };
+}
+function mapSupabaseCreditCardRow(row){
+  return {
+    id: row.id || uid(),
+    name: row.name || '',
+    limit: Number(row.credit_limit ?? row.limit ?? 0),
+    balance: Number(row.balance || 0),
+    due_date: buildDueDateFromDay(row.due_day),
+    notes: row.notes || ''
+  };
+}
+function mapLendingToSupabaseRow(item){
+  return {
+    id: item.id || uid(),
+    borrower_name: item.borrower || item.name || '',
+    date_lent: item.date_lent || item.date || null,
+    amount_lent: Number(item.amount_lent ?? item.amount ?? 0),
+    amount_repaid: Number(item.amount_repaid ?? item.repaid ?? 0),
+    due_date: item.due_date || item.due || null,
+    status: item.status || (((Number(item.amount_lent ?? item.amount ?? 0) - Number(item.amount_repaid ?? item.repaid ?? 0)) <= 0) ? 'Paid' : 'Pending'),
+    notes: item.notes || ''
+  };
+}
+function mapSupabaseLendingRow(row){
+  return {
+    id: row.id || uid(),
+    borrower: row.borrower_name || row.name || '',
+    status: row.status || 'Pending',
+    date_lent: row.date_lent || row.date || today(),
+    due_date: row.due_date || row.due || '',
+    amount_lent: Number(row.amount_lent ?? row.amount ?? 0),
+    amount_repaid: Number(row.amount_repaid ?? row.repaid ?? 0),
+    notes: row.notes || ''
+  };
+}
+function mapInvestmentToSupabaseRow(item){
+  return {
+    id: item.id || uid(),
+    name: item.name || '',
+    type: item.type || '',
+    amount_invested: Number(item.amount_invested ?? item.invested ?? 0),
+    current_value: Number(item.current_value ?? item.current ?? 0),
+    notes: item.notes || ''
+  };
+}
+function mapSupabaseInvestmentRow(row){
+  return {
+    id: row.id || uid(),
+    name: row.name || '',
+    type: row.type || '',
+    amount_invested: Number(row.amount_invested ?? row.invested ?? 0),
+    current_value: Number(row.current_value ?? row.current ?? 0),
+    notes: row.notes || ''
+  };
+}
+function mapNetWorthToSupabaseRow(item){
+  return {
+    id: item.id || uid(),
+    item_type: item.type || 'Asset',
+    category: item.cat || '',
+    name: item.name || '',
+    initial_value: Number(item.initialVal ?? item.val ?? 0),
+    asset_mode: item.assetMode || 'standard',
+    start_year: item.startYear ? Number(item.startYear) : null,
+    years: item.years ? Number(item.years) : null,
+    yearly_decrease: Number(item.yearlyDecrease || 0),
+    monthly_payment: Number(item.monthlyPayment || 0),
+    depreciation_start: item.depreciationStart || null,
+    appreciation_rate: Number(item.appreciationRate || 0),
+    appraised_value: Number(item.appraisedValue ?? item.appraised_value ?? 0),
+    appraised_date: item.appraisedDate || item.appraised_date || null,
+    valuation_method: item.valuationMethod || item.valuation_method || '',
+    notes: item.notes || ''
+  };
+}
+function mapSupabaseNetWorthRow(row){
+  return {
+    id: row.id || uid(),
+    type: row.item_type || row.type || 'Asset',
+    cat: row.category || row.cat || '',
+    name: row.name || '',
+    initialVal: Number(row.initial_value ?? row.initialVal ?? row.val ?? 0),
+    val: Number(row.initial_value ?? row.initialVal ?? row.val ?? 0),
+    assetMode: row.asset_mode || row.assetMode || 'standard',
+    startYear: row.start_year || '',
+    years: row.years || '',
+    yearlyDecrease: Number(row.yearly_decrease ?? row.yearlyDecrease ?? 0),
+    monthlyPayment: Number(row.monthly_payment ?? row.monthlyPayment ?? 0),
+    depreciationStart: row.depreciation_start || '',
+    appreciationRate: Number(row.appreciation_rate ?? row.appreciationRate ?? 0),
+    appraisedValue: Number(row.appraised_value ?? row.appraisedValue ?? 0),
+    appraised_value: Number(row.appraised_value ?? row.appraisedValue ?? 0),
+    appraisedDate: row.appraised_date || '',
+    valuationMethod: row.valuation_method || '',
+    notes: row.notes || ''
+  };
+}
+async function supabaseSelect(table){
+  if(!supabaseClient) return [];
+  const { data, error } = await supabaseClient.from(table).select('*').order('created_at', { ascending:false });
+  if(error) throw error;
+  return data || [];
+}
+async function upsertRows(table, rows){
+  if(!supabaseClient || !rows.length) return;
+  const { error } = await supabaseClient.from(table).upsert(rows, { onConflict:'id' });
+  if(error) throw error;
+}
+async function deleteMissingRows(table, localIds){
+  if(!supabaseClient) return;
+  const { data, error } = await supabaseClient.from(table).select('id');
+  if(error) throw error;
+  const remoteIds = (data || []).map(row => String(row.id || '')).filter(Boolean);
+  const keepIds = new Set((localIds || []).map(id => String(id || '')).filter(Boolean));
+  const idsToDelete = remoteIds.filter(id => !keepIds.has(id));
+  if(!idsToDelete.length) return;
+  const { error: deleteError } = await supabaseClient.from(table).delete().in('id', idsToDelete);
+  if(deleteError) throw deleteError;
+}
+async function syncTableToSupabase(table, rows){
+  const safeRows = Array.isArray(rows) ? rows : [];
+  await upsertRows(table, safeRows);
+  await deleteMissingRows(table, safeRows.map(row => row.id));
+}
+async function hydrateDbFromSupabase(){
+  if(!supabaseClient) throw new Error('Supabase client missing');
+  const [transactionsRows, accountsRows, creditCardRows, lendingRows, investmentRows, netWorthRows] = await Promise.all([
+    supabaseSelect('transactions'),
+    supabaseSelect('accounts'),
+    supabaseSelect('credit_cards'),
+    supabaseSelect('lending'),
+    supabaseSelect('investments'),
+    supabaseSelect('net_worth')
+  ]);
+  db.transactions = transactionsRows.map(mapSupabaseTransactionRow);
+  db.accounts = accountsRows.map(mapSupabaseAccountRow);
+  db.creditcards = creditCardRows.map(mapSupabaseCreditCardRow);
+  db.lending = lendingRows.map(mapSupabaseLendingRow);
+  db.investments = investmentRows.map(mapSupabaseInvestmentRow);
+  db.networth = netWorthRows.map(mapSupabaseNetWorthRow);
+  ensureSettingsShape();
+  saveLocalSnapshot();
+  setSyncStatus('ok', 'Connected to existing database');
+}
+async function saveToSupabase(options = {}){
+  if(!supabaseClient){
+    setSyncStatus('err', 'Supabase unavailable');
+    if(!options.silent) alert('Supabase is not available in this file.');
+    return;
+  }
+  if(syncInFlight) return;
+  syncInFlight = true;
+  try {
+    setSyncStatus('warn', 'Syncing to database...');
+    await Promise.all([
+      syncTableToSupabase('transactions', (db.transactions || []).map(mapTransactionToSupabaseRow)),
+      syncTableToSupabase('accounts', (db.accounts || []).map(mapAccountToSupabaseRow)),
+      syncTableToSupabase('credit_cards', (db.creditcards || []).map(mapCreditCardToSupabaseRow)),
+      syncTableToSupabase('lending', (db.lending || []).map(mapLendingToSupabaseRow)),
+      syncTableToSupabase('investments', (db.investments || []).map(mapInvestmentToSupabaseRow)),
+      syncTableToSupabase('net_worth', (db.networth || []).map(mapNetWorthToSupabaseRow))
+    ]);
+    saveLocalSnapshot();
+    setSyncStatus('ok', 'Synced to existing database');
+    if(!options.silent) alert('CathOS Lite synced to your existing database.\n\nNote: custom links, admin settings, credit card bills, and simplified sugarcane rows are still stored locally in this version.');
+  } catch(error){
+    console.error('Supabase save failed:', error);
+    setSyncStatus('err', 'Database sync failed');
+    if(!options.silent) alert('Failed to sync to the existing database.\n\n' + (error.message || error));
+  } finally {
+    syncInFlight = false;
+  }
+}
+async function refreshFromSupabase(options = {}){
+  try {
+    setSyncStatus('warn', 'Refreshing from database...');
+    await hydrateDbFromSupabase();
+    renderAll();
+    if(!options.silent) alert('CathOS Lite refreshed from your existing database.');
+  } catch(error){
+    console.error('Supabase refresh failed:', error);
+    setSyncStatus('err', 'Refresh failed • local fallback active');
+    if(!options.silent) alert('Could not refresh from the existing database. Using local fallback for the sections that are not in the database.\n\n' + (error.message || error));
+  }
+}
+function loadDb(){ loadLocalSnapshot(); ensureSettingsShape(); }
 function getTransactionCategoryMap(){
   db.settings = db.settings || {};
   db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
@@ -1319,32 +1629,60 @@ function renderNetWorth(){
   }).join('') : `<tr><td colspan="7"><div class="empty">No custom net worth items yet.</div></td></tr>`;
 }
 function renderReports(){
-  const year = Number(document.getElementById('reports-year-filter').value || new Date().getFullYear());
-  const month = document.getElementById('reports-month-filter').value || '';
-  const filtered = (db.transactions || []).filter(t => {
-    const d = new Date(t.date);
-    return d.getFullYear() === year && (!month || String(d.getMonth()+1).padStart(2,'0') === month);
+  buildReportFilters();
+  const year = Number(document.getElementById('reports-year-filter')?.value || db.settings.reportDefaultYear || new Date().getFullYear());
+  const month = document.getElementById('reports-month-filter')?.value || 'all';
+  const txns = (db.transactions || []).filter(t => {
+    const date = new Date((t.date || today()) + 'T00:00:00');
+    if (date.getFullYear() !== year) return false;
+    if (month !== 'all' && String(date.getMonth() + 1).padStart(2,'0') !== month) return false;
+    if (!db.settings.reportIncludeInvestment && normalizeTxnType(t.type) === 'investment') return false;
+    if (!db.settings.reportIncludeTransfer && normalizeTxnType(t.type) === 'transfer') return false;
+    return true;
   });
-  const income = filtered.filter(t => t.type === 'income').reduce((s,t)=>s+Number(t.amount||0),0);
-  const expenses = filtered.filter(t => ['expense','debt_payment'].includes(t.type)).reduce((s,t)=>s+Number(t.amount||0),0);
+  const income = txns.filter(t => normalizeTxnType(t.type) === 'income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  const expenses = txns.filter(t => ['expense','debt_payment'].includes(normalizeTxnType(t.type))).reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  const investment = txns.filter(t => normalizeTxnType(t.type) === 'investment').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  const net = income - expenses - investment;
   document.getElementById('rep-income').textContent = fmt(income);
   document.getElementById('rep-expenses').textContent = fmt(expenses);
-  document.getElementById('rep-net').textContent = fmt(income - expenses);
-  document.getElementById('rep-count').textContent = filtered.length;
+  document.getElementById('rep-investment').textContent = fmt(investment);
+  document.getElementById('rep-net').textContent = fmt(net);
 
-  const monthRows = Array.from({length:12}, (_,i) => {
-    const mm = String(i+1).padStart(2,'0');
-    const rows = (db.transactions || []).filter(t => {
-      const d = new Date(t.date); return d.getFullYear()===year && String(d.getMonth()+1).padStart(2,'0')===mm;
-    });
-    const inc = rows.filter(t => t.type==='income').reduce((s,t)=>s+Number(t.amount||0),0);
-    const exp = rows.filter(t => ['expense','debt_payment'].includes(t.type)).reduce((s,t)=>s+Number(t.amount||0),0);
-    return { month:mm, label:new Date(year, i, 1).toLocaleString('en-US',{month:'short'}), income:inc, expenses:exp, net:inc-exp };
+  const monthlyMap = {};
+  for (let m = 1; m <= 12; m++) {
+    const key = String(m).padStart(2,'0');
+    monthlyMap[key] = { income:0, expenses:0, investment:0 };
+  }
+  txns.forEach(t => {
+    const dt = new Date((t.date || today()) + 'T00:00:00');
+    const key = String(dt.getMonth() + 1).padStart(2,'0');
+    const type = normalizeTxnType(t.type);
+    if (type === 'income') monthlyMap[key].income += Number(t.amount || 0);
+    else if (type === 'investment') monthlyMap[key].investment += Number(t.amount || 0);
+    else if (type === 'expense' || type === 'debt_payment') monthlyMap[key].expenses += Number(t.amount || 0);
   });
-  renderChart('chart-reports-cashflow', { type:'bar', data:{ labels:monthRows.map(r=>r.label), datasets:[{ label:'Income', data:monthRows.map(r=>r.income) }, { label:'Expenses', data:monthRows.map(r=>r.expenses) }]}, options:{ responsive:true }});
-  const categories = getCategoryBreakdown(year, month);
-  renderChart('chart-category', { type:'doughnut', data:{ labels:Object.keys(categories), datasets:[{ data:Object.values(categories) }]}, options:{ responsive:true }});
-  document.getElementById('reports-table-body').innerHTML = monthRows.map(r => `<tr><td>${r.label}</td><td class="text-right positive">${fmt(r.income)}</td><td class="text-right negative">${fmt(r.expenses)}</td><td class="text-right ${r.net >= 0 ? 'positive' : 'negative'}">${fmt(r.net)}</td></tr>`).join('');
+  const labels = Object.keys(monthlyMap);
+  renderChart('chart-reports-cashflow', { type:'bar', data:{ labels, datasets:[
+    { label:'Income', data: labels.map(k => monthlyMap[k].income) },
+    { label:'Expense', data: labels.map(k => monthlyMap[k].expenses) },
+    { label:'Investment', data: labels.map(k => monthlyMap[k].investment) }
+  ] }, options:{ responsive:true } });
+
+  const categoryTotals = {};
+  txns.filter(t => ['expense','debt_payment'].includes(normalizeTxnType(t.type))).forEach(t => {
+    const key = t.category || 'Other';
+    categoryTotals[key] = (categoryTotals[key] || 0) + Number(t.amount || 0);
+  });
+  const catLabels = Object.keys(categoryTotals);
+  renderChart('chart-category', { type:'doughnut', data:{ labels:catLabels, datasets:[{ data:catLabels.map(k => categoryTotals[k]) }] }, options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } } });
+
+  const tbody = document.getElementById('reports-table-body');
+  tbody.innerHTML = labels.map(k => {
+    const row = monthlyMap[k];
+    const rowNet = row.income - row.expenses - row.investment;
+    return `<tr><td>${year}-${k}</td><td class="text-right positive">${fmt(row.income)}</td><td class="text-right negative">${fmt(row.expenses)}</td><td class="text-right">${fmt(row.investment)}</td><td class="text-right ${rowNet >= 0 ? 'positive' : 'negative'}">${fmt(rowNet)}</td></tr>`;
+  }).join('');
 }
 function renderTransactions(){
   refreshTransactionAccountOptions();
@@ -1497,11 +1835,12 @@ function seedDemoData(){
   saveDb();
   renderAll();
 }
-function resetAllData(){ if(!confirm('Reset all CathOS Lite data?')) return; localStorage.removeItem(STORAGE_KEY); db = { transactions:[], lending:[], accounts:[], creditcards:[], creditcardBills:[], investments:[], networth:[], sugarcane:[], settings:{} }; setDefaults(); renderAll(); }
+function resetAllData(){ if(!confirm('Reset all CathOS Lite data?')) return; localStorage.removeItem(STORAGE_KEY); db = { transactions:[], lending:[], accounts:[], creditcards:[], creditcardBills:[], investments:[], networth:[], sugarcane:[], settings:{} }; ensureSettingsShape(); setDefaults(); renderAll(); setSyncStatus('warn', 'Reset locally • Sync pending'); queueSupabaseSave(); }
 
 loadDb();
 setDefaults();
 renderAll();
+refreshFromSupabase({ silent:true });
 </script>
 </body>
 </html>
