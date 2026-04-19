@@ -205,6 +205,8 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     <div class="nav-item" onclick="navigate('creditcards')"><span class="icon">💳</span> Credit Cards</div>
     <div class="nav-item" onclick="navigate('investments')"><span class="icon">🌙</span> Investments</div>
     <div class="nav-item" onclick="navigate('sugarcane')"><span class="icon">🌾</span> Sugarcane</div>
+    <div class="nav-item" onclick="navigate('settings')"><span class="icon">⚙️</span> Settings</div>
+    <a class="nav-item" id="custom-sheet-nav" href="#" target="_blank" rel="noopener noreferrer" style="display:none;text-decoration:none;"><span class="icon">🔗</span><span id="custom-sheet-label">Google Sheets</span></a>
   </div>
 </nav>
 
@@ -266,18 +268,33 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
     <div class="page-header">
       <div>
         <div class="page-title">Net Worth</div>
-        <div class="page-sub">Simple asset and liability view.</div>
+        <div class="page-sub">Richer original CathOS-style logic with appraisal values, arendo mode, and liability paydown.</div>
       </div>
+      <button class="btn btn-primary" onclick="openNetworthModal()">+ Add Net Worth Item</button>
     </div>
     <div class="grid grid-4 mb-14">
       <div class="card"><div class="card-label">Total Assets</div><div class="card-value green" id="nw-assets">₱0.00</div></div>
       <div class="card"><div class="card-label">Total Liabilities</div><div class="card-value red" id="nw-liabilities">₱0.00</div></div>
       <div class="card"><div class="card-label">Net Worth</div><div class="card-value accent" id="nw-net">₱0.00</div></div>
-      <div class="card"><div class="card-label">Investment ROI</div><div class="card-value" id="nw-investment-roi">0.0%</div></div>
+      <div class="card"><div class="card-label">Property & Other Assets</div><div class="card-value" id="nw-custom-assets">₱0.00</div></div>
+    </div>
+    <div class="grid grid-2 mb-14">
+      <div class="card">
+        <div class="section-title">🏡 Net Worth Items</div>
+        <div class="card-sub" style="font-size:12px;line-height:1.7;">Add custom assets like land, house, vehicles, equipment, or liabilities. Appraisal overrides initial value. Arendo mode decreases yearly.</div>
+      </div>
+      <div class="card">
+        <div class="section-title">⚙️ Net Worth Categories</div>
+        <div class="form-row" style="grid-template-columns:1fr auto;">
+          <div class="form-group"><label>New Category</label><input id="nw-settings-category" placeholder="e.g. Property"></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addNetWorthCategorySetting()">Add</button></div>
+        </div>
+        <div id="nw-settings-categories"></div>
+      </div>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Bucket</th><th>Description</th><th class="text-right">Amount</th></tr></thead>
+        <thead><tr><th>Type</th><th>Category</th><th>Name</th><th>Mode</th><th class="text-right">Current Value</th><th>Notes</th><th></th></tr></thead>
         <tbody id="networth-body"></tbody>
       </table>
     </div>
@@ -391,21 +408,28 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
 
   <div class="page" id="page-creditcards">
     <div class="page-header">
-      <div><div class="page-title">Credit Cards</div><div class="page-sub">Keep balances and utilization visible.</div></div>
-      <button class="btn btn-primary" onclick="openModal('modal-creditcard')">+ Add Credit Card</button>
+      <div><div class="page-title">Credit Cards</div><div class="page-sub">Add bills, pay them, clear the monthly due, and keep transaction records.</div></div>
+      <div class="inline-split">
+        <button class="btn btn-ghost" onclick="openCreditCardBillModal()">+ Add Bill</button>
+        <button class="btn btn-primary" onclick="openCreditCardModal()">+ Add Credit Card</button>
+      </div>
     </div>
-    <div class="grid grid-3 mb-14">
+    <div class="grid grid-4 mb-14">
       <div class="card"><div class="card-label">Total Limit</div><div class="card-value" id="cc-limit">₱0.00</div></div>
       <div class="card"><div class="card-label">Total Balance</div><div class="card-value red" id="cc-balance">₱0.00</div></div>
+      <div class="card"><div class="card-label">Open Bills</div><div class="card-value accent" id="cc-open-bills">₱0.00</div></div>
       <div class="card"><div class="card-label">Utilization</div><div class="card-value accent" id="cc-util">0%</div></div>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>Card</th><th>Due Date</th><th class="text-right">Limit</th><th class="text-right">Balance</th><th class="text-right">Utilization</th><th></th></tr></thead><tbody id="creditcards-body"></tbody></table></div>
+    <div class="grid grid-2 mb-14">
+      <div class="table-wrap"><table><thead><tr><th>Card</th><th>Due Date</th><th class="text-right">Limit</th><th class="text-right">Balance</th><th class="text-right">Utilization</th><th></th></tr></thead><tbody id="creditcards-body"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Bill Month</th><th>Card</th><th class="text-right">Amount</th><th class="text-right">Paid</th><th>Status</th><th></th></tr></thead><tbody id="creditcard-bills-body"></tbody></table></div>
+    </div>
   </div>
 
   <div class="page" id="page-investments">
     <div class="page-header">
-      <div><div class="page-title">Investments</div><div class="page-sub">Just the numbers that matter.</div></div>
-      <button class="btn btn-primary" onclick="openModal('modal-investment')">+ Add Investment</button>
+      <div><div class="page-title">Investments</div><div class="page-sub">Editable like the original CathOS investment entries.</div></div>
+      <button class="btn btn-primary" onclick="openInvestmentModal()">+ Add Investment</button>
     </div>
     <div class="grid grid-4 mb-14">
       <div class="card"><div class="card-label">Amount Invested</div><div class="card-value" id="inv-invested">₱0.00</div></div>
@@ -413,7 +437,7 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
       <div class="card"><div class="card-label">Gain / Loss</div><div class="card-value accent" id="inv-gain">₱0.00</div></div>
       <div class="card"><div class="card-label">ROI</div><div class="card-value" id="inv-roi">0.0%</div></div>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th class="text-right">Invested</th><th class="text-right">Current Value</th><th class="text-right">Gain / Loss</th><th></th></tr></thead><tbody id="investments-body"></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th class="text-right">Invested</th><th class="text-right">Current Value</th><th class="text-right">Gain / Loss</th><th>Notes</th><th></th></tr></thead><tbody id="investments-body"></tbody></table></div>
   </div>
 
   
@@ -451,16 +475,22 @@ tbody tr:hover td { background: rgba(239,231,225,0.5); }
 
 <div class="modal-overlay" id="modal-lending"><div class="modal"><div class="modal-header"><div class="modal-title">Add Lending Entry</div><button class="modal-close" onclick="closeModal('modal-lending')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Borrower</label><input id="lend-borrower"></div><div class="form-group"><label>Status</label><select id="lend-status"><option>Pending</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr;"><div class="form-group"><label>Date Lent</label><input type="date" id="lend-date"></div><div class="form-group"><label>Due Date</label><input type="date" id="lend-due"></div><div class="form-group"><label>Amount Lent</label><input type="number" id="lend-amount"></div><div class="form-group"><label>Amount Repaid</label><input type="number" id="lend-repaid-input"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="lend-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addLending()">Save Lending</button></div></div>
 
-<div class="modal-overlay" id="modal-account"><div class="modal"><div class="modal-header"><div class="modal-title">Add Account</div><button class="modal-close" onclick="closeModal('modal-account')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Account Name</label><input id="acc-name"></div><div class="form-group"><label>Type</label><select id="acc-type"><option value="personal">Personal</option><option value="business">Business</option><option value="reserve">Reserve</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Balance</label><input type="number" id="acc-balance"></div><div class="form-group"><label>Notes</label><input id="acc-notes"></div></div><button class="btn btn-primary" onclick="addAccount()">Save Account</button></div></div>
+<div class="modal-overlay" id="modal-account"><div class="modal"><div class="modal-header"><div class="modal-title" id="acc-modal-title">Add Account</div><button class="modal-close" onclick="closeModal('modal-account')">×</button></div><input type="hidden" id="acc-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Account Name</label><input id="acc-name"></div><div class="form-group"><label>Type</label><select id="acc-type"><option value="personal">Personal</option><option value="business">Business</option><option value="reserve">Reserve</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Balance</label><input type="number" id="acc-balance"></div><div class="form-group"><label>Notes</label><input id="acc-notes"></div></div><button class="btn btn-primary" onclick="addAccount()">Save Account</button></div></div>
 
-<div class="modal-overlay" id="modal-creditcard"><div class="modal"><div class="modal-header"><div class="modal-title">Add Credit Card</div><button class="modal-close" onclick="closeModal('modal-creditcard')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Card Name</label><input id="cc-name"></div><div class="form-group"><label>Limit</label><input type="number" id="cc-limit-input"></div><div class="form-group"><label>Balance</label><input type="number" id="cc-balance-input"></div></div><div class="form-row"><div class="form-group"><label>Due Date</label><input type="date" id="cc-due"></div></div><button class="btn btn-primary" onclick="addCreditCard()">Save Card</button></div></div>
+<div class="modal-overlay" id="modal-creditcard"><div class="modal"><div class="modal-header"><div class="modal-title" id="cc-modal-title">Add Credit Card</div><button class="modal-close" onclick="closeModal('modal-creditcard')">×</button></div><input type="hidden" id="cc-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Card Name</label><input id="cc-name"></div><div class="form-group"><label>Limit</label><input type="number" id="cc-limit-input"></div><div class="form-group"><label>Balance</label><input type="number" id="cc-balance-input"></div></div><div class="form-row"><div class="form-group"><label>Due Date</label><input type="date" id="cc-due"></div></div><button class="btn btn-primary" onclick="addCreditCard()">Save Card</button></div></div>
 
-<div class="modal-overlay" id="modal-investment"><div class="modal"><div class="modal-header"><div class="modal-title">Add Investment</div><button class="modal-close" onclick="closeModal('modal-investment')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Investment Name</label><input id="inv-name"></div><div class="form-group"><label>Type</label><input id="inv-type"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Amount Invested</label><input type="number" id="inv-invested-input"></div><div class="form-group"><label>Current Value</label><input type="number" id="inv-current-input"></div></div><button class="btn btn-primary" onclick="addInvestment()">Save Investment</button></div></div>
+<div class="modal-overlay" id="modal-investment"><div class="modal"><div class="modal-header"><div class="modal-title" id="inv-modal-title">Add Investment</div><button class="modal-close" onclick="closeModal('modal-investment')">×</button></div><input type="hidden" id="inv-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Investment Name</label><input id="inv-name"></div><div class="form-group"><label>Type</label><input id="inv-type"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Amount Invested</label><input type="number" id="inv-invested-input"></div><div class="form-group"><label>Current Value</label><input type="number" id="inv-current-input"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="inv-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addInvestment()">Save Investment</button></div></div>
+
+<div class="modal-overlay" id="modal-networth"><div class="modal"><div class="modal-header"><div class="modal-title" id="nw-modal-title">Add Net Worth Item</div><button class="modal-close" onclick="closeModal('modal-networth')">×</button></div><input type="hidden" id="nw-edit-id"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Type</label><select id="nw-type"><option value="Asset">Asset</option><option value="Liability">Liability</option></select></div><div class="form-group"><label>Category</label><select id="nw-cat"></select></div><div class="form-group"><label>Mode</label><select id="nw-asset-mode" onchange="toggleArendoFields()"><option value="standard">Standard</option><option value="arendo">Arendo</option></select></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Name</label><input id="nw-name"></div><div class="form-group"><label>Initial Value</label><input type="number" id="nw-val"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Appraised Value (optional)</label><input type="number" id="nw-appraised"></div><div class="form-group"><label>Appreciation Rate % (optional)</label><input type="number" id="nw-appreciation-rate"></div></div><div id="nw-arendo-fields" style="display:none;"><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Start Year</label><input type="number" id="nw-start-year"></div><div class="form-group"><label>Years</label><input type="number" id="nw-years"></div><div class="form-group"><label>Yearly Decrease</label><input type="number" id="nw-yearly-decrease"></div></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Monthly Payment (liabilities)</label><input type="number" id="nw-monthly-payment"></div><div class="form-group"><label>Depreciation Start</label><input type="date" id="nw-depreciation-start"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="nw-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="saveNetWorthItem()">Save Net Worth Item</button></div></div>
+
+<div class="modal-overlay" id="modal-creditcard-bill"><div class="modal"><div class="modal-header"><div class="modal-title">Add Credit Card Bill</div><button class="modal-close" onclick="closeModal('modal-creditcard-bill')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Card</label><select id="cc-bill-card"></select></div><div class="form-group"><label>Bill Month</label><input type="month" id="cc-bill-month"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Amount</label><input type="number" id="cc-bill-amount"></div><div class="form-group"><label>Due Date</label><input type="date" id="cc-bill-due"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="cc-bill-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="addCreditCardBill()">Save Bill</button></div></div>
+
+<div class="modal-overlay" id="modal-creditcard-payment"><div class="modal"><div class="modal-header"><div class="modal-title">Pay Credit Card Bill</div><button class="modal-close" onclick="closeModal('modal-creditcard-payment')">×</button></div><input type="hidden" id="cc-pay-bill-id"><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Card</label><input id="cc-pay-card" readonly></div><div class="form-group"><label>Bill Month</label><input id="cc-pay-month" readonly></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Amount Due</label><input id="cc-pay-due-amount" readonly></div><div class="form-group"><label>Payment Amount</label><input type="number" id="cc-pay-amount"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Pay From Account</label><select id="cc-pay-account"></select></div><div class="form-group"><label>Payment Date</label><input type="date" id="cc-pay-date"></div></div><div class="form-row"><div class="form-group"><label>Notes</label><textarea id="cc-pay-notes" rows="3"></textarea></div></div><button class="btn btn-primary" onclick="submitCreditCardPayment()">Save Payment</button></div></div>
 
 <div class="modal-overlay" id="modal-sugarcane"><div class="modal"><div class="modal-header"><div class="modal-title">Add Sugarcane Location Year</div><button class="modal-close" onclick="closeModal('modal-sugarcane')">×</button></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Year</label><input type="number" id="sc-year"></div><div class="form-group"><label>Location</label><input id="sc-location" list="sc-location-list" placeholder="e.g. Calatrava Lot 1"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr;"><div class="form-group"><label>Hectares</label><input type="number" id="sc-hectares"></div><div class="form-group"><label>Total Tons</label><input type="number" id="sc-tons"></div><div class="form-group"><label>Total Investment</label><input type="number" id="sc-investment"></div></div><div class="form-row" style="grid-template-columns:1fr 1fr;"><div class="form-group"><label>Total Income</label><input type="number" id="sc-income"></div><div class="form-group"><label>Total Expenses</label><input type="number" id="sc-expenses"></div></div><datalist id="sc-location-list"></datalist><button class="btn btn-primary" onclick="addSugarcane()">Save Location Year</button></div></div>
 
 <script>
-const STORAGE_KEY = 'cathos-lite-v1';
+const STORAGE_KEY = 'cathos-lite-v4';
 let charts = {};
 const defaultTransactionCategoryMap = {
   'Income': ['Salary', 'Affiliate', 'Interest', 'Refund', 'Farm Income', 'Home Share', 'Other Income'],
@@ -480,10 +510,15 @@ let db = {
   lending: [],
   accounts: [],
   creditcards: [],
+  creditcardBills: [],
   investments: [],
+  networth: [],
   sugarcane: [],
   settings: {
-    transactionCategoryMap: JSON.parse(JSON.stringify(defaultTransactionCategoryMap))
+    transactionCategoryMap: JSON.parse(JSON.stringify(defaultTransactionCategoryMap)),
+    networthCategories: ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'],
+    customLinkLabel: 'Google Sheets',
+    customLinkUrl: ''
   }
 };
 
@@ -503,6 +538,240 @@ function getTransactionCategoryMap(){
   db.settings = db.settings || {};
   db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
   return db.settings.transactionCategoryMap;
+}
+function getNetWorthCategories(){
+  db.settings = db.settings || {};
+  if(!Array.isArray(db.settings.networthCategories) || !db.settings.networthCategories.length){
+    db.settings.networthCategories = ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'];
+  }
+  return db.settings.networthCategories;
+}
+function updateCustomSheetNav(){
+  const link = document.getElementById('custom-sheet-nav');
+  const label = document.getElementById('custom-sheet-label');
+  const url = (db.settings?.customLinkUrl || '').trim();
+  const text = (db.settings?.customLinkLabel || 'Google Sheets').trim() || 'Google Sheets';
+  if(label) label.textContent = text;
+  if(link){
+    if(url){
+      link.href = url;
+      link.style.display = 'flex';
+    } else {
+      link.href = '#';
+      link.style.display = 'none';
+    }
+  }
+}
+function populateNetWorthCategorySelect(){
+  const sel = document.getElementById('nw-cat');
+  if(!sel) return;
+  const cats = getNetWorthCategories();
+  sel.innerHTML = cats.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+}
+function toggleArendoFields(){
+  const wrap = document.getElementById('nw-arendo-fields');
+  if(wrap) wrap.style.display = (document.getElementById('nw-asset-mode')?.value || 'standard') === 'arendo' ? 'block' : 'none';
+}
+function getNetWorthCurrentValue(item){
+  const currentYear = new Date().getFullYear();
+  const initialVal = Number(item.initialVal ?? item.val ?? item.initial_value ?? 0);
+  const appraisedVal = Number(item.appraisedValue ?? item.appraised_value ?? 0);
+  if((item.type || 'Asset') === 'Asset' && appraisedVal > 0) return appraisedVal;
+  let value = initialVal;
+  if((item.assetMode || 'standard') === 'arendo'){
+    const startYear = Number(item.startYear || currentYear);
+    const years = Math.max(1, Number(item.years || 1));
+    const yearlyDecrease = Number(item.yearlyDecrease || 0);
+    const elapsed = Math.max(0, Math.min(years, currentYear - startYear));
+    value = Math.max(0, initialVal - (elapsed * yearlyDecrease));
+  } else if((item.type || 'Asset') === 'Asset' && Number(item.appreciationRate || 0) > 0){
+    const startYear = Number(item.startYear || currentYear);
+    const elapsed = Math.max(0, currentYear - startYear);
+    value = initialVal * Math.pow(1 + (Number(item.appreciationRate || 0) / 100), elapsed);
+  }
+  if((item.type || 'Asset') === 'Liability' && Number(item.monthlyPayment || 0) > 0){
+    const startDate = item.depreciationStart || (item.startYear ? `${item.startYear}-01-01` : today());
+    const start = new Date(startDate + 'T00:00:00');
+    const now = new Date();
+    const monthsElapsed = isNaN(start) ? 0 : Math.max(0, (now.getFullYear()-start.getFullYear())*12 + (now.getMonth()-start.getMonth()));
+    value = Math.max(0, initialVal - (monthsElapsed * Number(item.monthlyPayment || 0)));
+  }
+  return Math.max(0, value);
+}
+function populateCreditCardSelects(){
+  const options = (db.creditcards || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  const billSel = document.getElementById('cc-bill-card');
+  if(billSel) billSel.innerHTML = options;
+}
+function populatePaymentAccountSelect(){
+  const sel = document.getElementById('cc-pay-account');
+  if(!sel) return;
+  sel.innerHTML = (db.accounts || []).map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+}
+function openNetworthModal(item){
+  populateNetWorthCategorySelect();
+  document.getElementById('nw-modal-title').textContent = item ? 'Edit Net Worth Item' : 'Add Net Worth Item';
+  document.getElementById('nw-edit-id').value = item?.id || '';
+  document.getElementById('nw-type').value = item?.type || 'Asset';
+  document.getElementById('nw-cat').value = item?.cat || getNetWorthCategories()[0] || '';
+  document.getElementById('nw-name').value = item?.name || '';
+  document.getElementById('nw-val').value = item?.initialVal ?? item?.val ?? '';
+  document.getElementById('nw-appraised').value = item?.appraisedValue ?? '';
+  document.getElementById('nw-asset-mode').value = item?.assetMode || 'standard';
+  document.getElementById('nw-start-year').value = item?.startYear || '';
+  document.getElementById('nw-years').value = item?.years || '';
+  document.getElementById('nw-yearly-decrease').value = item?.yearlyDecrease || '';
+  document.getElementById('nw-appreciation-rate').value = item?.appreciationRate || '';
+  document.getElementById('nw-monthly-payment').value = item?.monthlyPayment || '';
+  document.getElementById('nw-depreciation-start').value = item?.depreciationStart || '';
+  document.getElementById('nw-notes').value = item?.notes || '';
+  toggleArendoFields();
+  openModal('modal-networth');
+}
+function saveNetWorthItem(){
+  const editId = document.getElementById('nw-edit-id').value;
+  const payload = {
+    id: editId || uid(),
+    type: document.getElementById('nw-type').value,
+    cat: document.getElementById('nw-cat').value,
+    name: document.getElementById('nw-name').value.trim(),
+    initialVal: Number(document.getElementById('nw-val').value || 0),
+    appraisedValue: Number(document.getElementById('nw-appraised').value || 0),
+    assetMode: document.getElementById('nw-asset-mode').value,
+    startYear: Number(document.getElementById('nw-start-year').value || 0),
+    years: Number(document.getElementById('nw-years').value || 0),
+    yearlyDecrease: Number(document.getElementById('nw-yearly-decrease').value || 0),
+    appreciationRate: Number(document.getElementById('nw-appreciation-rate').value || 0),
+    monthlyPayment: Number(document.getElementById('nw-monthly-payment').value || 0),
+    depreciationStart: document.getElementById('nw-depreciation-start').value || '',
+    notes: document.getElementById('nw-notes').value.trim()
+  };
+  if(!payload.name) return alert('Please add a name.');
+  db.networth = (db.networth || []).filter(x => x.id !== payload.id);
+  db.networth.unshift(payload);
+  saveDb(); closeModal('modal-networth'); renderAll();
+}
+function addNetWorthCategorySetting(){
+  const input = document.getElementById('nw-settings-category');
+  const value = (input?.value || '').trim();
+  if(!value) return;
+  const cats = getNetWorthCategories();
+  if(cats.includes(value)) return alert('That category already exists.');
+  cats.push(value);
+  saveDb(); input.value=''; populateNetWorthCategorySelect(); renderNetWorth();
+}
+function removeNetWorthCategorySetting(name){
+  if(!confirm(`Remove "${name}" from the category list?`)) return;
+  db.settings.networthCategories = getNetWorthCategories().filter(cat => cat !== name);
+  if(!db.settings.networthCategories.length) db.settings.networthCategories = ['Property','Vehicle','Business Asset','Land','Equipment','Other Asset','Loan','Other Liability'];
+  saveDb(); populateNetWorthCategorySelect(); renderNetWorth();
+}
+function openInvestmentModal(item){
+  document.getElementById('inv-modal-title').textContent = item ? 'Edit Investment' : 'Add Investment';
+  document.getElementById('inv-edit-id').value = item?.id || '';
+  document.getElementById('inv-name').value = item?.name || '';
+  document.getElementById('inv-type').value = item?.type || '';
+  document.getElementById('inv-invested-input').value = item?.amount_invested ?? '';
+  document.getElementById('inv-current-input').value = item?.current_value ?? '';
+  document.getElementById('inv-notes').value = item?.notes || '';
+  openModal('modal-investment');
+}
+function openAccountModal(item){
+  document.getElementById('acc-modal-title').textContent = item ? 'Edit Account' : 'Add Account';
+  document.getElementById('acc-edit-id').value = item?.id || '';
+  document.getElementById('acc-name').value = item?.name || '';
+  document.getElementById('acc-type').value = item?.type || 'personal';
+  document.getElementById('acc-balance').value = item?.balance ?? '';
+  document.getElementById('acc-notes').value = item?.notes || '';
+  openModal('modal-account');
+}
+function openCreditCardModal(item){
+  document.getElementById('cc-modal-title').textContent = item ? 'Edit Credit Card' : 'Add Credit Card';
+  document.getElementById('cc-edit-id').value = item?.id || '';
+  document.getElementById('cc-name').value = item?.name || '';
+  document.getElementById('cc-limit-input').value = item?.limit ?? '';
+  document.getElementById('cc-balance-input').value = item?.balance ?? '';
+  document.getElementById('cc-due').value = item?.due_date || '';
+  openModal('modal-creditcard');
+}
+function openCreditCardBillModal(){
+  populateCreditCardSelects();
+  document.getElementById('cc-bill-month').value = currentMonth();
+  document.getElementById('cc-bill-due').value = today();
+  openModal('modal-creditcard-bill');
+}
+function addCreditCardBill(){
+  const cardId = document.getElementById('cc-bill-card').value;
+  const amount = Number(document.getElementById('cc-bill-amount').value || 0);
+  if(!cardId || !amount) return alert('Please choose a card and amount.');
+  const payload = {
+    id: uid(),
+    card_id: cardId,
+    bill_month: document.getElementById('cc-bill-month').value || currentMonth(),
+    due_date: document.getElementById('cc-bill-due').value || '',
+    amount,
+    amount_paid: 0,
+    status: 'Open',
+    notes: document.getElementById('cc-bill-notes').value.trim()
+  };
+  db.creditcardBills.unshift(payload);
+  saveDb(); closeModal('modal-creditcard-bill'); renderCreditCards();
+}
+function openCreditCardPaymentModal(billId){
+  const bill = (db.creditcardBills || []).find(b => b.id === billId);
+  if(!bill) return;
+  const card = (db.creditcards || []).find(c => c.id === bill.card_id);
+  populatePaymentAccountSelect();
+  document.getElementById('cc-pay-bill-id').value = bill.id;
+  document.getElementById('cc-pay-card').value = card?.name || '';
+  document.getElementById('cc-pay-month').value = bill.bill_month || '';
+  const due = Math.max(0, Number(bill.amount || 0) - Number(bill.amount_paid || 0));
+  document.getElementById('cc-pay-due-amount').value = fmt(due);
+  document.getElementById('cc-pay-amount').value = due || '';
+  document.getElementById('cc-pay-date').value = today();
+  document.getElementById('cc-pay-notes').value = bill.notes || '';
+  openModal('modal-creditcard-payment');
+}
+function submitCreditCardPayment(){
+  const billId = document.getElementById('cc-pay-bill-id').value;
+  const bill = (db.creditcardBills || []).find(b => b.id === billId);
+  if(!bill) return;
+  const card = (db.creditcards || []).find(c => c.id === bill.card_id);
+  const amount = Number(document.getElementById('cc-pay-amount').value || 0);
+  if(amount <= 0) return alert('Please enter a payment amount.');
+  bill.amount_paid = Number(bill.amount_paid || 0) + amount;
+  bill.status = bill.amount_paid >= Number(bill.amount || 0) ? 'Paid' : 'Partially Paid';
+  bill.paid_date = document.getElementById('cc-pay-date').value || today();
+  if(card) card.balance = Math.max(0, Number(card.balance || 0) - amount);
+  db.transactions.unshift({
+    id: uid(),
+    date: bill.paid_date,
+    type: 'debt_payment',
+    description: `${card?.name || 'Credit Card'} payment`,
+    amount,
+    account: document.getElementById('cc-pay-account').value || '',
+    category: 'Debt',
+    subcategory: 'Credit Card Payment',
+    notes: document.getElementById('cc-pay-notes').value.trim() || `Bill ${bill.bill_month}`
+  });
+  saveDb(); closeModal('modal-creditcard-payment'); renderAll();
+}
+function saveCustomLinkSettings(){
+  db.settings.customLinkLabel = (document.getElementById('settings-link-label').value || 'Google Sheets').trim() || 'Google Sheets';
+  db.settings.customLinkUrl = (document.getElementById('settings-link-url').value || '').trim();
+  saveDb(); updateCustomSheetNav(); renderSettings();
+}
+function clearCustomLinkSettings(){
+  db.settings.customLinkLabel = 'Google Sheets';
+  db.settings.customLinkUrl = '';
+  saveDb(); updateCustomSheetNav(); renderSettings();
+}
+function renderSettings(){
+  const labelInput = document.getElementById('settings-link-label');
+  const urlInput = document.getElementById('settings-link-url');
+  if(labelInput) labelInput.value = db.settings?.customLinkLabel || 'Google Sheets';
+  if(urlInput) urlInput.value = db.settings?.customLinkUrl || '';
+  updateCustomSheetNav();
 }
 function getTransactionAccountOptions(){
   return [...new Set([...(db.accounts||[]).map(a=>a.name).filter(Boolean), ...(db.creditcards||[]).map(c=>c.name).filter(Boolean)])];
@@ -665,12 +934,19 @@ function setDefaults(){
   document.getElementById('lend-date').value = today();
   document.getElementById('txn-month-filter').value = currentMonth();
   document.getElementById('sc-year').value = new Date().getFullYear();
+  const monthEl = document.getElementById('cc-bill-month'); if(monthEl) monthEl.value = currentMonth();
+  const payDateEl = document.getElementById('cc-pay-date'); if(payDateEl) payDateEl.value = today();
   buildReportFilters();
   populateTransactionCategorySelect();
   populateTransactionSubcategorySelect();
+  populateNetWorthCategorySelect();
   refreshTransactionAccountOptions();
   refreshSugarcaneLocationOptions();
+  populateCreditCardSelects();
+  populatePaymentAccountSelect();
   renderTransactionSettings();
+  renderSettings();
+  updateCustomSheetNav();
 }
 function buildReportFilters(){
   const years = new Set();
@@ -691,7 +967,7 @@ function navigate(page){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => { if((n.getAttribute('onclick') || '').includes(`'${page}'`)) n.classList.add('active'); });
+  document.querySelectorAll('.nav-item[onclick]').forEach(n => { if((n.getAttribute('onclick') || '').includes(`'${page}'`)) n.classList.add('active'); });
   render(page);
 }
 function removeItem(type, id){ db[type] = (db[type] || []).filter(x => x.id !== id); saveDb(); renderAll(); }
@@ -725,18 +1001,24 @@ function addLending(){
   db.lending.unshift(row); saveDb(); closeModal('modal-lending'); renderAll();
 }
 function addAccount(){
-  const row = { id: uid(), name: document.getElementById('acc-name').value.trim(), type: document.getElementById('acc-type').value, balance: Number(document.getElementById('acc-balance').value || 0), notes: document.getElementById('acc-notes').value.trim() };
+  const editId = document.getElementById('acc-edit-id').value;
+  const row = { id: editId || uid(), name: document.getElementById('acc-name').value.trim(), type: document.getElementById('acc-type').value, balance: Number(document.getElementById('acc-balance').value || 0), notes: document.getElementById('acc-notes').value.trim() };
   if(!row.name) return;
+  db.accounts = (db.accounts || []).filter(x => x.id !== row.id);
   db.accounts.unshift(row); saveDb(); closeModal('modal-account'); renderAll();
 }
 function addCreditCard(){
-  const row = { id: uid(), name: document.getElementById('cc-name').value.trim(), limit: Number(document.getElementById('cc-limit-input').value || 0), balance: Number(document.getElementById('cc-balance-input').value || 0), due_date: document.getElementById('cc-due').value || '' };
+  const editId = document.getElementById('cc-edit-id').value;
+  const row = { id: editId || uid(), name: document.getElementById('cc-name').value.trim(), limit: Number(document.getElementById('cc-limit-input').value || 0), balance: Number(document.getElementById('cc-balance-input').value || 0), due_date: document.getElementById('cc-due').value || '' };
   if(!row.name) return;
+  db.creditcards = (db.creditcards || []).filter(x => x.id !== row.id);
   db.creditcards.unshift(row); saveDb(); closeModal('modal-creditcard'); renderAll();
 }
 function addInvestment(){
-  const row = { id: uid(), name: document.getElementById('inv-name').value.trim(), type: document.getElementById('inv-type').value.trim(), amount_invested: Number(document.getElementById('inv-invested-input').value || 0), current_value: Number(document.getElementById('inv-current-input').value || 0) };
+  const editId = document.getElementById('inv-edit-id').value;
+  const row = { id: editId || uid(), name: document.getElementById('inv-name').value.trim(), type: document.getElementById('inv-type').value.trim(), amount_invested: Number(document.getElementById('inv-invested-input').value || 0), current_value: Number(document.getElementById('inv-current-input').value || 0), notes: document.getElementById('inv-notes').value.trim() };
   if(!row.name) return;
+  db.investments = (db.investments || []).filter(x => x.id !== row.id);
   db.investments.unshift(row); saveDb(); closeModal('modal-investment'); renderAll();
 }
 function addSugarcane(){
@@ -761,8 +1043,10 @@ function computeNetWorth(){
   const cash = sum(db.accounts, 'balance');
   const investments = sum(db.investments, 'current_value');
   const lending = (db.lending || []).reduce((s,r)=> s + Math.max(0, Number(r.amount_lent||0) - Number(r.amount_repaid||0)), 0);
+  const customAssets = (db.networth || []).filter(x => (x.type || 'Asset') === 'Asset').reduce((s,x)=> s + getNetWorthCurrentValue(x), 0);
+  const customLiabilities = (db.networth || []).filter(x => (x.type || 'Asset') === 'Liability').reduce((s,x)=> s + getNetWorthCurrentValue(x), 0);
   const credit = sum(db.creditcards, 'balance');
-  return { cash, investments, lending, credit, assets: cash + investments + lending, liabilities: credit, net: cash + investments + lending - credit };
+  return { cash, investments, lending, credit, customAssets, customLiabilities, assets: cash + investments + lending + customAssets, liabilities: credit + customLiabilities, net: cash + investments + lending + customAssets - credit - customLiabilities };
 }
 function sum(arr, key){ return (arr || []).reduce((s,x)=> s + Number(x[key] || 0), 0); }
 function monthFlow(month){
@@ -864,20 +1148,18 @@ function renderDashboard(){
 }
 function renderNetWorth(){
   const nw = computeNetWorth();
-  const invested = sum(db.investments, 'amount_invested');
-  const current = sum(db.investments, 'current_value');
-  const roi = invested ? ((current - invested) / invested) * 100 : 0;
   document.getElementById('nw-assets').textContent = fmt(nw.assets);
   document.getElementById('nw-liabilities').textContent = fmt(nw.liabilities);
   document.getElementById('nw-net').textContent = fmt(nw.net);
-  document.getElementById('nw-investment-roi').textContent = pct(roi);
-  const rows = [
-    ['Asset', 'Bank accounts', nw.cash],
-    ['Asset', 'Investments', nw.investments],
-    ['Asset', 'Lending outstanding', nw.lending],
-    ['Liability', 'Credit card balances', nw.credit * -1]
-  ];
-  document.getElementById('networth-body').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="text-right ${r[2] >= 0 ? 'positive' : 'negative'}">${fmt(Math.abs(r[2]))}</td></tr>`).join('');
+  document.getElementById('nw-custom-assets').textContent = fmt(nw.customAssets);
+  const catsWrap = document.getElementById('nw-settings-categories');
+  if(catsWrap){
+    catsWrap.innerHTML = getNetWorthCategories().map(cat => `<div class="account-row"><div class="account-info"><div class="account-name">${cat}</div></div><button class="btn btn-danger btn-sm" onclick='removeNetWorthCategorySetting(${JSON.stringify(cat)})'>Remove</button></div>`).join('');
+  }
+  document.getElementById('networth-body').innerHTML = (db.networth || []).length ? (db.networth || []).map(item => {
+    const val = getNetWorthCurrentValue(item);
+    return `<tr><td><span class="badge ${item.type === 'Liability' ? 'badge-red' : 'badge-green'}">${item.type || 'Asset'}</span></td><td>${item.cat || '—'}</td><td>${item.name || '—'}</td><td>${item.assetMode || 'standard'}</td><td class="text-right ${item.type === 'Liability' ? 'negative' : 'positive'}">${fmt(val)}</td><td>${item.notes || '—'}</td><td><div class="inline-split"><button class="btn btn-ghost btn-sm" onclick="openNetworthModal((db.networth||[]).find(x=>x.id==='${item.id}'))">Edit</button><button class="btn btn-danger btn-sm" onclick="removeItem('networth','${item.id}')">Delete</button></div></td></tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty">No custom net worth items yet.</div></td></tr>`;
 }
 function renderReports(){
   const year = Number(document.getElementById('reports-year-filter').value || new Date().getFullYear());
@@ -942,18 +1224,26 @@ function renderAccounts(){
   document.getElementById('acc-business-total').textContent = fmt(sum(business, 'balance'));
   document.getElementById('acc-reserve-total').textContent = fmt(sum(reserve, 'balance'));
   document.getElementById('acc-total').textContent = fmt(sum(db.accounts, 'balance'));
-  document.getElementById('accounts-body').innerHTML = (db.accounts || []).length ? db.accounts.map(a => `<tr><td>${a.name}</td><td><span class="badge badge-blue">${a.type}</span></td><td>${a.notes || '—'}</td><td class="text-right accent">${fmt(a.balance)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('accounts','${a.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="5"><div class="empty">No accounts added yet.</div></td></tr>`;
+  document.getElementById('accounts-body').innerHTML = (db.accounts || []).length ? db.accounts.map(a => `<tr><td>${a.name}</td><td><span class="badge badge-blue">${a.type}</span></td><td>${a.notes || '—'}</td><td class="text-right accent">${fmt(a.balance)}</td><td><div class="inline-split"><button class="btn btn-ghost btn-sm" onclick="openAccountModal((db.accounts||[]).find(x=>x.id==='${a.id}'))">Edit</button><button class="btn btn-danger btn-sm" onclick="removeItem('accounts','${a.id}')">Delete</button></div></td></tr>`).join('') : `<tr><td colspan="5"><div class="empty">No accounts added yet.</div></td></tr>`;
 }
 function renderCreditCards(){
   const totalLimit = sum(db.creditcards, 'limit');
   const totalBalance = sum(db.creditcards, 'balance');
+  const openBills = (db.creditcardBills || []).reduce((s,b)=> s + Math.max(0, Number(b.amount||0) - Number(b.amount_paid||0)), 0);
   document.getElementById('cc-limit').textContent = fmt(totalLimit);
   document.getElementById('cc-balance').textContent = fmt(totalBalance);
+  document.getElementById('cc-open-bills').textContent = fmt(openBills);
   document.getElementById('cc-util').textContent = pct(totalLimit ? (totalBalance / totalLimit) * 100 : 0);
   document.getElementById('creditcards-body').innerHTML = (db.creditcards || []).length ? db.creditcards.map(c => {
     const util = c.limit ? (Number(c.balance || 0) / Number(c.limit || 0)) * 100 : 0;
-    return `<tr><td>${c.name}</td><td>${c.due_date || '—'}</td><td class="text-right">${fmt(c.limit)}</td><td class="text-right negative">${fmt(c.balance)}</td><td class="text-right ${util > 50 ? 'negative' : 'accent'}">${pct(util)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('creditcards','${c.id}')">Delete</button></td></tr>`;
+    return `<tr><td>${c.name}</td><td>${c.due_date || '—'}</td><td class="text-right">${fmt(c.limit)}</td><td class="text-right negative">${fmt(c.balance)}</td><td class="text-right ${util > 50 ? 'negative' : 'accent'}">${pct(util)}</td><td><div class="inline-split"><button class="btn btn-ghost btn-sm" onclick="openCreditCardModal((db.creditcards||[]).find(x=>x.id==='${c.id}'))">Edit</button><button class="btn btn-danger btn-sm" onclick="removeItem('creditcards','${c.id}')">Delete</button></div></td></tr>`;
   }).join('') : `<tr><td colspan="6"><div class="empty">No credit cards yet.</div></td></tr>`;
+  document.getElementById('creditcard-bills-body').innerHTML = (db.creditcardBills || []).length ? db.creditcardBills.map(b => {
+    const card = (db.creditcards || []).find(c => c.id === b.card_id);
+    const remaining = Math.max(0, Number(b.amount||0) - Number(b.amount_paid||0));
+    const badge = b.status === 'Paid' ? 'badge-green' : b.status === 'Partially Paid' ? 'badge-yellow' : 'badge-red';
+    return `<tr><td>${b.bill_month || '—'}</td><td>${card?.name || 'Unknown Card'}</td><td class="text-right negative">${fmt(b.amount)}</td><td class="text-right positive">${fmt(b.amount_paid)}</td><td><span class="badge ${badge}">${b.status || 'Open'}</span></td><td><div class="inline-split">${remaining > 0 ? `<button class="btn btn-ghost btn-sm" onclick="openCreditCardPaymentModal('${b.id}')">Pay Bill</button>` : ''}<button class="btn btn-danger btn-sm" onclick="removeItem('creditcardBills','${b.id}')">Delete</button></div></td></tr>`;
+  }).join('') : `<tr><td colspan="6"><div class="empty">No card bills yet.</div></td></tr>`;
 }
 function renderInvestments(){
   const invested = sum(db.investments, 'amount_invested');
@@ -965,8 +1255,8 @@ function renderInvestments(){
   document.getElementById('inv-roi').textContent = pct(invested ? (gain / invested) * 100 : 0);
   document.getElementById('investments-body').innerHTML = (db.investments || []).length ? db.investments.map(i => {
     const diff = Number(i.current_value||0) - Number(i.amount_invested||0);
-    return `<tr><td>${i.name}</td><td>${i.type || '—'}</td><td class="text-right">${fmt(i.amount_invested)}</td><td class="text-right positive">${fmt(i.current_value)}</td><td class="text-right ${diff >= 0 ? 'positive' : 'negative'}">${fmt(diff)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('investments','${i.id}')">Delete</button></td></tr>`;
-  }).join('') : `<tr><td colspan="6"><div class="empty">No investments added yet.</div></td></tr>`;
+    return `<tr><td>${i.name}</td><td>${i.type || '—'}</td><td class="text-right">${fmt(i.amount_invested)}</td><td class="text-right positive">${fmt(i.current_value)}</td><td class="text-right ${diff >= 0 ? 'positive' : 'negative'}">${fmt(diff)}</td><td>${i.notes || '—'}</td><td><div class="inline-split"><button class="btn btn-ghost btn-sm" onclick="openInvestmentModal((db.investments||[]).find(x=>x.id==='${i.id}'))">Edit</button><button class="btn btn-danger btn-sm" onclick="removeItem('investments','${i.id}')">Delete</button></div></td></tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty">No investments added yet.</div></td></tr>`;
 }
 function renderSugarcane(){
   refreshSugarcaneLocationOptions();
@@ -1007,10 +1297,10 @@ function renderSugarcane(){
   document.getElementById('sugarcane-body').innerHTML = detailRows.length ? detailRows.map(r => `<tr><td>${r.year}</td><td>${r.location || '—'}</td><td class="text-right accent">${Number(r.hectares||0).toFixed(2)}</td><td class="text-right">${Number(r.total_tons||0).toFixed(2)}</td><td class="text-right positive">${fmt(r.total_income)}</td><td class="text-right negative">${fmt(r.total_expenses)}</td><td class="text-right">${fmt(r.total_investment)}</td><td class="text-right ${r.profit >= 0 ? 'positive' : 'negative'}">${fmt(r.profit)}</td><td class="text-right">${pct(r.roi)}</td><td class="text-right">${fmt(r.costPerTon)}</td><td class="text-right">${fmt(r.profitPerTon)}</td><td><button class="btn btn-danger btn-sm" onclick="removeItem('sugarcane','${r.id}')">Delete</button></td></tr>`).join('') : `<tr><td colspan="12"><div class="empty">No sugarcane rows yet.</div></td></tr>`;
 }
 function render(page){
-  const fns = { dashboard:renderDashboard, networth:renderNetWorth, reports:renderReports, transactions:renderTransactions, lend:renderLending, accounts:renderAccounts, creditcards:renderCreditCards, investments:renderInvestments, sugarcane:renderSugarcane };
+  const fns = { dashboard:renderDashboard, networth:renderNetWorth, reports:renderReports, transactions:renderTransactions, lend:renderLending, accounts:renderAccounts, creditcards:renderCreditCards, investments:renderInvestments, settings:renderSettings, sugarcane:renderSugarcane };
   if(fns[page]) fns[page]();
 }
-function renderAll(){ buildReportFilters(); refreshTransactionAccountOptions(); refreshSugarcaneLocationOptions(); renderDashboard(); renderNetWorth(); renderReports(); renderTransactions(); renderLending(); renderAccounts(); renderCreditCards(); renderInvestments(); renderSugarcane(); }
+function renderAll(){ buildReportFilters(); refreshTransactionAccountOptions(); refreshSugarcaneLocationOptions(); populateCreditCardSelects(); populatePaymentAccountSelect(); updateCustomSheetNav(); renderDashboard(); renderNetWorth(); renderReports(); renderTransactions(); renderLending(); renderAccounts(); renderCreditCards(); renderInvestments(); renderSettings(); renderSugarcane(); }
 function seedDemoData(){
   db.accounts = [
     { id:uid(), name:'BDO Personal', type:'personal', balance:125000, notes:'Daily cash' },
@@ -1020,9 +1310,17 @@ function seedDemoData(){
   db.creditcards = [
     { id:uid(), name:'BDO Premium Visa', limit:250000, balance:38000, due_date:today() }
   ];
+  db.creditcardBills = [
+    { id:uid(), card_id:'demo-card-1', bill_month:currentMonth(), due_date:today(), amount:18000, amount_paid:5000, status:'Partially Paid', notes:'Monthly spend' }
+  ];
+  db.creditcards[0].id = 'demo-card-1';
   db.investments = [
-    { id:uid(), name:'Gold', type:'Commodity', amount_invested:120000, current_value:145000 },
-    { id:uid(), name:'Crypto Basket', type:'Crypto', amount_invested:80000, current_value:92000 }
+    { id:uid(), name:'Gold', type:'Commodity', amount_invested:120000, current_value:145000, notes:'Long-term hold' },
+    { id:uid(), name:'Crypto Basket', type:'Crypto', amount_invested:80000, current_value:92000, notes:'High risk' }
+  ];
+  db.networth = [
+    { id:uid(), type:'Asset', cat:'Property', name:'Sea View Lot', initialVal:1250000, appraisedValue:1600000, assetMode:'standard', notes:'Updated appraisal' },
+    { id:uid(), type:'Asset', cat:'Land', name:'Arendo Lot', initialVal:300000, assetMode:'arendo', startYear:new Date().getFullYear()-2, years:5, yearlyDecrease:60000, notes:'Arendo style value decline' }
   ];
   db.lending = [
     { id:uid(), borrower:'Aaron', status:'Pending', date_lent:today(), due_date:'', amount_lent:25000, amount_repaid:10000, notes:'Partial repayment' }
@@ -1042,7 +1340,7 @@ function seedDemoData(){
   saveDb();
   renderAll();
 }
-function resetAllData(){ if(!confirm('Reset all CathOS Lite data?')) return; localStorage.removeItem(STORAGE_KEY); db = { transactions:[], lending:[], accounts:[], creditcards:[], investments:[], sugarcane:[] }; setDefaults(); renderAll(); }
+function resetAllData(){ if(!confirm('Reset all CathOS Lite data?')) return; localStorage.removeItem(STORAGE_KEY); db = { transactions:[], lending:[], accounts:[], creditcards:[], creditcardBills:[], investments:[], networth:[], sugarcane:[], settings:{} }; setDefaults(); renderAll(); }
 
 loadDb();
 setDefaults();
