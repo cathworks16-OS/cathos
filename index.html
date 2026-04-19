@@ -591,6 +591,16 @@ function today(){ return new Date().toISOString().slice(0,10); }
 function currentMonth(){ return new Date().toISOString().slice(0,7); }
 function fmt(n){ return '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function pct(n){ return Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
+const APP_SETTING_IDS = {
+  transactionCategoryMap:'transactionCategoryMap',
+  networthCategories:'networthCategories',
+  customMenuLinks:'customMenuLinks',
+  reportDefaultYear:'reportDefaultYear',
+  reportView:'reportView',
+  reportIncludeInvestment:'reportIncludeInvestment',
+  reportIncludeTransfer:'reportIncludeTransfer',
+  investmentTypes:'investmentTypes'
+};
 function ensureSettingsShape(){
   db.settings = db.settings || {};
   db.settings.transactionCategoryMap = Object.assign({}, defaultTransactionCategoryMap, db.settings.transactionCategoryMap || {});
@@ -817,6 +827,73 @@ function mapSupabaseNetWorthRow(row){
     notes: row.notes || ''
   };
 }
+function mapCreditCardBillToSupabaseRow(item){
+  return {
+    id: item.id || uid(),
+    card_id: item.card_id || item.cardId || '',
+    bill_month: item.bill_month || item.billMonth || '',
+    amount: Number(item.amount || 0),
+    amount_paid: Number(item.amount_paid || item.amountPaid || 0),
+    status: item.status || 'Open',
+    payment_date: item.payment_date || item.paymentDate || null,
+    notes: item.notes || ''
+  };
+}
+function mapSupabaseCreditCardBillRow(row){
+  return {
+    id: row.id || uid(),
+    card_id: row.card_id || row.cardId || '',
+    bill_month: row.bill_month || row.billMonth || '',
+    amount: Number(row.amount || 0),
+    amount_paid: Number(row.amount_paid || row.amountPaid || 0),
+    status: row.status || 'Open',
+    payment_date: row.payment_date || row.paymentDate || '',
+    notes: row.notes || ''
+  };
+}
+function mapSugarcaneToSupabaseRow(item){
+  return {
+    id: item.id || uid(),
+    year: Number(item.year || 0),
+    location: item.location || '',
+    hectares: Number(item.hectares || 0),
+    total_tons: Number(item.total_tons || item.totalTons || 0),
+    total_investment: Number(item.total_investment || item.totalInvestment || 0),
+    total_income: Number(item.total_income || item.totalIncome || 0),
+    total_expenses: Number(item.total_expenses || item.totalExpenses || 0),
+    notes: item.notes || ''
+  };
+}
+function mapSupabaseSugarcaneRow(row){
+  return {
+    id: row.id || uid(),
+    year: Number(row.year || 0),
+    location: row.location || '',
+    hectares: Number(row.hectares || 0),
+    total_tons: Number(row.total_tons || row.totalTons || 0),
+    total_investment: Number(row.total_investment || row.totalInvestment || 0),
+    total_income: Number(row.total_income || row.totalIncome || 0),
+    total_expenses: Number(row.total_expenses || row.totalExpenses || 0),
+    notes: row.notes || ''
+  };
+}
+function mapSettingsToSupabaseRows(settings){
+  settings = settings || {};
+  return Object.keys(APP_SETTING_IDS).map(key => ({
+    id: APP_SETTING_IDS[key],
+    setting_key: key,
+    value_json: settings[key] ?? null
+  }));
+}
+function mapSupabaseSettingsRows(rows){
+  const out = {};
+  (rows || []).forEach(row => {
+    const key = row.setting_key || row.id;
+    if(key) out[key] = row.value_json;
+  });
+  return out;
+}
+
 async function supabaseSelect(table){
   if(!supabaseClient) return [];
   const { data, error } = await supabaseClient.from(table).select('*').order('created_at', { ascending:false });
@@ -846,13 +923,16 @@ async function syncTableToSupabase(table, rows){
 }
 async function hydrateDbFromSupabase(){
   if(!supabaseClient) throw new Error('Supabase client missing');
-  const [transactionsRows, accountsRows, creditCardRows, lendingRows, investmentRows, netWorthRows] = await Promise.all([
+  const [transactionsRows, accountsRows, creditCardRows, lendingRows, investmentRows, netWorthRows, creditCardBillRows, sugarcaneRows, settingsRows] = await Promise.all([
     supabaseSelect('transactions'),
     supabaseSelect('accounts'),
     supabaseSelect('credit_cards'),
     supabaseSelect('lending'),
     supabaseSelect('investments'),
-    supabaseSelect('net_worth')
+    supabaseSelect('net_worth'),
+    supabaseSelect('credit_card_bills'),
+    supabaseSelect('sugarcane_location_yearly'),
+    supabaseSelect('app_settings')
   ]);
   db.transactions = transactionsRows.map(mapSupabaseTransactionRow);
   db.accounts = accountsRows.map(mapSupabaseAccountRow);
@@ -860,6 +940,9 @@ async function hydrateDbFromSupabase(){
   db.lending = lendingRows.map(mapSupabaseLendingRow);
   db.investments = investmentRows.map(mapSupabaseInvestmentRow);
   db.networth = netWorthRows.map(mapSupabaseNetWorthRow);
+  db.creditcardBills = creditCardBillRows.map(mapSupabaseCreditCardBillRow);
+  db.sugarcane = sugarcaneRows.map(mapSupabaseSugarcaneRow);
+  db.settings = Object.assign({}, db.settings || {}, mapSupabaseSettingsRows(settingsRows));
   ensureSettingsShape();
   saveLocalSnapshot();
   setSyncStatus('ok', 'Connected to existing database');
@@ -880,11 +963,14 @@ async function saveToSupabase(options = {}){
       syncTableToSupabase('credit_cards', (db.creditcards || []).map(mapCreditCardToSupabaseRow)),
       syncTableToSupabase('lending', (db.lending || []).map(mapLendingToSupabaseRow)),
       syncTableToSupabase('investments', (db.investments || []).map(mapInvestmentToSupabaseRow)),
-      syncTableToSupabase('net_worth', (db.networth || []).map(mapNetWorthToSupabaseRow))
+      syncTableToSupabase('net_worth', (db.networth || []).map(mapNetWorthToSupabaseRow)),
+      syncTableToSupabase('credit_card_bills', (db.creditcardBills || []).map(mapCreditCardBillToSupabaseRow)),
+      syncTableToSupabase('sugarcane_location_yearly', (db.sugarcane || []).map(mapSugarcaneToSupabaseRow)),
+      syncTableToSupabase('app_settings', mapSettingsToSupabaseRows(db.settings || {}))
     ]);
     saveLocalSnapshot();
     setSyncStatus('ok', 'Synced to existing database');
-    if(!options.silent) alert('CathOS Lite synced to your existing database.\n\nNote: custom links, admin settings, credit card bills, and simplified sugarcane rows are still stored locally in this version.');
+    if(!options.silent) alert('CathOS Lite synced to your database, including admin settings, menu links, credit card bills, and sugarcane location-year data.');
   } catch(error){
     console.error('Supabase save failed:', error);
     setSyncStatus('err', 'Database sync failed');
@@ -902,7 +988,7 @@ async function refreshFromSupabase(options = {}){
   } catch(error){
     console.error('Supabase refresh failed:', error);
     setSyncStatus('err', 'Refresh failed • local fallback active');
-    if(!options.silent) alert('Could not refresh from the existing database. Using local fallback for the sections that are not in the database.\n\n' + (error.message || error));
+    if(!options.silent) alert('Could not refresh from the database. Local fallback is still available.\n\n' + (error.message || error));
   }
 }
 function loadDb(){ loadLocalSnapshot(); ensureSettingsShape(); }
