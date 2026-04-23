@@ -957,17 +957,38 @@ async function saveToSupabase(options = {}){
     return;
   }
   
-  // ✅ VALIDATE TRANSACTION IDS BEFORE SYNC (YOUR NEW CODE)
+  // ✅ VALIDATE TRANSACTION IDS BEFORE SYNC
   db.transactions = (db.transactions || []).map(txn => ({
     ...txn,
     id: txn.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(txn.id)) ? txn.id : uid()
   }));
   
-  // ✅ REST OF THE FUNCTION CONTINUES HERE
   if(syncInFlight) return;
   syncInFlight = true;
   try {
-    // ... rest of sync code
+    setSyncStatus('warn', 'Syncing to database...');
+    await Promise.all([
+      syncTableToSupabase('transactions', (db.transactions || []).map(mapTransactionToSupabaseRow)),
+      syncTableToSupabase('accounts', (db.accounts || []).map(mapAccountToSupabaseRow)),
+      syncTableToSupabase('credit_cards', (db.creditcards || []).map(mapCreditCardToSupabaseRow)),
+      syncTableToSupabase('lending', (db.lending || []).map(mapLendingToSupabaseRow)),
+      syncTableToSupabase('investments', (db.investments || []).map(mapInvestmentToSupabaseRow)),
+      syncTableToSupabase('net_worth', (db.networth || []).map(mapNetWorthToSupabaseRow)),
+      syncTableToSupabase('credit_card_bills', (db.creditcardBills || []).map(mapCreditCardBillToSupabaseRow)),
+      syncTableToSupabase('sugarcane_location_yearly', (db.sugarcane || []).map(mapSugarcaneToSupabaseRow)),
+      syncTableToSupabase('app_settings', mapSettingsToSupabaseRows(db.settings || {}))
+    ]);
+    saveLocalSnapshot();
+    setSyncStatus('ok', 'Synced to existing database');
+    if(!options.silent) alert('CathOS Lite synced to your database, including admin settings, menu links, credit card bills, and sugarcane location-year data.');
+  } catch(error){
+    console.error('Supabase save failed:', error);
+    setSyncStatus('err', 'Database sync failed');
+    if(!options.silent) alert('Failed to sync to the existing database.\n\n' + (error.message || error));
+  } finally {
+    syncInFlight = false;
+  }
+}
 async function refreshFromSupabase(options = {}){
   try {
     setSyncStatus('warn', 'Refreshing from database...');
